@@ -1,7 +1,9 @@
 {
-  "name": "um/wall-lib",
+  "name": "ultimate-member/wall-lib",
   "description": "UM discussion wall for Ultimate Member extensions.",
   "license": "MIT",
+  "keywords": ["wordpress", "ultimate member"],
+  "type": "library",
   "authors": [
     {
       "name": "Ultimate Member",
@@ -13,7 +15,7 @@
   },
   "autoload": {
     "psr-4": {
-      "um\\WallLib\\": "src/"
+      "ultimate-member\\WallLib\\": "src/"
     }
   },
   "minimum-stability": "dev",
