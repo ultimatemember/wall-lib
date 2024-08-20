@@ -1,0 +1,21 @@
+{
+  "name": "um/wall-lib",
+  "description": "UM discussion wall for Ultimate Member extensions.",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Ultimate Member",
+      "email": "support@ultimatemember.com"
+    }
+  ],
+  "require": {
+    "php": ">=7.2"
+  },
+  "autoload": {
+    "psr-4": {
+      "um\\WallLib\\": "src/"
+    }
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true
+}
