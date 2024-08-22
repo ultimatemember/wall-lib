@@ -13,11 +13,6 @@
   "require": {
     "php": ">=7.4"
   },
-  "autoload": {
-    "psr-4": {
-      "WallLib\\": "src/"
-    }
-  },
   "minimum-stability": "dev",
   "prefer-stable": true
 }
