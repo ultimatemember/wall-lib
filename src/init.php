@@ -5,7 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class WallLib {
+class Init {
 
 	/**
 	 * Plugin url
@@ -41,7 +41,6 @@ class WallLib {
 	 * @param string $file
 	 */
 	public function __construct( $data ) {
-		var_dump( 'activity');
 		$this->plugin_url     = $data['plugin_url'];
 		$this->plugin_version = $data['plugin_version'];
 		$this->plugin_path    = $data['plugin_path'];
