@@ -15,7 +15,7 @@
   },
   "autoload": {
     "psr-4": {
-      "ultimate-member\\WallLib\\": "src/"
+      "WallLib\\": "src/"
     }
   },
   "minimum-stability": "dev",
