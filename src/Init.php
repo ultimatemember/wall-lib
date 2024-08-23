@@ -46,7 +46,30 @@ class Init {
 		$this->plugin_path    = $data['plugin_path'];
 		$this->plugin_prefix  = $data['plugin_prefix'];
 
+		$this->includes();
+
 		add_shortcode( 'ultimatemember_post_type', array( $this, 'ultimatemember_post_type' ) );
+	}
+
+	public function includes() {
+//		$this->common()->includes();
+
+		if ( UM()->is_request( 'ajax' ) ) {
+//			$this->ajax()->includes();
+		} elseif ( UM()->is_request( 'frontend' ) ) {
+			$this->frontend()->includes();
+		}
+	}
+
+	/**
+	 *
+	 * @return frontend\Init
+	 */
+	public function frontend() {
+		if ( empty( UM()->classes['WallLib\frontend\init'] ) ) {
+			UM()->classes['WallLib\frontend\init'] = new frontend\Init();
+		}
+		return UM()->classes['WallLib\frontend\init'];
 	}
 
 	public function get_plugin_info() {
