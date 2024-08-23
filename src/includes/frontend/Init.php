@@ -12,6 +12,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Init {
 
+	public function __construct() {
+	}
 	/**
 	 * Create classes' instances where __construct isn't empty for hooks init
 	 */
