@@ -1,0 +1,246 @@
+@import "../../../../../ultimate-member/assets/css/selectors"
+@import "../../../../../ultimate-member/assets/css/mixins"
+@import "../../../../../ultimate-member/assets/css/box"
+@import "../../../../../ultimate-member/assets/css/colors"
+@import "../../../../../ultimate-member/assets/css/typography"
+
+// Single wall post
+.um
+  .#{$prefix}wall-widget
+    row-gap: $spacing-xl
+    .#{$prefix}wall-head
+      +flex( row, space-between, start, nowrap )
+      margin: 0
+      padding: 0
+      column-gap: $spacing-lg
+      .#{$prefix}wall-author
+        flex: 1
+        .#{$prefix}small-data
+          width: 100%
+          .#{$prefix}data-header
+            +flex( row, start, start, nowrap )
+            column-gap: $spacing-sm
+            .#{$prefix}user-display-name
+              display: block
+              line-height: var(--um-text-line-height-sm, 20px)
+    .#{$prefix}wall-body
+      +flex( column, flex-start, stretch, nowrap )
+      margin: 0
+      padding: 0
+      row-gap: $spacing-xl
+      +typography( text, sm, regular )
+      color: $gray-600
+      word-wrap: break-word
+      .#{$prefix}wall-actions
+        +flex( row, space-between, center, nowrap )
+        row-gap: $spacing-xs
+        button.#{$prefix}button.#{$prefix}wall-comments-toggle
+          column-gap: $spacing-sm
+          padding: 0
+          .#{$prefix}button-content
+            +flex( row, flex-start, center, nowrap )
+            column-gap: $spacing-sm
+        .#{$prefix}wall-like-wrap
+          +flex( row, flex-start, center, nowrap )
+          column-gap: $spacing-xl
+          height: $spacing-4xl
+          .#{$prefix}wall-post-like
+            position: relative
+            padding: 0
+            .#{$prefix}like-icon
+              display: block
+              width: $icon-size
+              height: $icon-size
+              position: relative
+              &:after
+                content: ""
+                position: absolute
+                top: 0
+                right: 0
+                mask-size: contain
+                -webkit-mask-size: contain
+                mask-position: center
+                -webkit-mask-position: center
+                mask-repeat: no-repeat
+                -webkit-mask-repeat: no-repeat
+                mask-image: url(../img/thumb-up.svg)
+                -webkit-mask-image: url(../img/thumb-up.svg)
+                width: $icon-size
+                height: $icon-size
+                background-color: $gray-600
+                text-indent: 500%
+                white-space: nowrap
+                overflow: hidden
+            &.active
+              .#{$prefix}like-icon
+                &:after
+                  mask-image: url(../img/thumb-up-active.svg)
+                  -webkit-mask-image: url(../img/thumb-up-active.svg)
+            &:hover
+              .#{$prefix}like-icon
+                &:after
+                  background-color: $gray-700
+            &:focus
+              .#{$prefix}like-icon
+                &:after
+                  background-color: $gray-600
+            &:disabled
+              .#{$prefix}like-icon
+                &:after
+                  background-color: $gray-400
+          .#{$prefix}wall-show-likes
+            padding: 0
+            .#{$prefix}wall-post-likes
+              +flex( row, flex-start, center, nowrap )
+              column-gap: $spacing-md
+    .#{$prefix}wall-comments
+      padding-top: $spacing-xl
+      border-top: 1px solid $gray-200
+      .#{$prefix}wall-comments-loop
+        row-gap: $spacing-3xl
+        +flex( column, flex-start, start, nowrap )
+        &>.#{$prefix}wall-loader
+          margin: 0 auto
+        .#{$prefix}wall-commentwrap
+          width: 100%
+          +flex( column, flex-start, start, nowrap )
+          row-gap: $spacing-md
+          .#{$prefix}wall-commentl
+            position: relative
+            +flex( column, flex-start, start, nowrap )
+            row-gap: $spacing-md
+            width: 100%
+            .#{$prefix}wall-comment-info
+              +flex( column, flex-start, start, nowrap )
+              row-gap: $spacing-md
+              width: calc( 100% - $spacing-6xl - 8px )
+              margin-left: calc( $spacing-6xl + 4px )
+              +typography( text, sm, regular )
+              color: $gray-600
+              .#{$prefix}wall-reply-form
+                width: 100%
+                .#{$prefix}wall-comment-reply-actions
+                  +flex( row, end, start, nowrap )
+                  column-gap: $spacing-md
+              .#{$prefix}wall-comment-data
+                width: 100%
+                .#{$prefix}wall-comment-edit-actions
+                  +flex( row, end, start, nowrap )
+                  column-gap: $spacing-md
+            a
+              text-decoration: none
+            .#{$prefix}small-data
+              row-gap: 0
+              width: calc(100% - 80px)
+              .#{$prefix}user-display-name
+                line-height: 1
+            textarea
+              width: 100%
+            .#{$prefix}wall-editc
+              position: absolute
+              top: 0
+              right: 0
+              opacity: 0
+              +flex( row, flex-start, start, nowrap )
+            .#{$prefix}wall-comment-meta
+              +flex( row, flex-start, center, nowrap )
+              column-gap: $spacing-xl
+            &:hover
+              .#{$prefix}wall-editc
+                opacity: 1
+          .#{$prefix}wall-comment-child
+            margin-left: calc( $spacing-6xl + 4px )
+            margin-top: $spacing-xl
+            width: calc( 100% - $spacing-6xl - 4px )
+            +flex( column, flex-start, center, nowrap )
+            row-gap: $spacing-xl
+            .#{$prefix}wall-comment-child-loop
+              width: 100%
+              +flex( column, flex-start, center, nowrap )
+              row-gap: $spacing-xl
+              .#{$prefix}wall-commentl
+                .#{$prefix}wall-comment-info
+                  width: calc( 100% - $spacing-6xl - 4px )
+                .#{$prefix}wall-editc
+                  right: 0
+                .#{$prefix}small-data
+                  &:before
+                    content: ""
+                    display: block
+                    width: 1px
+                    height: calc( 100% - $spacing-6xl )
+                    background: $gray-200
+                    position: absolute
+                    bottom: -$spacing-xs
+                    left: 20px
+                &:last-child
+                  .#{$prefix}small-data
+                    &:before
+                      display: none
+          .#{$prefix}wall-comment-likes
+            .#{$prefix}wall-comment-likes
+              +flex( row, flex-start, center, nowrap )
+              column-gap: $spacing-md
+          .#{$prefix}wall-comment-like
+            padding: 0
+            .#{$prefix}like-icon
+              display: block
+              width: $icon-size
+              height: $icon-size
+              position: relative
+              &:after
+                content: ""
+                position: absolute
+                top: 0
+                right: 0
+                mask-size: contain
+                -webkit-mask-size: contain
+                mask-position: center
+                -webkit-mask-position: center
+                mask-repeat: no-repeat
+                -webkit-mask-repeat: no-repeat
+                mask-image: url(../img/thumb-up.svg)
+                -webkit-mask-image: url(../img/thumb-up.svg)
+                width: $icon-size
+                height: $icon-size
+                background-color: $gray-600
+                text-indent: 500%
+                white-space: nowrap
+                overflow: hidden
+            &.active
+              .#{$prefix}like-icon
+                &:after
+                  mask-image: url(../img/thumb-up-active.svg)
+                  -webkit-mask-image: url(../img/thumb-up-active.svg)
+            &:hover
+              .#{$prefix}like-icon
+                &:after
+                  background-color: $gray-700
+            &:focus
+              .#{$prefix}like-icon
+                &:after
+                  background-color: $gray-600
+            &:disabled
+              .#{$prefix}like-icon
+                &:after
+                  background-color: $gray-400
+        .#{$prefix}wall-commentload
+          margin: 0 auto
+
+    .#{$prefix}wall-comment-form
+      +flex( column, flex-start, stretch, nowrap )
+      width: 100%
+      padding: 0
+      margin: 0
+      row-gap: $spacing-md
+      .#{$prefix}wall-comment-box
+        +flex( row, flex-start, start, nowrap )
+        padding: 0
+        margin: 0
+        column-gap: $spacing-lg
+        textarea
+          flex: 1
+          +typography( text, sm, regular )
+      .#{$prefix}form-submit
+        +flex( row, flex-end, center, nowrap )
+        gap: calc( $spacing-6xl + 4px )

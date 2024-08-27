@@ -12,28 +12,32 @@ class Init {
 	 *
 	 * @param string
 	 */
-	private $plugin_url;
+	public $plugin_url;
 
 	/**
 	 * Plugin version
 	 *
 	 * @param string
 	 */
-	private $plugin_version;
+	public $plugin_version;
 
 	/**
 	 * Plugin path
 	 *
 	 * @param string
 	 */
-	private $plugin_path;
+	public $plugin_path;
 
 	/**
 	 * Plugin prefix
 	 *
 	 * @param string
 	 */
-	private $plugin_prefix;
+	public $prefix;
+
+	public $classes = array();
+
+	public $namespace = __NAMESPACE__;
 
 	/**
 	 * WallLib constructor.
@@ -43,12 +47,16 @@ class Init {
 	public function __construct( $data ) {
 		spl_autoload_register( array( $this, 'wall__autoloader' ) );
 
+		UM()->classes['WallLib\Init'] = $this;
+
 		$this->plugin_url     = $data['plugin_url'];
 		$this->plugin_version = $data['plugin_version'];
 		$this->plugin_path    = $data['plugin_path'];
-		$this->plugin_prefix  = $data['plugin_prefix'];
+		$this->prefix  = $data['prefix'];
+		$this->classes        = $data['classes'];
 
 		$this->includes();
+
 
 		add_shortcode( 'ultimatemember_post_type', array( $this, 'ultimatemember_post_type' ) );
 	}
@@ -66,7 +74,26 @@ class Init {
 			$array = explode( '\\', strtolower( $class ) );
 			$array[ count( $array ) - 1 ] = 'class-'. end( $array );
 
-			if ( strpos( $class, '\\WallLib\\frontend\\' ) !== false ) {
+			// todo: check slashes in strpos '\\WallLib\\frontend\\'
+			if ( strpos( $class, 'WallLib\\frontend\\' ) !== false ) {
+				$class = implode( '\\', $array );
+				$slash = DIRECTORY_SEPARATOR;
+				$path = str_replace(
+					array( strtolower( __NAMESPACE__ ), '_', '\\' ),
+					array( '', '-', $slash ),
+					$class );
+
+				$full_path =  __DIR__ . $slash . 'includes' . $path . '.php';
+			} elseif ( strpos( $class, 'WallLib\\ajax\\' ) !== false ) {
+				$class = implode( '\\', $array );
+				$slash = DIRECTORY_SEPARATOR;
+				$path = str_replace(
+					array( strtolower( __NAMESPACE__ ), '_', '\\' ),
+					array( '', '-', $slash ),
+					$class );
+
+				$full_path =  __DIR__ . $slash . 'includes' . $path . '.php';
+			} elseif ( strpos( $class, 'WallLib\\common\\' ) !== false ) {
 				$class = implode( '\\', $array );
 				$slash = DIRECTORY_SEPARATOR;
 				$path = str_replace(
@@ -84,9 +111,9 @@ class Init {
 	}
 
 	public function includes() {
-
+		$this->common()->includes();
 		if ( UM()->is_request( 'ajax' ) ) {
-
+			$this->ajax()->includes();
 		} elseif ( UM()->is_request( 'frontend' ) ) {
 			$this->frontend()->includes();
 		}
@@ -98,9 +125,31 @@ class Init {
 	 */
 	public function frontend() {
 		if (empty(UM()->classes['WallLib\frontend\Init'])) {
-			UM()->classes['WallLib\frontend\Init'] = new frontend\Init();
+			UM()->classes['WallLib\frontend\Init'] = new frontend\Init( $this );
 		}
 		return UM()->classes['WallLib\frontend\Init'];
+	}
+
+	/**
+	 *
+	 * @return ajax\Init
+	 */
+	public function ajax() {
+		if (empty(UM()->classes['WallLib\ajax\Init'])) {
+			UM()->classes['WallLib\ajax\Init'] = new ajax\Init( $this );
+		}
+		return UM()->classes['WallLib\ajax\Init'];
+	}
+
+	/**
+	 *
+	 * @return common\Init
+	 */
+	public function common() {
+		if (empty(UM()->classes['WallLib\common\Init'])) {
+			UM()->classes['WallLib\common\Init'] = new common\Init( $this );
+		}
+		return UM()->classes['WallLib\common\Init'];
 	}
 
 	public function get_plugin_info() {
@@ -108,37 +157,7 @@ class Init {
 			'name'    => $this->plugin_url,
 			'version' => $this->plugin_version,
 			'path'    => $this->plugin_path,
-			'prefix'  => $this->plugin_prefix,
+			'prefix'  => $this->prefix,
 		);
-	}
-
-	public function ultimatemember_post_type( $atts = array() ) {
-		$atts = shortcode_atts(
-			array(
-				'post_type' => 'post',
-			),
-			$atts
-		);
-
-		$query = new \WP_Query(
-			array(
-				'post_type'      => $atts['post_type'],
-				'posts_per_page' => 5,
-			)
-		);
-
-		if ($query->have_posts()) {
-			$output = '<ul>';
-			while ($query->have_posts()) {
-				$query->the_post();
-				$output .= '<li><a href="' . get_permalink() . '">' . get_the_title() . '</a></li>';
-			}
-			$output .= '</ul>';
-			wp_reset_postdata();
-		} else {
-			$output = 'No posts found.';
-		}
-
-		return $output;
 	}
 }

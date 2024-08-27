@@ -1,0 +1,361 @@
+.um .um-wall-widget {
+  row-gap: 16px;
+}
+.um .um-wall-widget .um-wall-head {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: start;
+  flex-wrap: nowrap;
+  margin: 0;
+  padding: 0;
+  column-gap: 12px;
+}
+.um .um-wall-widget .um-wall-head .um-wall-author {
+  flex: 1;
+}
+.um .um-wall-widget .um-wall-head .um-wall-author .um-small-data {
+  width: 100%;
+}
+.um .um-wall-widget .um-wall-head .um-wall-author .um-small-data .um-data-header {
+  display: flex;
+  flex-direction: row;
+  justify-content: start;
+  align-items: start;
+  flex-wrap: nowrap;
+  column-gap: 6px;
+}
+.um .um-wall-widget .um-wall-head .um-wall-author .um-small-data .um-data-header .um-user-display-name {
+  display: block;
+  line-height: var(--um-text-line-height-sm, 20px);
+}
+.um .um-wall-widget .um-wall-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  flex-wrap: nowrap;
+  margin: 0;
+  padding: 0;
+  row-gap: 16px;
+  font-size: var(--um-text-font-size-sm, 14px);
+  line-height: var(--um-text-line-height-sm, 20px);
+  font-weight: var(--um-text-font-weight-regular, 400);
+  color: var(--um-gray-600, #475467);
+  word-wrap: break-word;
+}
+.um .um-wall-widget .um-wall-body .um-wall-actions {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: nowrap;
+  row-gap: 4px;
+}
+.um .um-wall-widget .um-wall-body .um-wall-actions button.um-button.um-wall-comments-toggle {
+  column-gap: 6px;
+  padding: 0;
+}
+.um .um-wall-widget .um-wall-body .um-wall-actions button.um-button.um-wall-comments-toggle .um-button-content {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  flex-wrap: nowrap;
+  column-gap: 6px;
+}
+.um .um-wall-widget .um-wall-body .um-wall-actions .um-wall-like-wrap {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  flex-wrap: nowrap;
+  column-gap: 16px;
+  height: 32px;
+}
+.um .um-wall-widget .um-wall-body .um-wall-actions .um-wall-like-wrap .um-wall-post-like {
+  position: relative;
+  padding: 0;
+}
+.um .um-wall-widget .um-wall-body .um-wall-actions .um-wall-like-wrap .um-wall-post-like .um-like-icon {
+  display: block;
+  width: 20px;
+  height: 20px;
+  position: relative;
+}
+.um .um-wall-widget .um-wall-body .um-wall-actions .um-wall-like-wrap .um-wall-post-like .um-like-icon:after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  mask-size: contain;
+  -webkit-mask-size: contain;
+  mask-position: center;
+  -webkit-mask-position: center;
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+  mask-image: url(../img/thumb-up.svg);
+  -webkit-mask-image: url(../img/thumb-up.svg);
+  width: 20px;
+  height: 20px;
+  background-color: var(--um-gray-600, #475467);
+  text-indent: 500%;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.um .um-wall-widget .um-wall-body .um-wall-actions .um-wall-like-wrap .um-wall-post-like.active .um-like-icon:after {
+  mask-image: url(../img/thumb-up-active.svg);
+  -webkit-mask-image: url(../img/thumb-up-active.svg);
+}
+.um .um-wall-widget .um-wall-body .um-wall-actions .um-wall-like-wrap .um-wall-post-like:hover .um-like-icon:after {
+  background-color: var(--um-gray-700, #344054);
+}
+.um .um-wall-widget .um-wall-body .um-wall-actions .um-wall-like-wrap .um-wall-post-like:focus .um-like-icon:after {
+  background-color: var(--um-gray-600, #475467);
+}
+.um .um-wall-widget .um-wall-body .um-wall-actions .um-wall-like-wrap .um-wall-post-like:disabled .um-like-icon:after {
+  background-color: var(--um-gray-400, #98a2b3);
+}
+.um .um-wall-widget .um-wall-body .um-wall-actions .um-wall-like-wrap .um-wall-show-likes {
+  padding: 0;
+}
+.um .um-wall-widget .um-wall-body .um-wall-actions .um-wall-like-wrap .um-wall-show-likes .um-wall-post-likes {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  flex-wrap: nowrap;
+  column-gap: 8px;
+}
+.um .um-wall-widget .um-wall-comments {
+  padding-top: 16px;
+  border-top: 1px solid var(--um-gray-200, #eaecf0);
+}
+.um .um-wall-widget .um-wall-comments .um-wall-comments-loop {
+  row-gap: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: start;
+  flex-wrap: nowrap;
+}
+.um .um-wall-widget .um-wall-comments .um-wall-comments-loop > .um-wall-loader {
+  margin: 0 auto;
+}
+.um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: start;
+  flex-wrap: nowrap;
+  row-gap: 8px;
+}
+.um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-commentl {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: start;
+  flex-wrap: nowrap;
+  row-gap: 8px;
+  width: 100%;
+}
+.um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-commentl .um-wall-comment-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: start;
+  flex-wrap: nowrap;
+  row-gap: 8px;
+  width: calc(100% - 48px - 8px);
+  margin-left: 52px;
+  font-size: var(--um-text-font-size-sm, 14px);
+  line-height: var(--um-text-line-height-sm, 20px);
+  font-weight: var(--um-text-font-weight-regular, 400);
+  color: var(--um-gray-600, #475467);
+}
+.um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-commentl .um-wall-comment-info .um-wall-reply-form {
+  width: 100%;
+}
+.um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-commentl .um-wall-comment-info .um-wall-reply-form .um-wall-comment-reply-actions {
+  display: flex;
+  flex-direction: row;
+  justify-content: end;
+  align-items: start;
+  flex-wrap: nowrap;
+  column-gap: 8px;
+}
+.um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-commentl .um-wall-comment-info .um-wall-comment-data {
+  width: 100%;
+}
+.um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-commentl .um-wall-comment-info .um-wall-comment-data .um-wall-comment-edit-actions {
+  display: flex;
+  flex-direction: row;
+  justify-content: end;
+  align-items: start;
+  flex-wrap: nowrap;
+  column-gap: 8px;
+}
+.um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-commentl a {
+  text-decoration: none;
+}
+.um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-commentl .um-small-data {
+  row-gap: 0;
+  width: calc(100% - 80px);
+}
+.um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-commentl .um-small-data .um-user-display-name {
+  line-height: 1;
+}
+.um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-commentl textarea {
+  width: 100%;
+}
+.um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-commentl .um-wall-editc {
+  position: absolute;
+  top: 0;
+  right: 0;
+  opacity: 0;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: start;
+  flex-wrap: nowrap;
+}
+.um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-commentl .um-wall-comment-meta {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  flex-wrap: nowrap;
+  column-gap: 16px;
+}
+.um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-commentl:hover .um-wall-editc {
+  opacity: 1;
+}
+.um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-comment-child {
+  margin-left: 52px;
+  margin-top: 16px;
+  width: calc(100% - 48px - 4px);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  flex-wrap: nowrap;
+  row-gap: 16px;
+}
+.um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-comment-child .um-wall-comment-child-loop {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  flex-wrap: nowrap;
+  row-gap: 16px;
+}
+.um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-comment-child .um-wall-comment-child-loop .um-wall-commentl .um-wall-comment-info {
+  width: calc(100% - 48px - 4px);
+}
+.um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-comment-child .um-wall-comment-child-loop .um-wall-commentl .um-wall-editc {
+  right: 0;
+}
+.um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-comment-child .um-wall-comment-child-loop .um-wall-commentl .um-small-data:before {
+  content: "";
+  display: block;
+  width: 1px;
+  height: calc(100% - 48px);
+  background: var(--um-gray-200, #eaecf0);
+  position: absolute;
+  bottom: -4px;
+  left: 20px;
+}
+.um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-comment-child .um-wall-comment-child-loop .um-wall-commentl:last-child .um-small-data:before {
+  display: none;
+}
+.um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-comment-likes .um-wall-comment-likes {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  flex-wrap: nowrap;
+  column-gap: 8px;
+}
+.um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-comment-like {
+  padding: 0;
+}
+.um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-comment-like .um-like-icon {
+  display: block;
+  width: 20px;
+  height: 20px;
+  position: relative;
+}
+.um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-comment-like .um-like-icon:after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  mask-size: contain;
+  -webkit-mask-size: contain;
+  mask-position: center;
+  -webkit-mask-position: center;
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+  mask-image: url(../img/thumb-up.svg);
+  -webkit-mask-image: url(../img/thumb-up.svg);
+  width: 20px;
+  height: 20px;
+  background-color: var(--um-gray-600, #475467);
+  text-indent: 500%;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-comment-like.active .um-like-icon:after {
+  mask-image: url(../img/thumb-up-active.svg);
+  -webkit-mask-image: url(../img/thumb-up-active.svg);
+}
+.um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-comment-like:hover .um-like-icon:after {
+  background-color: var(--um-gray-700, #344054);
+}
+.um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-comment-like:focus .um-like-icon:after {
+  background-color: var(--um-gray-600, #475467);
+}
+.um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-comment-like:disabled .um-like-icon:after {
+  background-color: var(--um-gray-400, #98a2b3);
+}
+.um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentload {
+  margin: 0 auto;
+}
+.um .um-wall-widget .um-wall-comment-form {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  flex-wrap: nowrap;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  row-gap: 8px;
+}
+.um .um-wall-widget .um-wall-comment-form .um-wall-comment-box {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: start;
+  flex-wrap: nowrap;
+  padding: 0;
+  margin: 0;
+  column-gap: 12px;
+}
+.um .um-wall-widget .um-wall-comment-form .um-wall-comment-box textarea {
+  flex: 1;
+  font-size: var(--um-text-font-size-sm, 14px);
+  line-height: var(--um-text-line-height-sm, 20px);
+  font-weight: var(--um-text-font-weight-regular, 400);
+}
+.um .um-wall-widget .um-wall-comment-form .um-form-submit {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 52px;
+}
