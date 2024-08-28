@@ -518,20 +518,22 @@ class Posts {
 	 */
 	public function remove_post() {
 		// phpcs:disable WordPress.Security.NonceVerification
-		if ( ! wp_verify_nonce( $_POST['nonce'], 'um_wall_delete_post' ) ) {
-			wp_send_json_error( __( 'Wrong nonce.', 'um-activity' ) );
+		if ( empty( $_POST['post_id'] ) || ! $this->wall->common()->posts()->exists( absint( $_POST['post_id'] ) ) ) {
+			wp_send_json_error( __( 'Wrong post ID.', $this->wall->textdomain ) );
 		}
 
 		$post_id = absint( $_POST['post_id'] );
-		if ( ! UM()->Activity_API()->common()->post()->exists( $post_id ) ) {
-			wp_send_json_error( __( 'You are not authorized to delete this comment.', 'um-activity' ) );
+
+		if ( ! wp_verify_nonce( $_POST['nonce'], 'um_wall_delete_post' . $post_id ) ) {
+			wp_send_json_error( __( 'Wrong nonce.', $this->wall->textdomain ) );
 		}
 		// phpcs:enable WordPress.Security.NonceVerification
 
-		$author_id = UM()->Activity_API()->common()->post()->get_author( $post_id );
-		if ( current_user_can( 'edit_users' ) || get_current_user_id() === $author_id ) {
-			wp_delete_post( $post_id, true );
+		if ( ! $this->wall->common()->user()->can_remove_post( $post_id ) ) {
+			wp_send_json_error( __( 'You are not authorized to remove this post.', $this->wall->textdomain ) );
 		}
+
+		wp_delete_post( $post_id, true );
 
 		wp_send_json_success();
 	}

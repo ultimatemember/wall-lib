@@ -71,6 +71,17 @@ class User {
 		return apply_filters( 'um_activity_custom_privacy', true, $user_id, $profile_id );
 	}
 
+	public function can_remove_post( $post_id ) {
+		$can_remove = true;
+
+		$author_id = $this->wall->common()->posts()->get_author( $post_id );
+		if ( ! current_user_can( 'edit_users' ) || get_current_user_id() !== absint( $author_id ) ) {
+			$can_remove = false;
+		}
+
+		return apply_filters( $this->wall->prefix . 'wall_post_can_remove', $can_remove, $post_id );
+	}
+
 	/**
 	 * @param int $post_id
 	 *
