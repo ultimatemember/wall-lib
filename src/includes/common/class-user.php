@@ -111,10 +111,6 @@ class User {
 
 	public function can_like( $post_id, $user_id = null ) {
 		// return `false` if doesn't exist.
-		if ( ! UM()->Activity_API()->common()->post()->exists( $post_id ) ) {
-			return false;
-		}
-
 		$can_like = true;
 
 		if ( ! $user_id && is_user_logged_in() ) {
@@ -135,15 +131,11 @@ class User {
 			$can_like = $this->can_view_post( $post_id );
 		}
 
-		return apply_filters( 'um_activity_can_like_post', $can_like, $post_id, $user_id );
+		return apply_filters( $this->wall->prefix . 'wall_can_like_post', $can_like, $post_id, $user_id );
 	}
 
 	public function can_unlike( $post_id, $user_id = null ) {
 		// return `false` if doesn't exist.
-		if ( ! UM()->Activity_API()->common()->post()->exists( $post_id ) ) {
-			return false;
-		}
-
 		$can_unlike = true;
 
 		if ( ! $user_id && is_user_logged_in() ) {
@@ -158,13 +150,15 @@ class User {
 		if ( empty( $likes ) ) {
 			$likes = array();
 		}
+
 		if ( ! in_array( $user_id, $likes, true ) ) {
 			$can_unlike = false;
 		} else {
+
 			$can_unlike = $this->can_view_post( $post_id );
 		}
 
-		return apply_filters( 'um_activity_can_unlike_post', $can_unlike, $post_id, $user_id );
+		return apply_filters( $this->wall->prefix . 'wall_can_unlike_post', $can_unlike, $post_id, $user_id );
 	}
 
 	/**

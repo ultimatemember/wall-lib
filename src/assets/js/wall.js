@@ -345,7 +345,7 @@ jQuery( document ).ready(function () {
 		if ( ! jQuery(this).parents('.um-wall-widget').hasClass('unready') ) {
 			wp.ajax.send('um_wall_like_post', {
 				data: {
-					postid: postid,
+					post_id: postid,
 					nonce: nonce
 				},
 				success: function (answer) {
@@ -369,7 +369,7 @@ jQuery( document ).ready(function () {
 
 		wp.ajax.send( 'um_wall_unlike_post', {
 			data: {
-				postid: postid,
+				post_id: postid,
 				nonce: nonce
 			},
 			success: function( answer ) {
