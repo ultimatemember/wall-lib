@@ -29,14 +29,39 @@ class Init {
 	public $plugin_path;
 
 	/**
+	 * Plugin basename
+	 *
+	 * @param string
+	 */
+	public $plugin_basename;
+
+	/**
 	 * Plugin prefix
 	 *
 	 * @param string
 	 */
 	public $prefix;
 
+	/**
+	 * Plugin text domain
+	 *
+	 * @param string
+	 */
+	public $textdomain;
+
+	/**
+	 * Plugin classes
+	 *
+	 * @param array
+	 */
 	public $classes = array();
 
+
+	/**
+	 * namespace
+	 *
+	 * @param string
+	 */
 	public $namespace = __NAMESPACE__;
 
 	/**
@@ -49,11 +74,13 @@ class Init {
 
 		UM()->classes['WallLib\Init'] = $this;
 
-		$this->plugin_url     = $data['plugin_url'];
-		$this->plugin_version = $data['plugin_version'];
-		$this->plugin_path    = $data['plugin_path'];
-		$this->prefix  = $data['prefix'];
-		$this->classes        = $data['classes'];
+		$this->plugin_url      = $data['plugin_url'];
+		$this->plugin_version  = $data['plugin_version'];
+		$this->plugin_path     = $data['plugin_path'];
+		$this->prefix          = $data['prefix'];
+		$this->plugin_basename = $data['plugin_basename'];
+		$this->textdomain      = $data['textdomain'];
+		$this->classes         = $data['classes'];
 
 		$this->includes();
 

@@ -390,7 +390,7 @@ jQuery( document ).ready(function () {
 		let nonce = btn.attr('data-wpnonce');
 
 		if ( parseInt( btn.find('.um-wall-post-likes-count .um-badge').html() ) > 0 ) {
-			wp.ajax.send( 'um_activity_wall_get_post_likes', {
+			wp.ajax.send( 'um_wall_get_post_likes', {
 				data: {
 					post_id: post_id,
 					nonce: nonce

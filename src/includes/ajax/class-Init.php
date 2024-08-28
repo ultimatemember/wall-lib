@@ -29,10 +29,10 @@ class Init {
 	 * @return Posts
 	 */
 	public function posts() {
-		if ( empty( UM()->classes[ $this->wall->classes['ajax']['posts'] ] ) ) {
-			UM()->classes[ $this->wall->classes['ajax']['posts'] ] = new $this->wall->classes['ajax']['posts']( $this->wall );
+		if ( empty( UM()->classes['WallLib\ajax\posts'] ) ) {
+			UM()->classes['WallLib\ajax\posts'] = new Posts( $this->wall );
 		}
-		return UM()->classes[ $this->wall->classes['ajax']['posts'] ];
+		return UM()->classes['WallLib\ajax\posts'];
 	}
 
 	/**

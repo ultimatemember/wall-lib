@@ -14,10 +14,14 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Posts {
 
+	private $wall;
+
 	/**
 	 * Post constructor.
 	 */
 	public function __construct( $wall ) {
+		$this->wall = $wall;
+
 		add_action( 'wp_ajax_um_wall_publish', array( $this, 'wall_publish' ) );
 
 		add_action( 'wp_ajax_um_wall_like_post', array( $this, 'ajax_like_post' ) );
@@ -467,37 +471,41 @@ class Posts {
 	 */
 	public function ajax_get_post_likes() {
 		// phpcs:disable WordPress.Security.NonceVerification
-//		if ( ! wp_verify_nonce( $_POST['nonce'], 'um_wall_show_likes' . $_POST['post_id'] ) ) {
-//			wp_send_json_error( __( 'Wrong nonce.', 'um-activity' ) );
-//		}
-//
-//		$post_id = absint( $_POST['post_id'] );
-//		// phpcs:enable WordPress.Security.NonceVerification
-//
-//		if ( ! UM()->Activity_API()->common()->user()->can_view_likes( $post_id ) ) {
-//			wp_send_json_error( __( 'You are not authorized to see likes.', 'um-activity' ) );
-//		}
-//
-//		$likes = get_post_meta( $post_id, '_liked', true );
-//		if ( empty( $likes ) ) {
-//			$likes = array();
-//		}
-//
-//		$content = UM()->get_template(
-//			'v3/modal/likes.php',
-//			um_activity_plugin,
-//			array(
-//				'likes'   => $likes,
-//				'context' => 'post',
-//			)
-//		);
-//
-//		wp_send_json_success(
-//			array(
-//				'content' => $content,
-//				'context' => 'post',
-//			)
-//		);
+		if ( empty( $_POST['post_id'] ) || ! $this->wall->common()->posts()->exists( absint( $_POST['post_id'] ) ) ) {
+			wp_send_json_error( __( 'Wrong post ID.', $this->wall->textdomain ) );
+		}
+
+		$post_id = absint( $_POST['post_id'] );
+
+		if ( ! wp_verify_nonce( $_POST['nonce'], 'um_wall_show_likes' . $post_id ) ) {
+			wp_send_json_error( __( 'Wrong nonce.', $this->wall->textdomain ) );
+		}
+		// phpcs:enable WordPress.Security.NonceVerification
+
+		if ( ! $this->wall->common()->user()->can_view_likes( $post_id ) ) {
+			wp_send_json_error( __( 'You are not authorized to see likes.', $this->wall->textdomain ) );
+		}
+
+		$likes = get_post_meta( $post_id, '_liked', true );
+		if ( empty( $likes ) ) {
+			$likes = array();
+		}
+
+		$content = UM()->get_template(
+			'v3/modal/likes.php',
+			$this->wall->plugin_basename,
+			array(
+				'likes'   => $likes,
+				'context' => 'post',
+			)
+		);
+
+		wp_send_json_success(
+			array(
+				'content' => UM()->ajax()->esc_html_spaces( $content ),
+				'context' => 'post',
+			)
+		);
 	}
 
 	/**

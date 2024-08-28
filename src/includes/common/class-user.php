@@ -17,13 +17,13 @@ class User {
 	 */
 	public $blocked_users = array();
 
+	private $wall;
+
 	/**
 	 * User constructor.
 	 */
-	public function __construct() {
-	}
-
-	public function hooks() {
+	public function __construct( $wall ) {
+		$this->wall = $wall;
 	}
 
 	/**
@@ -36,10 +36,6 @@ class User {
 	 */
 	public function can_view( $post_id = null, $user_id = null ) {
 		// return `false` if doesn't exist.
-		if ( ! UM()->Activity_API()->common()->post()->exists( $post_id ) ) {
-			return false;
-		}
-
 		if ( ! $user_id && is_user_logged_in() ) {
 			$user_id = get_current_user_id();
 		}
@@ -82,29 +78,20 @@ class User {
 	 */
 	public function can_view_post( $post_id ) {
 		// return `false` if doesn't exist.
-		if ( ! UM()->Activity_API()->common()->post()->exists( $post_id ) ) {
-			return false;
-		}
-
 		$can_view = true;
 
-		$activity_post = get_post( $post_id );
-		if ( empty( $activity_post ) || 'publish' !== $activity_post->post_status ) {
-			$can_view = false;
-		}
-
-		$wall_id       = UM()->Activity_API()->common()->post()->get_wall( $post_id );
-		$can_view_wall = $this->can_view_wall( $wall_id );
-		if ( true !== $can_view_wall ) {
+		$post = get_post( $post_id );
+		if ( empty( $post ) || 'publish' !== $post->post_status ) {
 			$can_view = false;
 		}
 
 		$in_users     = array();
-		$followed_ids = UM()->Activity_API()->common()->followers()->followed_ids();
+		$followed_ids = $this->wall->common()->followers()->followed_ids();
 		if ( $followed_ids ) {
 			$in_users = array_merge( $in_users, $followed_ids );
 		}
-		$friends_ids = UM()->Activity_API()->common()->friends()->friends_ids();
+
+		$friends_ids = $this->wall->common()->friends()->friends_ids();
 		if ( $friends_ids ) {
 			$in_users = array_merge( $in_users, $friends_ids );
 		}
@@ -113,13 +100,13 @@ class User {
 			$in_users[] = get_current_user_id();
 			$in_users   = array_unique( $in_users );
 			$in_users   = array_map( 'absint', $in_users );
-			$author_id  = UM()->Activity_API()->common()->post()->get_author( $post_id );
+			$author_id  = $this->wall->common()->posts()->get_author( $post_id );
 			if ( ! in_array( $author_id, $in_users, true ) ) {
 				$can_view = false;
 			}
 		}
 
-		return apply_filters( 'um_activity_post_can_view', $can_view, $post_id );
+		return apply_filters( $this->wall->prefix . 'wall_post_can_view', $can_view, $post_id );
 	}
 
 	public function can_like( $post_id, $user_id = null ) {
@@ -190,10 +177,6 @@ class User {
 	 */
 	public function can_view_likes( $post_id = null, $user_id = null ) {
 		// return `false` if doesn't exist.
-		if ( ! UM()->Activity_API()->common()->post()->exists( $post_id ) ) {
-			return false;
-		}
-
 		if ( ! $user_id && is_user_logged_in() ) {
 			$user_id = get_current_user_id();
 		}
@@ -211,7 +194,7 @@ class User {
 			return true;
 		}
 
-		return apply_filters( 'um_activity_custom_privacy_view_likes', true, $user_id, $profile_id );
+		return apply_filters( $this->wall->prefix . 'wall_custom_privacy_view_likes', true, $user_id, $profile_id );
 	}
 
 	/**
