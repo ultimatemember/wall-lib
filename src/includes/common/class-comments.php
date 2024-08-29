@@ -26,68 +26,68 @@ class Comments {
 	 *
 	 * @param $comment_id
 	 */
-//	public function delete_comment( $comment_id ) {
-//		global $wpdb;
-//
-//		$comment = get_comment( $comment_id );
-//
-//		// Remove comment replies
-//		if ( 0 === absint( $comment->comment_parent ) ) {
-//			$replies = get_comments(
-//				array(
-//					'post_id' => $comment->comment_post_ID,
-//					'parent'  => $comment_id,
-//					'number'  => 10000,
-//					'offset'  => 0,
-//					'fields'  => 'ids',
-//				)
-//			);
-//
-//			if ( ! empty( $replies ) && ! is_wp_error( $replies ) ) {
-//				foreach ( $replies as $reply_id ) {
-//					$this->delete_comment( $reply_id );
-//				}
-//			}
-//		}
-//
-//		// remove comment
-//		wp_delete_comment( $comment_id, true );
-//
-//		// Remove hashtag(s) from the trending list if it's totally remove from posts / comments.
-//		$content = $comment->comment_content;
-//		$post_id = $comment->comment_post_ID;
-//		preg_match_all( '/(?<!\&)#([^\s\<]+)/', $content, $matches );
-//		if ( isset( $matches[1] ) && is_array( $matches[1] ) ) {
-//			foreach ( $matches[1] as $hashtag ) {
-//				$post_count    = $wpdb->get_var(
-//					$wpdb->prepare(
-//						"SELECT COUNT(*)
-//						FROM {$wpdb->posts}
-//						WHERE ID = %d AND
-//							  post_content LIKE %s",
-//						$post_id,
-//						"%>#{$hashtag}<%"
-//					)
-//				);
-//				$comment_count = $wpdb->get_var(
-//					$wpdb->prepare(
-//						"SELECT COUNT(*)
-//						FROM {$wpdb->comments}
-//						WHERE comment_post_ID = %d AND
-//							  comment_content LIKE %s",
-//						$post_id,
-//						"%>#{$hashtag}<%"
-//					)
-//				);
-//
-//				if ( empty( $post_count ) && empty( $comment_count ) ) {
-//					$term = get_term_by( 'name', $hashtag, 'um_hashtag' );
-//					wp_remove_object_terms( $post_id, $term->term_id, 'um_hashtag' );
-//				}
-//			}
-//		}
-//	}
-//
+	public function delete_comment( $comment_id ) {
+		global $wpdb;
+
+		$comment = get_comment( $comment_id );
+
+		// Remove comment replies
+		if ( 0 === absint( $comment->comment_parent ) ) {
+			$replies = get_comments(
+				array(
+					'post_id' => $comment->comment_post_ID,
+					'parent'  => $comment_id,
+					'number'  => 10000,
+					'offset'  => 0,
+					'fields'  => 'ids',
+				)
+			);
+
+			if ( ! empty( $replies ) && ! is_wp_error( $replies ) ) {
+				foreach ( $replies as $reply_id ) {
+					$this->delete_comment( $reply_id );
+				}
+			}
+		}
+
+		// remove comment
+		wp_delete_comment( $comment_id, true );
+
+		// Remove hashtag(s) from the trending list if it's totally remove from posts / comments.
+		$content = $comment->comment_content;
+		$post_id = $comment->comment_post_ID;
+		preg_match_all( '/(?<!\&)#([^\s\<]+)/', $content, $matches );
+		if ( isset( $matches[1] ) && is_array( $matches[1] ) ) {
+			foreach ( $matches[1] as $hashtag ) {
+				$post_count    = $wpdb->get_var(
+					$wpdb->prepare(
+						"SELECT COUNT(*)
+						FROM {$wpdb->posts}
+						WHERE ID = %d AND
+							  post_content LIKE %s",
+						$post_id,
+						"%>#{$hashtag}<%"
+					)
+				);
+				$comment_count = $wpdb->get_var(
+					$wpdb->prepare(
+						"SELECT COUNT(*)
+						FROM {$wpdb->comments}
+						WHERE comment_post_ID = %d AND
+							  comment_content LIKE %s",
+						$post_id,
+						"%>#{$hashtag}<%"
+					)
+				);
+
+				if ( empty( $post_count ) && empty( $comment_count ) ) {
+					$term = get_term_by( 'name', $hashtag, 'um_hashtag' );
+					wp_remove_object_terms( $post_id, $term->term_id, 'um_hashtag' );
+				}
+			}
+		}
+	}
+
 //	/**
 //	 * Unhide a comment for user
 //	 *

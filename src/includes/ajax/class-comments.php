@@ -563,7 +563,7 @@ class Comments {
 		}
 		$post_id = absint( $_POST['post_id'] );
 
-		if ( empty( $_POST['post_id'] ) || ! $this->wall->common()->comments()->exists( absint( $_POST['comment_id'] ) ) ) {
+		if ( empty( $_POST['comment_id'] ) || ! $this->wall->common()->comments()->exists( absint( $_POST['comment_id'] ) ) ) {
 			wp_send_json_error( __( 'Wrong comment ID.', $this->wall->textdomain ) );
 		}
 		$comment_id = absint( $_POST['comment_id'] );
@@ -628,26 +628,30 @@ class Comments {
 	 * Removes a wall comment via AJAX
 	 */
 	public function remove_comment() {
-		if ( ! wp_verify_nonce( $_POST['nonce'], 'um_wall_delete_comment' ) ) {
-			wp_send_json_error( __( 'Wrong nonce.', 'um-activity' ) );
+		// phpcs:disable WordPress.Security.NonceVerification
+		if ( empty( $_POST['comment_id'] ) || ! $this->wall->common()->comments()->exists( absint( $_POST['comment_id'] ) ) ) {
+			wp_send_json_error( __( 'Wrong comment ID.', $this->wall->textdomain ) );
+		}
+		$comment_id = absint( $_POST['comment_id'] );
+
+		if ( ! wp_verify_nonce( $_POST['nonce'], 'um_wall_delete_comment' . $comment_id ) ) {
+			wp_send_json_error( __( 'Wrong nonce.', $this->wall->textdomain ) );
+		}
+		// phpcs:enable WordPress.Security.NonceVerification
+		if ( ! $this->wall->common()->comments()->exists( $comment_id ) ) {
+			wp_send_json_error( __( 'You are not authorized to delete this comment.', $this->wall->textdomain ) );
 		}
 
-		$comment_id = absint( $_POST['comment_id'] );// phpcs:ignore WordPress.Security.NonceVerification
-
-		if ( ! UM()->Activity_API()->common()->comments()->exists( $comment_id ) ) {
-			wp_send_json_error( __( 'You are not authorized to delete this comment.', 'um-activity' ) );
-		}
-
-		if ( UM()->Activity_API()->common()->user()->can_edit_comment( $comment_id, get_current_user_id() ) ) {
-			UM()->Activity_API()->common()->comments()->delete_comment( $comment_id );
+		if ( $this->wall->common()->user()->can_edit_comment( $comment_id, get_current_user_id() ) ) {
+			$this->wall->common()->comments()->delete_comment( $comment_id );
 			wp_send_json_success();
 		}
 
 		// Post authors can delete spam and malicious comments under their posts.
 		$comment   = get_comment( $comment_id );
-		$author_id = UM()->Activity_API()->common()->post()->get_author( $comment->comment_post_ID );
+		$author_id = $this->wall->common()->post()->get_author( $comment->comment_post_ID );
 		if ( get_current_user_id() === $author_id ) {
-			UM()->Activity_API()->common()->comments()->delete_comment( $comment_id );
+			$this->wall->common()->comments()->delete_comment( $comment_id );
 		}
 
 		wp_send_json_success();
