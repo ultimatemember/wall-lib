@@ -166,45 +166,45 @@ class Comments {
 //		return $link;
 //	}
 //
-//	/**
-//	 * Get comment count
-//	 *
-//	 * @param int $post_id
-//	 *
-//	 * @return int
-//	 */
-//	public function get_comments_number( $post_id ) {
-//		$comments_all = get_comments(
-//			array(
-//				'post_id' => $post_id,
-//				'parent'  => 0,
-//				'number'  => 10000,
-//				'offset'  => 0,
-//			)
-//		);
-//		return count( $comments_all );
-//	}
-//
-//	/**
-//	 * Get replies count
-//	 *
-//	 * @param int $post_id
-//	 * @param int $comment_id
-//	 *
-//	 * @return int
-//	 */
-//	public function get_replies_number( $post_id, $comment_id ) {
-//		$replies_all = get_comments(
-//			array(
-//				'post_id' => $post_id,
-//				'parent'  => $comment_id,
-//				'number'  => 10000,
-//				'offset'  => 0,
-//			)
-//		);
-//		return count( $replies_all );
-//	}
-//
+	/**
+	 * Get comment count
+	 *
+	 * @param int $post_id
+	 *
+	 * @return int
+	 */
+	public function get_comments_number( $post_id ) {
+		$comments_all = get_comments(
+			array(
+				'post_id' => $post_id,
+				'parent'  => 0,
+				'number'  => 10000,
+				'offset'  => 0,
+			)
+		);
+		return count( $comments_all );
+	}
+
+	/**
+	 * Get replies count
+	 *
+	 * @param int $post_id
+	 * @param int $comment_id
+	 *
+	 * @return int
+	 */
+	public function get_replies_number( $post_id, $comment_id ) {
+		$replies_all = get_comments(
+			array(
+				'post_id' => $post_id,
+				'parent'  => $comment_id,
+				'number'  => 10000,
+				'offset'  => 0,
+			)
+		);
+		return count( $replies_all );
+	}
+
 //	/**
 //	 * Hide a comment for user
 //	 *

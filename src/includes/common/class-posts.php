@@ -22,6 +22,18 @@ class Posts {
 	}
 
 	/**
+	 * Gets post permalink
+	 *
+	 * @param int $post_id
+	 *
+	 * @return string
+	 */
+	public function get_permalink( $post_id ) {
+		$url = apply_filters( $this->wall->prefix . 'um_wall_get_core_page', '' );
+		return add_query_arg( 'wall_post', $post_id, $url );
+	}
+
+	/**
 	 *
 	 * @param int|WP_Post $post Post ID or Post WP_Post object.
 	 *

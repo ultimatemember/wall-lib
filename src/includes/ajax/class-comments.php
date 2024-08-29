@@ -495,33 +495,48 @@ class Comments {
 	 * Load wall comments via AJAX
 	 */
 	public function load_more_comments() {
-		if ( ! wp_verify_nonce( $_POST['nonce'], 'um_wall_comments_loadmore' ) ) {
-			wp_send_json_error( __( 'Wrong nonce.', 'um-activity' ) );
+		// phpcs:disable WordPress.Security.NonceVerification
+		if ( empty( $_POST['post_id'] ) || ! $this->wall->common()->posts()->exists( absint( $_POST['post_id'] ) ) ) {
+			wp_send_json_error( __( 'Wrong post ID.', $this->wall->textdomain ) );
 		}
 
-		$number    = UM()->options()->get( 'activity_load_comments_count' );
-		$offset    = absint( $_POST['offset'] ); // phpcs:ignore WordPress.Security.NonceVerification
-		$post_id   = absint( $_POST['post_id'] ); // phpcs:ignore WordPress.Security.NonceVerification
-		$post_link = UM()->Activity_API()->common()->post()->get_permalink( $post_id );
+		$post_id = absint( $_POST['post_id'] );
 
-		$comments     = get_comments(
+		if ( ! wp_verify_nonce( $_POST['nonce'], 'um_wall_comments_loadmore' . $post_id ) ) {
+			wp_send_json_error( __( 'Wrong nonce.', $this->wall->textdomain ) );
+		}
+
+		if ( ! $this->wall->common()->user()->can_view_post( $post_id ) ) {
+			wp_send_json_error( __( 'You are not authorized to load comments.', $this->wall->textdomain ) );
+		}
+
+		$number    = apply_filters( $this->wall->prefix . 'wall_comments_loadmore_number', 10 );
+		$order     = apply_filters( $this->wall->prefix . 'wall_comments_loadmore_order', 'asc' );
+		$offset    = absint( $_POST['offset'] );
+		$post_link = $this->wall->common()->posts()->get_permalink( $post_id );
+		// phpcs:enable WordPress.Security.NonceVerification
+
+		$comments = get_comments(
 			array(
 				'post_id' => $post_id,
 				'parent'  => 0,
-				'number'  => $number,
+				'number'  => absint( $number ),
 				'offset'  => $offset,
-				'order'   => UM()->options()->get( 'activity_order_comment' ),
+				'order'   => $order,
 			)
 		);
-		$comments_all = UM()->Activity_API()->common()->comments()->get_comments_number( $post_id );
 
-		UM()->Activity_API()->shortcode()->args = $t_args = array(
+		$comments_all = $this->wall->common()->comments()->get_comments_number( $post_id );
+
+		$t_args = array(
 			'comments'  => $comments,
 			'post_id'   => $post_id,
 			'post_link' => $post_link,
 		);
 
-		$content = UM()->get_template( 'v3/comment.php', um_wall_plugin, $t_args, false );
+		$template = apply_filters( $this->wall->prefix . 'wall_comment_template', 'comment.php' );
+
+		$content = UM()->get_template( $template, $this->wall->plugin_basename, $t_args, false );
 		if ( $comments_all > ( absint( $offset ) + absint( $number ) ) ) {
 			$loadmore = true;
 		} else {
@@ -542,42 +557,55 @@ class Comments {
 	 * Load wall replies via AJAX
 	 */
 	public function load_more_replies() {
-		if ( ! wp_verify_nonce( $_POST['nonce'], 'um_wall_replies_loadmore' ) ) {
-			wp_send_json_error( __( 'Wrong nonce.', 'um-activity' ) );
+		// phpcs:disable WordPress.Security.NonceVerification
+		if ( empty( $_POST['post_id'] ) || ! $this->wall->common()->posts()->exists( absint( $_POST['post_id'] ) ) ) {
+			wp_send_json_error( __( 'Wrong post ID.', $this->wall->textdomain ) );
+		}
+		$post_id = absint( $_POST['post_id'] );
+
+		if ( empty( $_POST['post_id'] ) || ! $this->wall->common()->comments()->exists( absint( $_POST['comment_id'] ) ) ) {
+			wp_send_json_error( __( 'Wrong comment ID.', $this->wall->textdomain ) );
+		}
+		$comment_id = absint( $_POST['comment_id'] );
+
+		if ( ! wp_verify_nonce( $_POST['nonce'], 'um_wall_replies_loadmore' . $comment_id ) ) {
+			wp_send_json_error( __( 'Wrong nonce.', $this->wall->textdomain ) );
 		}
 
-		$number = UM()->options()->get( 'activity_load_comments_count' );
+		if ( ! $this->wall->common()->user()->can_view_comment( $comment_id ) ) {
+			wp_send_json_error( __( 'You are not authorized to load comments.', $this->wall->textdomain ) );
+		}
 
-		// phpcs:disable WordPress.Security.NonceVerification
-		$offset     = absint( $_POST['offset'] );
-		$post_id    = absint( $_POST['post_id'] );
-		$comment_id = absint( $_POST['comment_id'] );
-		$post_link  = UM()->Activity_API()->common()->post()->get_permalink( $post_id );
+		$number    = apply_filters( $this->wall->prefix . 'wall_comments_loadmore_number', 10 );
+		$order     = apply_filters( $this->wall->prefix . 'wall_comments_loadmore_order', 10 );
+		$offset    = absint( $_POST['offset'] );
+		$post_link = $this->wall->common()->posts()->get_permalink( $post_id );
 		// phpcs:enable WordPress.Security.NonceVerification
 
 		$child = get_comments(
 			array(
 				'post_id' => $post_id,
 				'parent'  => $comment_id,
-				'number'  => $number,
+				'number'  => absint( $number ),
 				'offset'  => $offset,
-				'order'   => UM()->options()->get( 'activity_order_comment' ),
+				'order'   => $order,
 			)
 		);
 
-		$child_all = UM()->Activity_API()->common()->comments()->get_replies_number( $post_id, $comment_id );
+		$child_all = $this->wall->common()->comments()->get_replies_number( $post_id, $comment_id );
 
 		$content = '';
 		foreach ( $child as $commentc ) {
 			um_fetch_user( $commentc->user_id );
 
-			UM()->Activity_API()->shortcode()->args = $t_args = array(
+			$t_args = array(
 				'commentc'  => $commentc,
 				'post_id'   => $post_id,
 				'post_link' => $post_link,
 			);
 
-			$content .= UM()->get_template( 'v3/comment-reply.php', um_wall_plugin, $t_args, false );
+			$template = apply_filters( $this->wall->prefix . 'wall_comment_reply_template', 'comment-reply.php' );
+			$content .= UM()->get_template( $template, $this->wall->plugin_basename, $t_args, false );
 		}
 
 		if ( absint( $child_all ) > ( absint( $offset ) + absint( $number ) ) ) {
