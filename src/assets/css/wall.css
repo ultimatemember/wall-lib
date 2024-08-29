@@ -271,7 +271,7 @@
 .um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-comment-child .um-wall-comment-child-loop .um-wall-commentl:last-child .um-small-data:before {
   display: none;
 }
-.um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-comment-likes .um-wall-comment-likes {
+.um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-comment-likes .um-wall-comment-likes-wrap {
   display: flex;
   flex-direction: row;
   justify-content: flex-start;

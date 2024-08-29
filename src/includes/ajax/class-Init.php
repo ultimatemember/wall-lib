@@ -40,7 +40,7 @@ class Init {
 	 */
 	public function comments() {
 		if ( empty( UM()->classes['WallLib\ajax\comments'] ) ) {
-			UM()->classes['WallLib\ajax\comments'] = new Comments();
+			UM()->classes['WallLib\ajax\comments'] = new Comments( $this->wall );
 		}
 		return UM()->classes['WallLib\ajax\comments'];
 	}

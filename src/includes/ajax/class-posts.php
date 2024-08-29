@@ -496,8 +496,10 @@ class Posts {
 			$likes = array();
 		}
 
+		$template = apply_filters( $this->wall->prefix . 'wall_likes_template', 'modal/likes.php' );
+
 		$content = UM()->get_template(
-			'v3/modal/likes.php',
+			$template,
 			$this->wall->plugin_basename,
 			array(
 				'likes'   => $likes,

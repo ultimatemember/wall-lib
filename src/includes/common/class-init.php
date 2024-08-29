@@ -23,6 +23,7 @@ class Init {
 	public function includes() {
 		$this->user();
 		$this->posts();
+		$this->comments();
 		$this->friends();
 		$this->followers();
 	}
@@ -45,6 +46,16 @@ class Init {
 			UM()->classes['WallLib\common\posts'] = new Posts( $this->wall );
 		}
 		return UM()->classes['WallLib\common\posts'];
+	}
+
+	/**
+	 * @return Comments
+	 */
+	public function comments() {
+		if ( empty( UM()->classes['WallLib\common\comments'] ) ) {
+			UM()->classes['WallLib\common\comments'] = new Comments( $this->wall );
+		}
+		return UM()->classes['WallLib\common\comments'];
 	}
 
 	/**

@@ -437,7 +437,7 @@ jQuery( document ).ready(function () {
 				},
 				success: function (response) {
 					let settings = {
-						classes: 'um-activity-likes-modal',
+						classes: 'um-wall-likes-modal',
 						duration: 400,
 						footer: '',
 						header: wp.i18n.__('Post likes', 'um-activity'),
@@ -464,7 +464,7 @@ jQuery( document ).ready(function () {
 
 			wp.ajax.send( 'um_wall_like_comment', {
 				data: {
-					commentid: commentid,
+					comment_id: commentid,
 					nonce: nonce
 				},
 				success: function( response ) {
@@ -493,7 +493,7 @@ jQuery( document ).ready(function () {
 
 		wp.ajax.send( 'um_wall_unlike_comment', {
 			data: {
-				commentid: commentid,
+				comment_id: commentid,
 				nonce: nonce
 			},
 			success: function( response ) {

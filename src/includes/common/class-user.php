@@ -212,10 +212,6 @@ class User {
 	 */
 	public function can_view_comment_likes( $comment_id = null, $user_id = null ) {
 		// return `false` if doesn't exist.
-		if ( ! UM()->Activity_API()->common()->comments()->exists( $comment_id ) ) {
-			return false;
-		}
-
 		if ( ! $user_id && is_user_logged_in() ) {
 			$user_id = get_current_user_id();
 		}
@@ -237,45 +233,12 @@ class User {
 			return true;
 		}
 
-		return apply_filters( 'um_activity_custom_privacy_view_comment_likes', true, $comment_id, $user_id, $profile_id );
-	}
-
-	/**
-	 * @param int $profile_id
-	 *
-	 * @return bool|string
-	 */
-	public function can_view_wall( $profile_id ) {
-		$can_view = true;
-
-		if ( ! UM()->options()->get( 'activity_enable_privacy' ) ) {
-			return $can_view;
-		}
-
-		$privacy = get_user_meta( $profile_id, 'wall_privacy', true );
-
-		if ( ! is_user_logged_in() ) {
-			if ( UM()->options()->get( 'activity_require_login' ) ) {
-				$can_view = __( 'You must login to view this user activity', 'um-activity' );
-			} elseif ( 1 === absint( $privacy ) ) {
-				$can_view = __( 'Please login to view this user\'s activity', 'um-activity' );
-			} elseif ( 2 === absint( $privacy ) ) {
-				$can_view = __( 'This user wall is private', 'um-activity' );
-			}
-		} else {
-			if ( absint( $profile_id ) !== get_current_user_id() && 2 === absint( $privacy ) ) {
-				$can_view = __( 'This user wall is private', 'um-activity' );
-			}
-		}
-
-		return apply_filters( 'um_wall_can_view', $can_view, $profile_id );
+		return apply_filters( $this->wall->prefix . 'wall_custom_privacy_view_comment_likes', true, $comment_id, $user_id, $profile_id );
 	}
 
 	public function can_like_comment( $comment_id, $user_id = null ) {
 		// return `false` if doesn't exist.
-		if ( ! UM()->Activity_API()->common()->comments()->exists( $comment_id ) ) {
-			return false;
-		}
+		$can_like = true;
 
 		if ( ! $user_id && is_user_logged_in() ) {
 			$user_id = get_current_user_id();
@@ -296,22 +259,20 @@ class User {
 			$can_like = $this->can_view_comment( $comment_id );
 		}
 
-		return apply_filters( 'um_activity_can_like_comment', $can_like, $comment_id, $user_id );
+		return apply_filters( $this->wall->prefix . 'wall_can_like_comment', $can_like, $comment_id, $user_id );
 	}
 
 	public function can_unlike_comment( $comment_id, $user_id = null ) {
 		// return `false` if doesn't exist.
-		if ( ! UM()->Activity_API()->common()->comments()->exists( $comment_id ) ) {
-			return false;
+		$can_unlike = true;
+
+		if ( ! $user_id && is_user_logged_in() ) {
+			$user_id = get_current_user_id();
 		}
 
 		$post_id = get_comment( $comment_id )->comment_post_ID;
 		if ( true !== $this->can_view_post( $post_id ) ) {
 			$can_unlike = false;
-		}
-
-		if ( ! $user_id && is_user_logged_in() ) {
-			$user_id = get_current_user_id();
 		}
 
 		$likes = get_comment_meta( $comment_id, '_liked', true );
@@ -324,7 +285,7 @@ class User {
 			$can_unlike = $this->can_view_comment( $comment_id );
 		}
 
-		return apply_filters( 'um_activity_can_unlike_comment', $can_unlike, $comment_id, $user_id );
+		return apply_filters( $this->wall->prefix . 'wall_can_unlike_comment', $can_unlike, $comment_id, $user_id );
 	}
 
 	/**
@@ -334,10 +295,6 @@ class User {
 	 */
 	public function can_view_comment( $comment_id ) {
 		// return `false` if doesn't exist.
-		if ( ! UM()->Activity_API()->common()->comments()->exists( $comment_id ) ) {
-			return false;
-		}
-
 		$can_view = true;
 
 		$post_id = get_comment( $comment_id )->comment_post_ID;
@@ -345,7 +302,7 @@ class User {
 			$can_view = false;
 		}
 
-		return apply_filters( 'um_activity_comment_can_view', $can_view, $comment_id );
+		return apply_filters( $this->wall->prefix . 'wall_comment_can_view', $can_view, $comment_id );
 	}
 
 	/**

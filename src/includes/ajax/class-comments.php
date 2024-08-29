@@ -11,43 +11,51 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @package WallLib\ajax
  */
 class Comments {
+
+	private $wall;
+
 	/**
 	 * Comments constructor.
 	 */
-	public function __construct() {
-		add_action( 'wp_ajax_um_wall_get_comment_likes', array( $this, 'ajax_get_comment_likes' ) );
-		add_action( 'wp_ajax_nopriv_um_wall_get_comment_likes', array( $this, 'ajax_get_comment_likes' ) );
+	public function __construct( $wall ) {
+		$this->wall = $wall;
 
-		add_action( 'wp_ajax_um_wall_like_comment', array( $this, 'ajax_like_comment' ) );
-		add_action( 'wp_ajax_um_wall_unlike_comment', array( $this, 'ajax_unlike_comment' ) );
+		add_action( 'wp_ajax_um_wall_get_comment_likes', array( $this, 'get_comment_likes' ) );
+		add_action( 'wp_ajax_nopriv_um_wall_get_comment_likes', array( $this, 'get_comment_likes' ) );
 
-		add_action( 'wp_ajax_um_wall_post_comment', array( $this, 'ajax_post_comment' ) );
-		add_action( 'wp_ajax_um_wall_edit_comment', array( $this, 'ajax_edit_comment' ) );
+		add_action( 'wp_ajax_um_wall_like_comment', array( $this, 'like_comment' ) );
+		add_action( 'wp_ajax_um_wall_unlike_comment', array( $this, 'unlike_comment' ) );
 
-		add_action( 'wp_ajax_um_wall_load_more_comments', array( $this, 'ajax_load_more_comments' ) );
-		add_action( 'wp_ajax_nopriv_um_wall_load_more_comments', array( $this, 'ajax_load_more_comments' ) );
+		add_action( 'wp_ajax_um_wall_post_comment', array( $this, 'post_comment' ) );
+		add_action( 'wp_ajax_um_wall_edit_comment', array( $this, 'edit_comment' ) );
 
-		add_action( 'wp_ajax_um_wall_load_more_replies', array( $this, 'ajax_load_more_replies' ) );
-		add_action( 'wp_ajax_nopriv_um_wall_load_more_replies', array( $this, 'ajax_load_more_replies' ) );
+		add_action( 'wp_ajax_um_wall_load_more_comments', array( $this, 'load_more_comments' ) );
+		add_action( 'wp_ajax_nopriv_um_wall_load_more_comments', array( $this, 'load_more_comments' ) );
 
-		add_action( 'wp_ajax_um_wall_remove_comment', array( $this, 'ajax_remove_comment' ) );
+		add_action( 'wp_ajax_um_wall_load_more_replies', array( $this, 'load_more_replies' ) );
+		add_action( 'wp_ajax_nopriv_um_wall_load_more_replies', array( $this, 'load_more_replies' ) );
+
+		add_action( 'wp_ajax_um_wall_remove_comment', array( $this, 'remove_comment' ) );
 	}
 
 	/***
 	 ***    @load comment likes
 	 ***/
-	public function ajax_get_comment_likes() {
+	public function get_comment_likes() {
 		// phpcs:disable WordPress.Security.NonceVerification
-		if ( ! wp_verify_nonce( $_POST['nonce'], 'um_wall_get_comment_likes' ) ) {
-			wp_send_json_error( __( 'Wrong nonce.', 'um-activity' ) );
+		if ( empty( $_POST['comment_id'] ) || ! $this->wall->common()->comments()->exists( absint( $_POST['comment_id'] ) ) ) {
+			wp_send_json_error( __( 'Wrong 1comment ID.', $this->wall->textdomain ) );
 		}
 
-		// phpcs:disable WordPress.Security.NonceVerification
 		$comment_id = absint( $_POST['comment_id'] );
+
+		if ( ! wp_verify_nonce( $_POST['nonce'], 'um_wall_get_comment_likes' . $comment_id ) ) {
+			wp_send_json_error( __( 'Wrong nonce.', $this->wall->textdomain ) );
+		}
 		// phpcs:enable WordPress.Security.NonceVerification
 
-		if ( ! UM()->Activity_API()->common()->user()->can_view_comment_likes( $comment_id ) ) {
-			wp_send_json_error( __( 'You are not authorized to see likes.', 'um-activity' ) );
+		if ( ! $this->wall->common()->user()->can_view_comment_likes( $comment_id ) ) {
+			wp_send_json_error( __( 'You are not authorized to see likes.', $this->wall->textdomain ) );
 		}
 
 		$likes = get_comment_meta( $comment_id, '_liked', true );
@@ -55,9 +63,11 @@ class Comments {
 			$likes = array();
 		}
 
+		$template = apply_filters( $this->wall->prefix . 'wall_likes_template', 'modal/likes.php' );
+
 		$content = UM()->get_template(
-			'v3/modal/likes.php',
-			um_wall_plugin,
+			$template,
+			$this->wall->plugin_basename,
 			array(
 				'likes'   => $likes,
 				'context' => 'comment',
@@ -71,26 +81,30 @@ class Comments {
 	 * Like wall comment.
 	 *
 	 */
-	public function ajax_like_comment() {
+	public function like_comment() {
 		// phpcs:disable WordPress.Security.NonceVerification
-		if ( ! wp_verify_nonce( $_POST['nonce'], 'um_wall_like_comment' ) ) {
-			wp_send_json_error( __( 'Wrong nonce.', 'um-activity' ) );
+		if ( empty( $_POST['comment_id'] ) || ! $this->wall->common()->comments()->exists( absint( $_POST['comment_id'] ) ) ) {
+			wp_send_json_error( __( 'Wrong comment ID.', $this->wall->textdomain ) );
+		}
+
+		$comment_id = absint( $_POST['comment_id'] );
+
+		if ( ! wp_verify_nonce( $_POST['nonce'], 'um_wall_like_comment' . $comment_id ) ) {
+			wp_send_json_error( __( 'Wrong nonce.', $this->wall->textdomain ) );
 		}
 
 		if ( ! is_user_logged_in() ) {
-			wp_send_json_error( __( 'You must login to like', 'um-activity' ) );
+			wp_send_json_error( __( 'You must login to like', $this->wall->textdomain ) );
 		}
-
-		$comment_id = absint( $_POST['commentid'] );
 		// phpcs:enable WordPress.Security.NonceVerification
 
-		if ( ! UM()->Activity_API()->common()->user()->can_like_comment( $comment_id ) ) {
-			wp_send_json_error( __( 'You are not authorized to like this comment.', 'um-activity' ) );
+		if ( ! $this->wall->common()->user()->can_like_comment( $comment_id ) ) {
+			wp_send_json_error( __( 'You are not authorized to like this comment.', $this->wall->textdomain ) );
 		}
 
 		$liked = get_comment_meta( $comment_id, '_liked', true );
 		if ( is_array( $liked ) && in_array( get_current_user_id(), $liked, true ) ) {
-			wp_send_json_error( __( 'You already liked this comment', 'um-activity' ) );
+			wp_send_json_error( __( 'You already liked this comment', $this->wall->textdomain ) );
 		}
 
 		$increase_likes = false;
@@ -134,29 +148,34 @@ class Comments {
 	 * Unlike wall comment.
 	 *
 	 */
-	public function ajax_unlike_comment() {
+	public function unlike_comment() {
 		// phpcs:disable WordPress.Security.NonceVerification
-		if ( ! wp_verify_nonce( $_POST['nonce'], 'um_wall_unlike_comment' ) ) {
-			wp_send_json_error( __( 'Wrong nonce.', 'um-activity' ) );
-		}
-		if ( ! is_user_logged_in() ) {
-			wp_send_json_error( __( 'You must login to unlike', 'um-activity' ) );
+		if ( empty( $_POST['comment_id'] ) || ! $this->wall->common()->comments()->exists( absint( $_POST['comment_id'] ) ) ) {
+			wp_send_json_error( __( 'Wrong comment ID.', $this->wall->textdomain ) );
 		}
 
-		$comment_id = absint( $_POST['commentid'] );
+		$comment_id = absint( $_POST['comment_id'] );
+
+		if ( ! wp_verify_nonce( $_POST['nonce'], 'um_wall_unlike_comment' . $comment_id ) ) {
+			wp_send_json_error( __( 'Wrong nonce.', $this->wall->textdomain ) );
+		}
+
+		if ( ! is_user_logged_in() ) {
+			wp_send_json_error( __( 'You must login to unlike', $this->wall->textdomain ) );
+		}
 		// phpcs:enable WordPress.Security.NonceVerification
 
-		if ( ! UM()->Activity_API()->common()->user()->can_unlike_comment( $comment_id ) ) {
-			wp_send_json_error( __( 'You are not authorized to unlike this comment.', 'um-activity' ) );
+		if ( ! $this->wall->common()->user()->can_unlike_comment( $comment_id ) ) {
+			wp_send_json_error( __( 'You are not authorized to unlike this comment.', $this->wall->textdomain ) );
 		}
 
 		$liked = get_comment_meta( $comment_id, '_liked', true );
 		if ( empty( $liked ) || ! is_array( $liked ) ) {
-			wp_send_json_error( __( 'Invalid comment data', 'um-activity' ) );
+			wp_send_json_error( __( 'Invalid comment data', $this->wall->textdomain ) );
 		}
 
 		if ( ! in_array( get_current_user_id(), $liked, true ) ) {
-			wp_send_json_error( __( 'You didn\'t like this comment', 'um-activity' ) );
+			wp_send_json_error( __( 'You didn\'t like this comment', $this->wall->textdomain ) );
 		}
 
 		$likes = get_comment_meta( $comment_id, '_likes', true );
@@ -190,7 +209,7 @@ class Comments {
 	 * Post comment.
 	 *
 	 */
-	public function ajax_post_comment() {
+	public function post_comment() {
 		// phpcs:disable WordPress.Security.NonceVerification
 		if ( ! wp_verify_nonce( $_POST['nonce'], 'um_wall_comment_post' ) ) {
 			$error = esc_html__( 'Wrong nonce.', 'um-activity' );
@@ -358,7 +377,7 @@ class Comments {
 	 * Edit comment.
 	 *
 	 */
-	public function ajax_edit_comment() {
+	public function edit_comment() {
 		// phpcs:disable WordPress.Security.NonceVerification
 		if ( ! wp_verify_nonce( $_POST['nonce'], 'um_wall_comment_edit' ) ) {
 			$error = esc_html__( 'Wrong nonce.', 'um-activity' );
@@ -475,7 +494,7 @@ class Comments {
 	/**
 	 * Load wall comments via AJAX
 	 */
-	public function ajax_load_more_comments() {
+	public function load_more_comments() {
 		if ( ! wp_verify_nonce( $_POST['nonce'], 'um_wall_comments_loadmore' ) ) {
 			wp_send_json_error( __( 'Wrong nonce.', 'um-activity' ) );
 		}
@@ -522,7 +541,7 @@ class Comments {
 	/**
 	 * Load wall replies via AJAX
 	 */
-	public function ajax_load_more_replies() {
+	public function load_more_replies() {
 		if ( ! wp_verify_nonce( $_POST['nonce'], 'um_wall_replies_loadmore' ) ) {
 			wp_send_json_error( __( 'Wrong nonce.', 'um-activity' ) );
 		}
@@ -580,7 +599,7 @@ class Comments {
 	/**
 	 * Removes a wall comment via AJAX
 	 */
-	public function ajax_remove_comment() {
+	public function remove_comment() {
 		if ( ! wp_verify_nonce( $_POST['nonce'], 'um_wall_delete_comment' ) ) {
 			wp_send_json_error( __( 'Wrong nonce.', 'um-activity' ) );
 		}
