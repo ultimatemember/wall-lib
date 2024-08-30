@@ -388,6 +388,7 @@ jQuery( document ).ready(function () {
 		let btn = jQuery(this);
 		let post_id = btn.attr('data-id');
 		let nonce = btn.attr('data-wpnonce');
+		let header = btn.attr('data-header');
 
 		if ( parseInt( btn.find('.um-wall-post-likes-count .um-badge').html() ) > 0 ) {
 			wp.ajax.send( 'um_wall_get_post_likes', {
@@ -400,7 +401,7 @@ jQuery( document ).ready(function () {
 						classes:  'um-wall-likes-modal',
 						duration: 400,
 						footer:   '',
-						header:   wp.i18n.__( 'Post likes', 'um-activity' ),
+						header:   header,
 						size:     'normal',
 						content:  response.content
 					};
@@ -428,6 +429,7 @@ jQuery( document ).ready(function () {
 		let btn = jQuery(this);
 		let comment_id = btn.attr('data-commentid');
 		let nonce = btn.attr('data-wpnonce');
+		let header = btn.attr('data-header');
 
 		if ( parseInt( btn.find('.um-wall-comment-likes-count .um-badge').html() ) > 0 ) {
 			wp.ajax.send('um_wall_get_comment_likes', {
@@ -440,7 +442,7 @@ jQuery( document ).ready(function () {
 						classes: 'um-wall-likes-modal',
 						duration: 400,
 						footer: '',
-						header: wp.i18n.__('Post likes', 'um-activity'),
+						header: header,
 						size: 'normal',
 						content: response.content
 					};
@@ -536,10 +538,10 @@ jQuery( document ).ready(function () {
 
 		wp.ajax.send( 'um_wall_post_comment', {
 			data: {
-				postid: postid,
+				post_id: postid,
 				comment: comment,
 				reply_to: reply_to,
-				commentid: comment_id,
+				comment_id: comment_id,
 				nonce: nonce
 			},
 			success: function( response ) {
@@ -600,8 +602,8 @@ jQuery( document ).ready(function () {
 
 		wp.ajax.send( 'um_wall_edit_comment', {
 			data: {
-				postid: postid,
-				commentid: commentid,
+				post_id: postid,
+				comment_id: commentid,
 				comment: comment,
 				nonce: nonce
 			},

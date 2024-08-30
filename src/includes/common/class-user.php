@@ -26,51 +26,6 @@ class User {
 		$this->wall = $wall;
 	}
 
-	/**
-	 * Check if user can view post
-	 *
-	 * @param int|null $post_id
-	 * @param int|null $user_id
-	 *
-	 * @return bool
-	 */
-	public function can_view( $post_id = null, $user_id = null ) {
-		// return `false` if doesn't exist.
-		if ( ! $user_id && is_user_logged_in() ) {
-			$user_id = get_current_user_id();
-		}
-
-		$profile_id = get_post_field( 'post_author', $post_id );
-		if ( ! $profile_id ) {
-			return false;
-		}
-
-		if ( absint( $profile_id ) === absint( $user_id ) ) {
-			return true;
-		}
-
-		/**
-		 * Filters the user's ability to see the activity post.
-		 *
-		 * @since 2.1.8
-		 * @hook  um_activity_custom_privacy
-		 *
-		 * @param {bool}   $can_view   Can view capability.
-		 * @param {int}    $user_id    User ID (viewer).
-		 * @param {int}    $profile_id Album author ID.
-		 *
-		 * @return {bool} privacy.
-		 *
-		 * @example <caption>User can view a post.</caption>
-		 * function my_um_activity_custom_privacy( $can_view, $user_id, $profile_id ) {
-		 *     $can_view = true;
-		 *     return $can_view;
-		 * }
-		 * add_filter( 'um_activity_custom_privacy', 'my_um_activity_custom_privacy', 10, 3 );
-		 */
-		return apply_filters( 'um_activity_custom_privacy', true, $user_id, $profile_id );
-	}
-
 	public function can_remove_post( $post_id ) {
 		$can_remove = true;
 
@@ -314,12 +269,17 @@ class User {
 	 * @return bool
 	 */
 	public function can_edit_comment( $comment_id, $user_id ) {
+		$can_edit = false;
 		if ( ! $user_id ) {
 			return false;
 		}
-		$comment = get_comment( $comment_id );
 
-		return absint( $comment->user_id ) === absint( $user_id );
+		$comment = get_comment( $comment_id );
+		if ( absint( $comment->user_id ) === absint( $user_id ) ) {
+			$can_edit = true;
+		}
+
+		return apply_filters( $this->wall->prefix . 'wall_can_edit_comment', $can_edit );
 	}
 
 	/**
@@ -330,7 +290,8 @@ class User {
 	public function can_comment() {
 		$res = true;
 
-		if ( UM()->roles()->um_user_can( 'activity_comments_off' ) ) {
+		$role_comments_off = apply_filters( $this->wall->prefix . 'wall_role_comments_off', false );
+		if ( $role_comments_off ) {
 			$res = false;
 		}
 
@@ -338,7 +299,7 @@ class User {
 			$res = false;
 		}
 
-		return apply_filters( 'um_activity_can_post_comment_on_wall', $res );
+		return apply_filters( $this->wall->prefix . 'wall_can_post_comment', $res );
 	}
 
 	/**

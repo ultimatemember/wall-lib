@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Class Post
  *
- * @package um_ext\um_social_activity\common
+ * @package WallLib\common
  */
 class Comments {
 

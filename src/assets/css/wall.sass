@@ -4,6 +4,70 @@
 @import "../../../../../ultimate-member/assets/css/colors"
 @import "../../../../../ultimate-member/assets/css/typography"
 
+.um
+  .#{$prefix}box
+    &.#{$prefix}wall-new-post,
+    &.#{$prefix}wall-edit-post
+      +flex( column, flex-start, stretch, nowrap )
+      padding: $spacing-xl $spacing-3xl
+      row-gap: $spacing-lg
+      .#{$prefix}box-header
+        +flex( row, flex-start, start, nowrap )
+        padding: 0
+        gap: $spacing-lg
+        .#{$prefix}wall-post-author
+          +typography( text, md, semibold )
+      .#{$prefix}box-content
+        +flex( column, flex-start, stretch, nowrap )
+        padding: 0
+        gap: $spacing-lg
+        textarea
+          resize: none
+          min-height: $spacing-7xl
+          border: 0
+          border-radius: 0
+          box-shadow: none
+          width: 100%
+          margin: 0
+          padding: 0
+          &:focus,
+          &:focus-visible
+            border: 0
+            border-radius: 0
+            box-shadow: none
+            margin: 0
+            padding: 0
+        .#{$prefix}toggle-block-inner
+          +flex( column, flex-start, stretch, nowrap )
+          +border-box
+          .#{$prefix}uploader
+            width: calc( 100% - 1px ) // fix while animation crop the uploader border.
+
+      .#{$prefix}box-footer
+        +flex( row, space-between, stretch, nowrap )
+        padding: $spacing-lg 0 0 0
+        .#{$prefix}wall-left
+          +flex( row, flex-start, center, nowrap )
+        .#{$prefix}wall-right
+          +flex( row, flex-end, center, nowrap )
+          gap: $spacing-md
+          .#{$prefix}wall-posting-result
+            margin: 0
+            padding: 0
+            +typography(text,sm,regular)
+            color: $gray-600
+  .#{$prefix}wall-commentl
+    &.#{$prefix}wall-comment-area
+      display: grid
+      grid-template-rows: auto 1fr
+      grid-template-columns: auto 1fr
+      column-gap: $spacing-lg
+      row-gap: $spacing-sm
+      .#{$prefix}avatar
+        grid-row: 1 / 3
+      .#{$prefix}wall-comment-post
+        justify-self: right
+
 // Single wall post
 .um
   .#{$prefix}wall-widget

@@ -435,11 +435,11 @@ class Posts {
 
 		$liked = get_post_meta( $post_id, '_liked', true );
 		if ( empty( $liked ) || ! is_array( $liked ) ) {
-			wp_send_json_error( __( 'Invalid post data', 'um-activity' ) );
+			wp_send_json_error( __( 'Invalid post data', $this->wall->textdomain ) );
 		}
 
 		if ( ! in_array( get_current_user_id(), $liked, true ) ) {
-			wp_send_json_error( __( 'You didn\'t like this post', 'um-activity' ) );
+			wp_send_json_error( __( 'You didn\'t like this post', $this->wall->textdomain ) );
 		}
 
 		$likes = get_post_meta( $post_id, '_likes', true );

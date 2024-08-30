@@ -211,12 +211,30 @@ class Comments {
 	 */
 	public function post_comment() {
 		// phpcs:disable WordPress.Security.NonceVerification
-		if ( ! wp_verify_nonce( $_POST['nonce'], 'um_wall_comment_post' ) ) {
-			$error = esc_html__( 'Wrong nonce.', 'um-activity' );
+		if ( empty( $_POST['post_id'] ) || ! $this->wall->common()->posts()->exists( absint( $_POST['post_id'] ) ) ) {
+			$error = esc_html__( 'Wrong post ID.', $this->wall->textdomain );
 			wp_send_json_error(
 				wp_kses(
 					UM()->frontend()::layouts()::alert(
-						esc_html__( 'Submission error', 'um-activity' ),
+						esc_html__( 'Submission error', $this->wall->textdomain ),
+						array(
+							'type'       => 'error',
+							'underline'  => false,
+							'supporting' => $error,
+						)
+					),
+					UM()->get_allowed_html( 'templates' )
+				)
+			);
+		}
+		$post_id = absint( $_POST['post_id'] );
+
+		if ( ! wp_verify_nonce( $_POST['nonce'], 'um_wall_comment_post' . $post_id ) ) {
+			$error = esc_html__( 'Wrong nonce.', $this->wall->textdomain );
+			wp_send_json_error(
+				wp_kses(
+					UM()->frontend()::layouts()::alert(
+						esc_html__( 'Submission error', $this->wall->textdomain ),
 						array(
 							'type'       => 'error',
 							'underline'  => false,
@@ -228,13 +246,12 @@ class Comments {
 			);
 		}
 
-		$post_id = absint( $_POST['postid'] );
-		if ( ! UM()->Activity_API()->common()->post()->exists( $post_id ) ) {
-			$error = esc_html__( 'Invalid wall post.', 'um-activity' );
+		if ( ! $this->wall->common()->user()->can_comment() ) {
+			$error = esc_html__( 'You can\'t comment this post.', $this->wall->textdomain );
 			wp_send_json_error(
 				wp_kses(
 					UM()->frontend()::layouts()::alert(
-						esc_html__( 'Submission error', 'um-activity' ),
+						esc_html__( 'Submission error', $this->wall->textdomain ),
 						array(
 							'type'       => 'error',
 							'underline'  => false,
@@ -246,29 +263,12 @@ class Comments {
 			);
 		}
 
-		if ( ! UM()->Activity_API()->common()->user()->can_comment() ) {
-			$error = esc_html__( 'You can\'t comment this post.', 'um-activity' );
+		if ( empty( sanitize_textarea_field( $_POST['comment'] ) ) ) {
+			$error = esc_html__( 'Empty comment.', $this->wall->textdomain );
 			wp_send_json_error(
 				wp_kses(
 					UM()->frontend()::layouts()::alert(
-						esc_html__( 'Submission error', 'um-activity' ),
-						array(
-							'type'       => 'error',
-							'underline'  => false,
-							'supporting' => $error,
-						)
-					),
-					UM()->get_allowed_html( 'templates' )
-				)
-			);
-		}
-
-		if ( empty( sanitize_text_field( $_POST['comment'] ) ) ) {
-			$error = esc_html__( 'Empty comment.', 'um-activity' );
-			wp_send_json_error(
-				wp_kses(
-					UM()->frontend()::layouts()::alert(
-						esc_html__( 'Submission error', 'um-activity' ),
+						esc_html__( 'Submission error', $this->wall->textdomain ),
 						array(
 							'type'       => 'error',
 							'underline'  => false,
@@ -284,19 +284,19 @@ class Comments {
 
 		$time = current_time( 'mysql' );
 
-		$orig_content    = wp_kses(
-			trim( $_POST['comment'] ),
+		$orig_content = wp_kses(
+			trim( sanitize_textarea_field( $_POST['comment'] ) ),
 			array(
 				'br' => array(),
 			)
 		);
-		$comment_content = apply_filters( 'um_wall_comment_content_new', $orig_content, $post_id );
+		$comment_content = apply_filters( $this->wall->prefix . 'wall_comment_content_new', $orig_content, $post_id );
 		// apply hashtag
-		UM()->Activity_API()->common()->post()->hashtagit( $post_id, $comment_content, true );
+		$this->wall->common()->posts()->hashtagit( $post_id, $comment_content, true );
 
-		$comment_content = UM()->Activity_API()->common()->post()->hashtag_links( $comment_content );
-		$comment_content = apply_filters( 'um_wall_insert_post_content_filter', $comment_content, get_current_user_id(), absint( $post_id ), 'new' );
-		$comment_content = UM()->Activity_API()->common()->post()->make_links_clickable( $comment_content );
+		$comment_content = $this->wall->common()->posts()->hashtag_links( $comment_content );
+		$comment_content = apply_filters( $this->wall->prefix . 'wall_insert_post_content_filter', $comment_content, get_current_user_id(), absint( $post_id ), 'new' );
+		$comment_content = $this->wall->common()->posts()->make_links_clickable( $comment_content );
 		$comment_content = stripslashes_deep( $comment_content );
 		$comment_content = convert_smilies( $comment_content );
 
@@ -316,15 +316,31 @@ class Comments {
 			'comment_date'         => $time,
 		);
 
-		if ( isset( $_POST['commentid'] ) && absint( $_POST['commentid'] ) ) {
-			$data['comment_parent'] = absint( $_POST['commentid'] );
+		if ( isset( $_POST['comment_id'] ) && absint( $_POST['comment_id'] ) ) {
+			if ( empty( $_POST['comment_id'] ) || ! $this->wall->common()->comments()->exists( absint( $_POST['comment_id'] ) ) ) {
+				$error = esc_html__( 'Wrong comment ID.', $this->wall->textdomain );
+				wp_send_json_error(
+					wp_kses(
+						UM()->frontend()::layouts()::alert(
+							esc_html__( 'Submission error', $this->wall->textdomain ),
+							array(
+								'type'       => 'error',
+								'underline'  => false,
+								'supporting' => $error,
+							)
+						),
+						UM()->get_allowed_html( 'templates' )
+					)
+				);
+			}
+			$data['comment_parent'] = absint( $_POST['comment_id'] );
 		}
 
 		$commentid = wp_insert_comment( $data );
 
 		if ( isset( $_POST['reply_to'] ) && absint( $_POST['reply_to'] ) ) {
 			$comment_parent = $data['comment_parent'];
-			do_action( 'um_wall_after_wall_comment_reply_published', $commentid, $comment_parent, $post_id, get_current_user_id() );
+			do_action( $this->wall->prefix . 'wall_after_wall_comment_reply_published', $commentid, $comment_parent, $post_id, get_current_user_id() );
 		} else {
 			$comment_parent = 0;
 		}
@@ -332,8 +348,8 @@ class Comments {
 		$comment_count = get_post_meta( $post_id, '_comments', true );
 		update_post_meta( $post_id, '_comments', $comment_count + 1 );
 
-		do_action( 'um_wall_after_wall_comment_published', $commentid, $comment_parent, $post_id, get_current_user_id() );
-		$post_link = UM()->Activity_API()->common()->post()->get_permalink( $post_id );
+		do_action( $this->wall->prefix . 'wall_after_wall_comment_published', $commentid, $comment_parent, $post_id, get_current_user_id() );
+		$post_link = $this->wall->common()->posts()->get_permalink( $post_id );
 		$comment   = get_comment( $commentid );
 		$comments  = array( $comment );
 
@@ -343,23 +359,25 @@ class Comments {
 				'post_id'   => $post_id,
 				'post_link' => $post_link,
 			);
-			$output = UM()->get_template( 'v3/comment-reply.php', um_wall_plugin, $t_args, false );
+			$template = apply_filters( $this->wall->prefix . 'wall_comment_reply_template', 'comment-reply.php' );
+			$output = UM()->get_template( $template, $this->wall->plugin_basename, $t_args, false );
 		} else {
 			$t_args = array(
 				'comments'  => $comments,
 				'post_id'   => $post_id,
 				'post_link' => $post_link,
 			);
-			$output = UM()->get_template( 'v3/comment.php', um_wall_plugin, $t_args, false );
+			$template = apply_filters( $this->wall->prefix . 'wall_comment_template', 'comment.php' );
+			$output = UM()->get_template( $template, $this->wall->plugin_basename, $t_args, false );
 		}
 
 		$status = wp_kses(
 			UM()->frontend()::layouts()::alert(
-				esc_html__( 'Submission error', 'um-activity' ),
+				esc_html__( 'Submission error', $this->wall->textdomain ),
 				array(
 					'type'       => 'success',
 					'underline'  => false,
-					'supporting' => esc_html__( 'Comment posted successfully.', 'um-activity' ),
+					'supporting' => esc_html__( 'Comment posted successfully.', $this->wall->textdomain ),
 				)
 			),
 			UM()->get_allowed_html( 'templates' )
@@ -367,7 +385,7 @@ class Comments {
 		// phpcs:enable WordPress.Security.NonceVerification
 		wp_send_json_success(
 			array(
-				'content' => $output,
+				'content' => UM()->ajax()->esc_html_spaces( $output ),
 				'status'  => $status,
 			)
 		);
@@ -379,12 +397,48 @@ class Comments {
 	 */
 	public function edit_comment() {
 		// phpcs:disable WordPress.Security.NonceVerification
-		if ( ! wp_verify_nonce( $_POST['nonce'], 'um_wall_comment_edit' ) ) {
-			$error = esc_html__( 'Wrong nonce.', 'um-activity' );
+		if ( empty( $_POST['post_id'] ) || ! $this->wall->common()->posts()->exists( absint( $_POST['post_id'] ) ) ) {
+			$error = esc_html__( 'Wrong post ID.', $this->wall->textdomain );
 			wp_send_json_error(
 				wp_kses(
 					UM()->frontend()::layouts()::alert(
-						esc_html__( 'Submission error', 'um-activity' ),
+						esc_html__( 'Submission error', $this->wall->textdomain ),
+						array(
+							'type'       => 'error',
+							'underline'  => false,
+							'supporting' => $error,
+						)
+					),
+					UM()->get_allowed_html( 'templates' )
+				)
+			);
+		}
+		$post_id = absint( $_POST['post_id'] );
+
+		if ( empty( $_POST['comment_id'] ) || ! $this->wall->common()->comments()->exists( absint( $_POST['comment_id'] ) ) ) {
+			$error = esc_html__( 'Wrong comment ID.', $this->wall->textdomain );
+			wp_send_json_error(
+				wp_kses(
+					UM()->frontend()::layouts()::alert(
+						esc_html__( 'Submission error', $this->wall->textdomain ),
+						array(
+							'type'       => 'error',
+							'underline'  => false,
+							'supporting' => $error,
+						)
+					),
+					UM()->get_allowed_html( 'templates' )
+				)
+			);
+		}
+		$commentid = absint( $_POST['comment_id'] );
+
+		if ( ! wp_verify_nonce( $_POST['nonce'], 'um_wall_comment_edit' . $commentid ) ) {
+			$error = esc_html__( 'Wrong nonce.', $this->wall->textdomain );
+			wp_send_json_error(
+				wp_kses(
+					UM()->frontend()::layouts()::alert(
+						esc_html__( 'Submission error', $this->wall->textdomain ),
 						array(
 							'type'       => 'error',
 							'underline'  => false,
@@ -396,29 +450,12 @@ class Comments {
 			);
 		}
 
-		if ( ! isset( $_POST['postid'] ) || ! is_numeric( $_POST['postid'] ) ) {
-			$error = esc_html__( 'Invalid wall post.', 'um-activity' );
+		if ( ! $this->wall->common()->user()->can_edit_comment() ) {
+			$error = esc_html__( 'You can\'t edit this comment.', $this->wall->textdomain );
 			wp_send_json_error(
 				wp_kses(
 					UM()->frontend()::layouts()::alert(
-						esc_html__( 'Submission error', 'um-activity' ),
-						array(
-							'type'       => 'error',
-							'underline'  => false,
-							'supporting' => $error,
-						)
-					),
-					UM()->get_allowed_html( 'templates' )
-				)
-			);
-		}
-
-		if ( ! UM()->Activity_API()->common()->user()->can_comment() ) {
-			$error = esc_html__( 'You can\'t comment this post.', 'um-activity' );
-			wp_send_json_error(
-				wp_kses(
-					UM()->frontend()::layouts()::alert(
-						esc_html__( 'Submission error', 'um-activity' ),
+						esc_html__( 'Submission error', $this->wall->textdomain ),
 						array(
 							'type'       => 'error',
 							'underline'  => false,
@@ -432,29 +469,24 @@ class Comments {
 
 		um_fetch_user( get_current_user_id() );
 
-		if ( isset( $_POST['postid'] ) ) {
-			$post_id = absint( $_POST['postid'] );
-		}
-		$orig_content    = wp_kses(
-			trim( $_POST['comment'] ),
+		$orig_content = wp_kses(
+			trim( sanitize_textarea_field( $_POST['comment'] ) ),
 			array(
 				'br' => array(),
 			)
 		);
-		$comment_content = apply_filters( 'um_wall_comment_content_new', $orig_content, $post_id );
+		$comment_content = apply_filters( $this->wall->prefix . 'wall_comment_content_new', $orig_content, $post_id );
 
 		// apply hashtag
-		UM()->Activity_API()->common()->post()->hashtagit( $post_id, $comment_content, true );
+		$this->wall->common()->posts()->hashtagit( $post_id, $comment_content, true );
 
-		$comment_content = UM()->Activity_API()->common()->post()->hashtag_links( $comment_content );
-		$comment_content = apply_filters( 'um_wall_insert_post_content_filter', $comment_content, get_current_user_id(), absint( $post_id ), 'new' );
-		$comment_content = UM()->Activity_API()->common()->post()->make_links_clickable( $comment_content );
+		$comment_content = $this->wall->common()->posts()->hashtag_links( $comment_content );
+		$comment_content = apply_filters( $this->wall->prefix . 'wall_insert_post_content_filter', $comment_content, get_current_user_id(), absint( $post_id ), 'new' );
+		$comment_content = $this->wall->common()->posts()->make_links_clickable( $comment_content );
 		$comment_content = stripslashes_deep( $comment_content );
 		$comment_content = convert_smilies( $comment_content );
 
 		um_fetch_user( get_current_user_id() );
-
-		$commentid = absint( $_POST['commentid'] );
 
 		$data = array(
 			'comment_content' => $comment_content,
@@ -464,11 +496,11 @@ class Comments {
 		$updated = wp_update_comment( $data );
 
 		if ( ! $updated ) {
-			$error = esc_html__( 'Something goes wrong.', 'um-activity' );
+			$error = esc_html__( 'Something goes wrong.', $this->wall->textdomain );
 			wp_send_json_error(
 				wp_kses(
 					UM()->frontend()::layouts()::alert(
-						esc_html__( 'Submission error', 'um-activity' ),
+						esc_html__( 'Submission error', $this->wall->textdomain ),
 						array(
 							'type'       => 'error',
 							'underline'  => false,
@@ -481,12 +513,12 @@ class Comments {
 		}
 		$comment_parent = 0;
 
-		do_action( 'um_wall_after_wall_comment_edited', $commentid, $comment_parent, $post_id, get_current_user_id() );
+		do_action( $this->wall->prefix . 'wall_after_wall_comment_edited', $commentid, $comment_parent, $post_id, get_current_user_id() );
 
 		// phpcs:enable WordPress.Security.NonceVerification
 		wp_send_json_success(
 			array(
-				'content' => $comment_content,
+				'content' => UM()->ajax()->esc_html_spaces( $comment_content ),
 			)
 		);
 	}
