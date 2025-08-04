@@ -84,7 +84,6 @@ class Init {
 
 		$this->includes();
 
-
 		add_shortcode( 'ultimatemember_post_type', array( $this, 'ultimatemember_post_type' ) );
 	}
 
@@ -95,43 +94,45 @@ class Init {
 	 *
 	 * @param $class
 	 */
-	function wall__autoloader( $class ) {
+	public function wall__autoloader( $class ) {
 		if ( strpos( $class, 'WallLib' ) !== false ) {
-
-			$array = explode( '\\', strtolower( $class ) );
-			$array[ count( $array ) - 1 ] = 'class-'. end( $array );
+			$array                        = explode( '\\', strtolower( $class ) );
+			$array[ count( $array ) - 1 ] = 'class-' . end( $array );
 
 			// todo: check slashes in strpos '\\WallLib\\frontend\\'
 			if ( strpos( $class, 'WallLib\\frontend\\' ) !== false ) {
 				$class = implode( '\\', $array );
 				$slash = DIRECTORY_SEPARATOR;
-				$path = str_replace(
+				$path  = str_replace(
 					array( strtolower( __NAMESPACE__ ), '_', '\\' ),
 					array( '', '-', $slash ),
-					$class );
+					$class
+				);
 
-				$full_path =  __DIR__ . $slash . 'includes' . $path . '.php';
+				$full_path = __DIR__ . $slash . 'includes' . $path . '.php';
 			} elseif ( strpos( $class, 'WallLib\\ajax\\' ) !== false ) {
 				$class = implode( '\\', $array );
 				$slash = DIRECTORY_SEPARATOR;
-				$path = str_replace(
+				$path  = str_replace(
 					array( strtolower( __NAMESPACE__ ), '_', '\\' ),
 					array( '', '-', $slash ),
-					$class );
+					$class
+				);
 
-				$full_path =  __DIR__ . $slash . 'includes' . $path . '.php';
+				$full_path = __DIR__ . $slash . 'includes' . $path . '.php';
 			} elseif ( strpos( $class, 'WallLib\\common\\' ) !== false ) {
 				$class = implode( '\\', $array );
 				$slash = DIRECTORY_SEPARATOR;
-				$path = str_replace(
+				$path  = str_replace(
 					array( strtolower( __NAMESPACE__ ), '_', '\\' ),
 					array( '', '-', $slash ),
-					$class );
+					$class
+				);
 
-				$full_path =  __DIR__ . $slash . 'includes' . $path . '.php';
+				$full_path = __DIR__ . $slash . 'includes' . $path . '.php';
 			}
 
-			if( isset( $full_path ) && file_exists( $full_path ) ) {
+			if ( isset( $full_path ) && file_exists( $full_path ) ) {
 				include_once $full_path;
 			}
 		}
@@ -151,7 +152,7 @@ class Init {
 	 * @return frontend\Init
 	 */
 	public function frontend() {
-		if (empty(UM()->classes['WallLib\frontend\Init'])) {
+		if ( empty( UM()->classes['WallLib\frontend\Init'] ) ) {
 			UM()->classes['WallLib\frontend\Init'] = new frontend\Init( $this );
 		}
 		return UM()->classes['WallLib\frontend\Init'];
@@ -162,7 +163,7 @@ class Init {
 	 * @return ajax\Init
 	 */
 	public function ajax() {
-		if (empty(UM()->classes['WallLib\ajax\Init'])) {
+		if ( empty( UM()->classes['WallLib\ajax\Init'] ) ) {
 			UM()->classes['WallLib\ajax\Init'] = new ajax\Init( $this );
 		}
 		return UM()->classes['WallLib\ajax\Init'];
@@ -173,7 +174,7 @@ class Init {
 	 * @return common\Init
 	 */
 	public function common() {
-		if (empty(UM()->classes['WallLib\common\Init'])) {
+		if ( empty( UM()->classes['WallLib\common\Init'] ) ) {
 			UM()->classes['WallLib\common\Init'] = new common\Init( $this );
 		}
 		return UM()->classes['WallLib\common\Init'];
