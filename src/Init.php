@@ -145,7 +145,7 @@ class Init {
 		} elseif ( UM()->is_request( 'frontend' ) ) {
 			$this->frontend()->includes();
 		}
-		$this->common()->integrations();
+		$this->integrations()->includes();
 	}
 
 	/**
