@@ -1,5 +1,5 @@
 <?php
-namespace WallLib\common;
+namespace WallLib\integrations;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -52,7 +52,7 @@ class Friends {
 
 		$array[] = get_current_user_id();
 
-		$friends = UM()->Friends_API()->api()->friends( get_current_user_id() );
+		$friends = UM()->Friends_API()->common()->friends()->friends( get_current_user_id() );
 		if ( $friends ) {
 			foreach ( $friends as $arr ) {
 				if ( absint( $arr['user_id1'] ) === get_current_user_id() ) {

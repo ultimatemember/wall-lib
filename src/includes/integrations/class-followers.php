@@ -1,5 +1,5 @@
 <?php
-namespace WallLib\common;
+namespace WallLib\integrations;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -41,7 +41,7 @@ class Followers {
 
 		$array[] = get_current_user_id();
 
-		$following = UM()->Followers_API()->api()->following( get_current_user_id() );
+		$following = UM()->Followers_API()->common()->followers()->following( get_current_user_id() );
 		if ( $following ) {
 			$array = array_merge( $array, $following );
 		}

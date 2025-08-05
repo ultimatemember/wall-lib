@@ -24,8 +24,6 @@ class Init {
 		$this->user();
 		$this->posts();
 		$this->comments();
-		$this->friends();
-		$this->followers();
 	}
 
 	/**
@@ -56,25 +54,5 @@ class Init {
 			UM()->classes['WallLib\common\comments'] = new Comments( $this->wall );
 		}
 		return UM()->classes['WallLib\common\comments'];
-	}
-
-	/**
-	 * @return Friends
-	 */
-	public function friends() {
-		if ( empty( UM()->classes['WallLib\common\friends'] ) ) {
-			UM()->classes['WallLib\common\friends'] = new Friends( $this->wall );
-		}
-		return UM()->classes['WallLib\common\friends'];
-	}
-
-	/**
-	 * @return Followers
-	 */
-	public function followers() {
-		if ( empty( UM()->classes['WallLib\common\followers'] ) ) {
-			UM()->classes['WallLib\common\followers'] = new Followers( $this->wall );
-		}
-		return UM()->classes['WallLib\common\followers'];
 	}
 }
