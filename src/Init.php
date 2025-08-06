@@ -130,6 +130,16 @@ class Init {
 				);
 
 				$full_path = __DIR__ . $slash . 'includes' . $path . '.php';
+			} elseif ( strpos( $class, 'WallLib\\integrations\\' ) !== false ) {
+				$class = implode( '\\', $array );
+				$slash = DIRECTORY_SEPARATOR;
+				$path  = str_replace(
+					array( strtolower( __NAMESPACE__ ), '_', '\\' ),
+					array( '', '-', $slash ),
+					$class
+				);
+
+				$full_path = __DIR__ . $slash . 'includes' . $path . '.php';
 			}
 
 			if ( isset( $full_path ) && file_exists( $full_path ) ) {
