@@ -1,5 +1,6 @@
 <?php
-namespace WallLib\ajax;
+//namespace WallLib\ajax;
+namespace Dev\UM_Activity\WallLib\ajax;
 
 use WP_Filesystem_Base;
 
@@ -22,6 +23,9 @@ class Posts {
 	public function __construct( $wall ) {
 		$this->wall = $wall;
 
+		add_action( 'wp_ajax_um_wall_load_posts', array( $this, 'ajax_load_wall' ) );
+		add_action( 'wp_ajax_nopriv_um_wall_load_posts', array( $this, 'ajax_load_wall' ) );
+
 		add_action( 'wp_ajax_um_wall_publish', array( $this, 'wall_publish' ) );
 
 		add_action( 'wp_ajax_um_wall_like_post', array( $this, 'like_post' ) );
@@ -34,16 +38,74 @@ class Posts {
 	}
 
 	/**
+	 * Load wall posts
+	 */
+	public function ajax_load_wall() {
+		check_ajax_referer( 'um_activity_wall', 'nonce' );
+
+		$user_id = empty( $_POST['user_id'] ) ? 0 : absint( $_POST['user_id'] );
+
+		$can_view = $this->wall->common()->user()->can_view_wall( $user_id );
+
+		if ( true !== $can_view ) {
+			wp_send_json_error( array( 'message' => __( 'You can\'t view wall', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
+		}
+
+		// phpcs:disable WordPress.Security.NonceVerification
+		$hashtag_id = '';
+		if ( ! empty( $_POST['hashtag'] ) ) {
+			$hashtag    = str_replace( '#', '', sanitize_text_field( $_POST['hashtag'] ) );
+			$term       = get_term_by( 'name', $hashtag, 'um_hashtag' );
+			$hashtag_id = isset( $term->term_id ) ? $term->term_id : '';
+		}
+
+		$data = array(
+			'hashtag_id' => $hashtag_id,
+			'user_wall'  => false,
+			'offset'     => empty( $_POST['offset'] ) ? 0 : absint( $_POST['offset'] ),
+		);
+
+		if ( ! empty( $_POST['user_wall'] ) ) {
+			$data['user_wall'] = true;
+			$data['user_id']   = empty( $_POST['user_id'] ) ? 0 : absint( $_POST['user_id'] );
+		}
+		// phpcs:enable WordPress.Security.NonceVerification
+
+		$args = array(
+			'fields'      => 'ids',
+			'post_type'   => $this->wall->post_type,
+			'post_status' => 'publish',
+			'meta_query'  => array(),
+		);
+
+		$args = apply_filters( $this->wall->prefix . 'wall_posts_args', $args, $data );
+
+		$query = new \WP_Query( $args );
+
+		$t_args = array(
+			'wall_posts' => $query->get_posts(),
+		);
+
+		$t_args = apply_filters( $this->wall->prefix . 'wall_template_args', $t_args, $args, $query );
+
+//		add_filter( 'safe_style_css', array( &$this, 'add_extra_safe_style_css' ) );
+		$output = UM()->get_template( 'v3/posts-loop.php', $this->wall->plugin_basename, $t_args );
+//		remove_filter( 'safe_style_css', array( &$this, 'add_extra_safe_style_css' ) );
+
+		wp_send_json_success( $output );
+	}
+
+	/**
 	 * Add a new wall post via AJAX
 	 */
 	public function wall_publish() {
 		if ( empty( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'um-wall-post-publish' ) ) {
-			wp_send_json_error( __( 'Wrong nonce.', 'um-activity' ) );
+			wp_send_json_error( __( 'Wrong nonce.', $this->wall->textdomain ) );
 		}
 
 		// When '_post_id' === 0 then insert, else edit.
 		if ( ! isset( $_POST['_post_id'] ) ) {
-			wp_send_json_error( __( 'Please specify the post ID. It\'s required.', 'um-activity' ) );
+			wp_send_json_error( __( 'Please specify the post ID. It\'s required.', $this->wall->textdomain ) );
 		}
 		$post_id = absint( $_POST['_post_id'] );
 
@@ -58,7 +120,7 @@ class Posts {
 				if ( ! array_key_exists( 'path', $post_photo ) ) {
 					continue;
 				}
-				if ( ! UM()->ajax()->files()->is_file_author( $post_photo['path'] ) ) {
+				if ( ! UM()->common()->filesystem()->is_file_author( $post_photo['path'] ) ) {
 					continue;
 				}
 				$_post_images[] = $post_photo;
@@ -66,7 +128,7 @@ class Posts {
 		}
 
 		if ( empty( $_post_content ) && empty( $_post_images ) ) {
-			wp_send_json_error( __( 'You should type something first.', 'um-activity' ) );
+			wp_send_json_error( __( 'You should type something first.', $this->wall->textdomain ) );
 		}
 
 		$wall_id = 0;
@@ -82,7 +144,8 @@ class Posts {
 			if ( ! $wall_exists ) {
 				// When there is only posting form on the page then we don't need return post data. Just a result success or not and post URL.
 				// translators: %s - activity post URL
-				$output = wp_kses_post( sprintf( __( 'Post is submitted successfully. To view post <a href="%s" class="um-link">click here</a>.', 'um-activity' ), $this->get_permalink( $post_id ) ) );
+				$permalink = apply_filters( $this->wall->prefix . 'wall_publish_permalink', '', $post_id );
+				$output    = wp_kses_post( sprintf( __( 'Post is submitted successfully. To view post <a href="%s" class="um-link">click here</a>.', 'um-activity' ), $permalink ) );
 			} else {
 				$output = $this->prepare_response( $post_id );
 			}
@@ -114,7 +177,7 @@ class Posts {
 			wp_send_json_success( $output );
 		}
 
-		wp_send_json_error( __( 'Something went wrong.', 'um-activity' ) );
+		wp_send_json_error( __( 'Something went wrong.', $this->wall->textdomain ) );
 	}
 
 	private function prepare_response( $post_id ) {
@@ -347,26 +410,25 @@ class Posts {
 	public function like_post() {
 		// phpcs:disable WordPress.Security.NonceVerification
 		if ( empty( $_POST['post_id'] ) || ! $this->wall->common()->posts()->exists( absint( $_POST['post_id'] ) ) ) {
-			wp_send_json_error( __( 'Wrong post ID.', $this->wall->textdomain ) );
+			wp_send_json_error( array( 'message' => __( 'Wrong post ID.', $this->wall->textdomain ) ) );
 		}
 
 		$post_id = absint( $_POST['post_id'] );
 
-		if ( ! wp_verify_nonce( $_POST['nonce'], 'um_wall_like_post' . $post_id ) ) {
-			wp_send_json_error( __( 'Wrong nonce.', $this->wall->textdomain ) );
-		}
+		check_ajax_referer( 'um_wall_like_post' . $post_id, 'nonce' );
 
 		if ( ! is_user_logged_in() ) {
-			wp_send_json_error( __( 'You must login to like', $this->wall->textdomain ) );
+			wp_send_json_error( array( 'message' => __( 'You must login to like', $this->wall->textdomain ) ) );
 		}
+
 		// phpcs:enable WordPress.Security.NonceVerification
 		if ( ! $this->wall->common()->user()->can_like( $post_id ) ) {
-			wp_send_json_error( __( 'You are not authorized to like this post.', $this->wall->textdomain ) );
+			wp_send_json_error( array( 'message' => __( 'You are not authorized to like this post.', $this->wall->textdomain ) ) );
 		}
 
 		$liked = get_post_meta( $post_id, '_liked', true );
 		if ( is_array( $liked ) && in_array( get_current_user_id(), $liked, true ) ) {
-			wp_send_json_error( __( 'You already liked this post', $this->wall->textdomain ) );
+			wp_send_json_error( array( 'message' => __( 'You already liked this post', $this->wall->textdomain ) ) );
 		}
 
 		$increase_likes = false;
@@ -415,31 +477,29 @@ class Posts {
 	public function unlike_post() {
 		// phpcs:disable WordPress.Security.NonceVerification
 		if ( empty( $_POST['post_id'] ) || ! $this->wall->common()->posts()->exists( absint( $_POST['post_id'] ) ) ) {
-			wp_send_json_error( __( 'Wrong post ID.', $this->wall->textdomain ) );
+			wp_send_json_error( array( 'message' => __( 'Wrong post ID.', $this->wall->textdomain ) ) );
 		}
 
 		$post_id = absint( $_POST['post_id'] );
 
-		if ( ! wp_verify_nonce( $_POST['nonce'], 'um_wall_unlike_post' . $post_id ) ) {
-			wp_send_json_error( __( 'Wrong nonce.', $this->wall->textdomain ) );
-		}
+		check_ajax_referer( 'um_wall_unlike_post' . $post_id, 'nonce' );
 
 		if ( ! is_user_logged_in() ) {
-			wp_send_json_error( __( 'You must login to unlike', $this->wall->textdomain ) );
+			wp_send_json_error( array( 'message' => __( 'You must login to unlike', $this->wall->textdomain ) ) );
 		}
 		// phpcs:enable WordPress.Security.NonceVerification
 
 		if ( ! $this->wall->common()->user()->can_unlike( $post_id ) ) {
-			wp_send_json_error( __( 'You are not authorized to unlike this post.', $this->wall->textdomain ) );
+			wp_send_json_error( array( 'message' => __( 'You are not authorized to unlike this post.', $this->wall->textdomain ) ) );
 		}
 
 		$liked = get_post_meta( $post_id, '_liked', true );
 		if ( empty( $liked ) || ! is_array( $liked ) ) {
-			wp_send_json_error( __( 'Invalid post data', $this->wall->textdomain ) );
+			wp_send_json_error( array( 'message' => __( 'Invalid post data', $this->wall->textdomain ) ) );
 		}
 
 		if ( ! in_array( get_current_user_id(), $liked, true ) ) {
-			wp_send_json_error( __( 'You didn\'t like this post', $this->wall->textdomain ) );
+			wp_send_json_error( array( 'message' => __( 'You didn\'t like this post', $this->wall->textdomain ) ) );
 		}
 
 		$likes = get_post_meta( $post_id, '_likes', true );
@@ -448,7 +508,7 @@ class Posts {
 		$liked = array_diff( $liked, array( get_current_user_id() ) );
 		update_post_meta( $post_id, '_liked', $liked );
 
-		$likes --;
+		--$likes;
 		$likes = 0 < $likes ? $likes : 0;
 		update_post_meta( $post_id, '_likes', $likes );
 
@@ -477,18 +537,16 @@ class Posts {
 	public function get_post_likes() {
 		// phpcs:disable WordPress.Security.NonceVerification
 		if ( empty( $_POST['post_id'] ) || ! $this->wall->common()->posts()->exists( absint( $_POST['post_id'] ) ) ) {
-			wp_send_json_error( __( 'Wrong post ID.', $this->wall->textdomain ) );
+			wp_send_json_error( array( 'message' => __( 'Wrong post ID.', $this->wall->textdomain ) ) );
 		}
 
 		$post_id = absint( $_POST['post_id'] );
 
-		if ( ! wp_verify_nonce( $_POST['nonce'], 'um_wall_show_likes' . $post_id ) ) {
-			wp_send_json_error( __( 'Wrong nonce.', $this->wall->textdomain ) );
-		}
 		// phpcs:enable WordPress.Security.NonceVerification
+		check_ajax_referer( 'um_wall_show_likes' . $post_id, 'nonce' );
 
 		if ( ! $this->wall->common()->user()->can_view_likes( $post_id ) ) {
-			wp_send_json_error( __( 'You are not authorized to see likes.', $this->wall->textdomain ) );
+			wp_send_json_error( array( 'message' => __( 'You are not authorized to see likes.', $this->wall->textdomain ) ) );
 		}
 
 		$likes = get_post_meta( $post_id, '_liked', true );

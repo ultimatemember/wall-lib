@@ -1,5 +1,6 @@
 <?php
-namespace WallLib;
+//namespace WallLib;
+namespace Dev\UM_Activity\WallLib;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -80,6 +81,7 @@ class Init {
 		$this->prefix          = $data['prefix'];
 		$this->plugin_basename = $data['plugin_basename'];
 		$this->textdomain      = $data['textdomain'];
+		$this->post_type       = $data['post_type'];
 		$this->classes         = $data['classes'];
 
 		$this->includes();

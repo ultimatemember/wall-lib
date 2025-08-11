@@ -1,8 +1,11 @@
 <?php
-namespace WallLib\integrations;
+//namespace WallLib\integrations;
+namespace Dev\UM_Activity\WallLib\integrations;
 
-use WallLib\integrations\Followers;
-use WallLib\integrations\Friends;
+//use WallLib\integrations\Followers;
+//use WallLib\integrations\Friends;
+use Dev\UM_Activity\WallLib\integrations\Followers;
+use Dev\UM_Activity\WallLib\integrations\Friends;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;

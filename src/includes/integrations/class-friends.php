@@ -1,5 +1,6 @@
 <?php
-namespace WallLib\integrations;
+//namespace WallLib\integrations;
+namespace Dev\UM_Activity\WallLib\integrations;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;

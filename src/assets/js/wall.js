@@ -35,9 +35,16 @@ function um_check_comment_length( textarea ) {
 	}
 }
 
+let Loadwall_ajax = false;
+
 jQuery( document ).ready(function () {
 	autosize( jQuery('.um-wall-post-form-wrapper .um-wall-textarea-elem') );
 	autosize( jQuery('.um-wall-widget .um-wall-comment-textarea') );
+
+	// AJAX wall request
+	if ( jQuery('.um-wall:not([data-single_post="1"])').not('[data-loading="sync"]').length ) {
+		um_wall_ajax_request();
+	}
 
 	/* Detect change in textarea content */
 	jQuery( document.body ).on( 'input onpropertychange', '.um-wall-textarea-elem', function() {
@@ -354,6 +361,14 @@ jQuery( document ).ready(function () {
 					wrap.find('.um-wall-post-likes-avatars').html(answer.content);
 				},
 				error: function (data) {
+					let error;
+					if ( data.message ) {
+						error = data.message;
+					}
+					jQuery(this).um_notice({
+						message: error,
+						type: 'error'
+					});
 					console.log(data);
 				}
 			});
@@ -379,6 +394,14 @@ jQuery( document ).ready(function () {
 			},
 			error: function( data ) {
 				console.log( data );
+				let error;
+				if ( data.message ) {
+					error = data.message;
+				}
+				jQuery(this).um_notice({
+					message: error,
+					type: 'error'
+				});
 			}
 		});
 	});
@@ -410,6 +433,14 @@ jQuery( document ).ready(function () {
 				},
 				error: function( data ) {
 					console.log( data );
+					let error;
+					if ( data.message ) {
+						error = data.message;
+					}
+					jQuery(this).um_notice({
+						message: error,
+						type: 'error'
+					});
 				}
 			});
 		}
@@ -755,3 +786,69 @@ jQuery( document ).ready(function () {
 		);
 	});
 });
+
+// AJAX wall request on scroll
+jQuery( window ).on( 'scroll', function() {
+	var wall = jQuery('.um-wall:not([data-single_post="1"])');
+	if ( wall.length > 0 && jQuery(window).scrollTop() + jQuery(window).height() >= wall.offset().top + wall.height() ) {
+		um_wall_ajax_request();
+	}
+});
+
+function um_wall_ajax_request() {
+	let wall = jQuery('.um-wall');
+	if ( wall.length > 0 && Loadwall_ajax === false ) {
+
+		let $activity_end = wall.find( '.um-activity-end' );
+		if ( $activity_end.length ) {
+			return;
+		}
+
+		Loadwall_ajax = true;
+
+		let offset = wall.attr('data-offset');
+		let nonce = wall.attr('data-nonce');
+		let loader = wall.parents('.um-activity').find('.um-wall-posts-loader');
+		loader.umShow();
+
+		wp.ajax.send( 'um_wall_load_posts', {
+			data: {
+				offset: offset,
+				user_id:  wall.data('user_id'),
+				user_wall: wall.data( 'user_wall' ),
+				hashtag: wall.data('hashtag'),
+				nonce: nonce
+			},
+			success: function( data ) {
+				loader.umHide();
+				let loadedPosts = jQuery(data).filter('.um-activity-widget');
+
+				if ( loadedPosts.length === 0 ) {
+					Loadwall_ajax = true;
+				} else {
+					// End of wall.
+					if ( jQuery(data).filter('.um-activity-end').length ) {
+						wall.append( data );
+						loader.remove();
+						Loadwall_ajax = false;
+					} else {
+						wall.attr('data-offset', parseInt( offset ) + loadedPosts.length);
+						wall.append( data );
+						if ( wall.attr( 'data-wall_post' ) > 0 ) {
+							Loadwall_ajax = true;
+						} else {
+							Loadwall_ajax = false;
+						}
+					}
+				}
+
+				jQuery( document ).trigger('activity_loaded');
+
+				wp.hooks.doAction( 'um_activity_wall_loaded', wall );
+			},
+			error: function (e) {
+				console.log('UM Social Activity Error', e);
+			}
+		});
+	}
+}

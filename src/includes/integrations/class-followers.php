@@ -1,5 +1,6 @@
 <?php
-namespace WallLib\integrations;
+//namespace WallLib\integrations;
+namespace Dev\UM_Activity\WallLib\integrations;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -20,9 +21,7 @@ class Followers {
 	public function __construct( $wall ) {
 		$this->wall = $wall;
 	}
-	public function sss() {
-		return 2;
-	}
+
 	/**
 	 * Grab followed user IDs
 	 *

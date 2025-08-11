@@ -1,5 +1,6 @@
 <?php
-namespace WallLib\common;
+//namespace WallLib\common;
+namespace Dev\UM_Activity\WallLib\common;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -37,6 +38,12 @@ class User {
 		return apply_filters( $this->wall->prefix . 'wall_post_can_remove', $can_remove, $post_id );
 	}
 
+	public function can_view_wall( $profile_id ) {
+		$can_view = true;
+
+		return apply_filters( $this->wall->prefix . 'wall_can_view', $can_view, $profile_id );
+	}
+
 	/**
 	 * @param int $post_id
 	 *
@@ -52,12 +59,12 @@ class User {
 		}
 
 		$in_users     = array();
-		$followed_ids = $this->wall->common()->followers()->followed_ids();
+		$followed_ids = $this->wall->integrations()->followers()->followed_ids();
 		if ( $followed_ids ) {
 			$in_users = array_merge( $in_users, $followed_ids );
 		}
 
-		$friends_ids = $this->wall->common()->friends()->friends_ids();
+		$friends_ids = $this->wall->integrations()->friends()->friends_ids();
 		if ( $friends_ids ) {
 			$in_users = array_merge( $in_users, $friends_ids );
 		}

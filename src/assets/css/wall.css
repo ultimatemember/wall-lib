@@ -1,3 +1,17 @@
+.um.um-activity {
+  row-gap: 12px;
+}
+.um.um-activity .um-wall {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: start;
+  flex-wrap: nowrap;
+  row-gap: 12px;
+}
+.um.um-activity .um-wall .um-wall-posts-loader {
+  margin: 0 auto;
+}
 .um .um-box.um-wall-new-post, .um .um-box.um-wall-edit-post {
   display: flex;
   flex-direction: column;
@@ -106,6 +120,7 @@
 }
 
 .um .um-wall-widget {
+  width: 100%;
   row-gap: 16px;
 }
 .um .um-wall-widget .um-wall-head {
