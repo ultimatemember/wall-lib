@@ -40,7 +40,6 @@ let Loadwall_ajax = false;
 jQuery( document ).ready(function () {
 	autosize( jQuery('.um-wall-post-form-wrapper .um-wall-textarea-elem') );
 	autosize( jQuery('.um-wall-widget .um-wall-comment-textarea') );
-
 	// AJAX wall request
 	if ( jQuery('.um-wall:not([data-single_post="1"])').not('[data-loading="sync"]').length ) {
 		um_wall_ajax_request();
@@ -799,7 +798,7 @@ function um_wall_ajax_request() {
 	let wall = jQuery('.um-wall');
 	if ( wall.length > 0 && Loadwall_ajax === false ) {
 
-		let $activity_end = wall.find( '.um-activity-end' );
+		let $activity_end = wall.find( '.um-wall-end' );
 		if ( $activity_end.length ) {
 			return;
 		}
@@ -809,25 +808,30 @@ function um_wall_ajax_request() {
 		let offset = wall.attr('data-offset');
 		let nonce = wall.attr('data-nonce');
 		let loader = wall.parents('.um-activity').find('.um-wall-posts-loader');
+		let action = wall.attr('data-action') + '_wall_load_posts';
 		loader.umShow();
-
+		console.log(action)
 		wp.ajax.send( 'um_wall_load_posts', {
 			data: {
 				offset: offset,
 				user_id:  wall.data('user_id'),
 				user_wall: wall.data( 'user_wall' ),
 				hashtag: wall.data('hashtag'),
+				core_page: wall.data('core_page'),
+				post_id: wall.data('post_id'),
+				show_pending: wall.data('show_pending'),
 				nonce: nonce
 			},
 			success: function( data ) {
+				console.log(data)
 				loader.umHide();
-				let loadedPosts = jQuery(data).filter('.um-activity-widget');
+				let loadedPosts = jQuery(data).filter('.um-wall-widget');
 
 				if ( loadedPosts.length === 0 ) {
 					Loadwall_ajax = true;
 				} else {
 					// End of wall.
-					if ( jQuery(data).filter('.um-activity-end').length ) {
+					if ( jQuery(data).filter('.um-wall-end').length ) {
 						wall.append( data );
 						loader.remove();
 						Loadwall_ajax = false;
@@ -847,7 +851,7 @@ function um_wall_ajax_request() {
 				wp.hooks.doAction( 'um_activity_wall_loaded', wall );
 			},
 			error: function (e) {
-				console.log('UM Social Activity Error', e);
+				console.log('UM  Error', e);
 			}
 		});
 	}

@@ -69,6 +69,15 @@ class Posts {
 			$data['user_wall'] = true;
 			$data['user_id']   = empty( $_POST['user_id'] ) ? 0 : absint( $_POST['user_id'] );
 		}
+		if ( isset( $_POST['post_id'] ) && ! empty( $_POST['post_id'] ) && is_numeric( $_POST['post_id'] ) ) {
+			$data['post_id'] = absint( $_POST['post_id'] );
+		}
+		if ( isset( $_POST['core_page'] ) && ! empty( $_POST['core_page'] ) ) {
+			$data['core_page'] = sanitize_key( $_POST['core_page'] );
+		}
+		if ( isset( $_POST['show_pending'] ) && ! empty( $_POST['show_pending'] ) ) {
+			$data['show_pending'] = sanitize_key( $_POST['show_pending'] );
+		}
 		// phpcs:enable WordPress.Security.NonceVerification
 
 		$args = array(

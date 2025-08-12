@@ -10,13 +10,11 @@
 @import "../../../../../../../ultimate-member/assets/css/typography"
 
 .um
-  &.#{$prefix}activity
+  .#{$prefix}wall
+    +flex( column, flex-start, start, nowrap )
     row-gap: $spacing-lg
-    .#{$prefix}wall
-      +flex( column, flex-start, start, nowrap )
-      row-gap: $spacing-lg
-      .#{$prefix}wall-posts-loader
-        margin: 0 auto
+    .#{$prefix}wall-posts-loader
+      margin: 0 auto
   .#{$prefix}box
     &.#{$prefix}wall-new-post,
     &.#{$prefix}wall-edit-post
