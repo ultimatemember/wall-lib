@@ -246,6 +246,9 @@
   flex-wrap: nowrap;
   column-gap: 8px;
 }
+.um .um-wall-widget .um-wall-body .um-photo-modal img {
+  max-width: 100%;
+}
 .um .um-wall-widget .um-wall-comments {
   padding-top: 16px;
   border-top: 1px solid var(--um-gray-200, #eaecf0);

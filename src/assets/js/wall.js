@@ -91,9 +91,9 @@ jQuery( document ).ready(function () {
 		let $wall;
 		let wallID = parseInt( formdata['_wall_id'] )
 		formdata.wall_exists = 1;
-		if ( 0 === parseInt( formdata['_post_id'] ) ) {
+		if ( 1 === parseInt( formdata['_only_form'] ) ) {
 			// Add new post
-			$wall = jQuery('.um-wall-wall[data-user_wall="' + wallID + '"]');
+			$wall = jQuery('.um-wall[data-user_wall="' + wallID + '"]');
 
 			if ( ! $wall.length ) {
 				/* for shortcode [ultimatemember_activity_form] */
@@ -127,82 +127,45 @@ jQuery( document ).ready(function () {
 					return;
 				}
 
-				////// NEW END
-
-				var widget_template;
-				var template_data;
-
 				if ( form.find('input[name="_post_id"]').val() === '0' ) {
-					var wall = form.parents('.um').find('.um-wall-wall');
+					let wall = form.parents('.um').find('.um-wall');
 
 					/* for shortcode [ultimatemember_activity_form] */
 					if ( wall.length < 1 ) {
-						wall = jQuery( document.body ).find('.um-wall-wall');
+						wall = jQuery( document.body ).find('.um-wall');
 					}
 
-					if ( wall.length ) {
-						widget_template = wp.template( 'um-activity-widget' );
-						template_data = {
-							'content'       : data.content,
-							'img_src'       : ( 'undefined' !== typeof data.photo_orig_base ) ? data.photo_orig_base : '',
-							'img_src_url'   : ( 'undefined' !== typeof data.photo_orig_url ) ? data.photo_orig_url : '',
-							'modal'         : ( 'undefined' !== typeof data.photo ) ? data.photo : '',
-							/*'img_src'       : form.find('input[name="_post_img"]').val(),
-							'img_src_url'   : form.find('input[name="_post_img_url"]').val(),*/
-							'wall_id'       : form.find('input[name="_wall_id"]').val() || 0,
-							'user_id'       : data.user_id,
-							'post_id'       : data.postid,
-							'post_url'      : data.permalink,
-							'photo'         : ( form.find('input[name="_post_img"]').val().trim().length > 0 ),
-							'video'         : data.video || data.has_text_video,
-							'video_content' : data.video,
-							'oembed'        : data.has_oembed,
-							'link'          : data.link
-						};
+					// if ( wall.length ) {
+					// 	if ( jQuery('.um-wall-bigtext').length ) {
+					// 		var content = data.content;
+					// 		var hashtag = jQuery('.um-wall-bigtext').text();
+					// 		if ( content.indexOf( '>' + hashtag + '<' ) >= 0 ) {
+					// 			wall.prepend( widget_template( template_data ) );
+					// 		}
+					// 	} else {
+					// 		wall.prepend( widget_template( template_data ) );
+					// 	}
+					//
+					//
+					// 	wall.find( '.unready' ).removeClass( 'unready um-activity-clone' ).fadeIn();
+					// }
 
-						if ( jQuery('.um-wall-bigtext').length ) {
-							var content = data.content;
-							var hashtag = jQuery('.um-wall-bigtext').text();
-							if ( content.indexOf( '>' + hashtag + '<' ) >= 0 ) {
-								wall.prepend( widget_template( template_data ) );
-							}
-						} else {
-							wall.prepend( widget_template( template_data ) );
-						}
-
-
-						wall.find( '.unready' ).removeClass( 'unready um-activity-clone' ).fadeIn();
-					}
+					wall.prepend(data);
 
 					form.find('textarea').val('').height('auto');
 					um_clean_photo_fields( form );
 					um_post_placeholder( form.find( 'textarea' ) );
 
-					UM_wall_autocomplete_start();
+					// UM_wall_autocomplete_start();
 				} else {
 					form.parents('.um-wall-widget').removeClass( 'editing' );
 
-					widget_template = wp.template( 'um-activity-post' );
-					template_data = {
-						'content'       : data.content,
-						'img_src'       : data.photo_orig_base,
-						'img_src_url'   : data.photo_orig_url,
-						'modal'         : data.photo,
-						/*'img_src'       : form.find('input[name="_post_img"]').val(),
-						'img_src_url'   : form.find('input[name="_post_img_url"]').val(),*/
-						'wall_id'       : form.find('input[name="_wall_id"]').val() || 0,
-						'user_id'       : data.user_id,
-						'post_id'       : data.postid,
-						'post_url'      : data.permalink,
-						'photo'         : ( form.find('input[name="_post_img"]').val().trim().length > 0 ),
-						'video'         : data.video || data.has_text_video,
-						'video_content' : data.video,
-						'oembed'        : data.has_oembed,
-						'link'          : data.link
-					};
-
-					form.parents('.um-wall-body').html( widget_template( template_data ) );
+					form.parents('.um-wall-body').html( data );
 				}
+
+
+				form.find('.um-uploader-filelist').html('').umHide();
+				form.find('.um-wall-insert .um-badge').remove();
 
 				autosize( jQuery('.um-wall-widget .um-wall-comment-textarea') );
 
@@ -211,13 +174,18 @@ jQuery( document ).ready(function () {
 				form.find('.um-wall-toggle-uploader').prop('disabled',false);
 			},
 			error: function(data) {
-				////// NEW
 				form.find('.um-wall-right .um-ajax-spinner-svg').hide();
 				form.find('.um-wall-toggle-uploader').prop('disabled',false);
-				// form.find('.um-wall-posting-result').html( data ).removeClass( 'um-display-none' ).addClass( 'um-error-text' );
+				let error;
+				if ( data.message ) {
+					error = data.message;
+				} else {
+					error = form.attr('data-error');
+				}
+				form.find('.um-wall-posting-result').umShow();
 				UM.common.form.messageTimeout(
 					form.find('.um-wall-posting-result'),
-					data,
+					error,
 					3000,
 					( wrapper ) => {
 						wrapper.addClass( 'um-error-text' );
@@ -823,7 +791,6 @@ function um_wall_ajax_request() {
 				nonce: nonce
 			},
 			success: function( data ) {
-				console.log(data)
 				loader.umHide();
 				let loadedPosts = jQuery(data).filter('.um-wall-widget');
 
@@ -855,4 +822,64 @@ function um_wall_ajax_request() {
 			}
 		});
 	}
+}
+
+function um_clean_photo_fields( form ) {
+	form.find('.um-wall-preview').hide();
+	form.find('.um-wall-preview img').attr('src', '');
+	form.find( 'input[type="hidden"][name="_post_img"]' ).val('');
+	form.find( 'input[type="hidden"][name="_post_img_url"]' ).val('');
+}
+
+function um_post_placeholder( obj ) {
+	obj.attr( 'placeholder', obj.attr( 'data-ph' ) );
+}
+
+function UM_wall_autocomplete_start() {
+	var textareas = jQuery( 'textarea.um-wall-textarea-elem,textarea.um-wall-comment-textarea' );
+
+	if ( textareas.length === 0 ) {
+		return;
+	}
+
+	textareas.each( function() {
+		var el = jQuery(this);
+
+		if (typeof jQuery.ui === 'undefined') {
+			return false;
+		}
+
+		var el_autocomplete = el.autocomplete({
+			minLength: 1,
+			source: function( request, response ) {
+
+				if ( um_extractLast( request.term ).charAt(0) === '@' ) {
+
+					jQuery.getJSON( wp.ajax.settings.url + '?action=um_activity_get_user_suggestions&term=' + um_extractLast( request.term )  + '&nonce=' + um_scripts.nonce, function( data ) {
+						response( data );
+					});
+
+				}
+
+			},
+			select: function( event, ui ) {
+				ui.item.name = ui.item.name.replace( '<strong>', '' );
+				ui.item.name = ui.item.name.replace( '</strong>', '' );
+
+				var terms = um_extract_string( this.value );
+				terms.pop();
+				terms.push( '@' + ui.item.username );
+				terms.push( "" );
+				this.value = jQuery.trim( terms.join(" ") );
+				return false;
+			}
+		});
+
+		if ( typeof el_autocomplete.data("ui-autocomplete") !== 'undefined' ) {
+			el_autocomplete.data("ui-autocomplete")._renderItem = function( ul, item ) {
+				return jQuery("<li />").data("item.autocomplete", item).append(item.photo + item.name + '<span>@' + item.username + '</span>').appendTo(ul);
+			}
+		}
+
+	});
 }

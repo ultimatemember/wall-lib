@@ -25,6 +25,7 @@ class Init {
 		$this->user();
 		$this->posts();
 		$this->comments();
+		$this->uploader();
 	}
 
 	/**
@@ -55,5 +56,15 @@ class Init {
 			UM()->classes['WallLib\common\comments'] = new Comments( $this->wall );
 		}
 		return UM()->classes['WallLib\common\comments'];
+	}
+
+	/**
+	 * @return Uploader
+	 */
+	public function uploader() {
+		if ( empty( UM()->classes['WallLib\common\uploader'] ) ) {
+			UM()->classes['WallLib\common\uploader'] = new Uploader( $this->wall );
+		}
+		return UM()->classes['WallLib\common\uploader'];
 	}
 }
