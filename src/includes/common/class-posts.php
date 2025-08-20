@@ -22,6 +22,25 @@ class Posts {
 		$this->wall = $wall;
 	}
 
+	public function add_extra_kses_allowed_tags( $allowed_html, $context ) {
+		if ( 'templates' === $context ) {
+			$allowed_html['iframe'] = array(
+				'allow'          => true,
+				'frameborder'    => true,
+				'loading'        => true,
+				'name'           => true,
+				'referrerpolicy' => true,
+				'sandbox'        => true,
+				'src'            => true,
+				'srcdoc'         => true,
+				'title'          => true,
+			);
+
+			$allowed_html['strong']['onclick'] = true;
+		}
+		return $allowed_html;
+	}
+
 	/**
 	 * Gets post permalink
 	 *
@@ -74,6 +93,202 @@ class Posts {
 			$author = $post->post_author;
 		}
 		return ! empty( $author ) ? absint( $author ) : 0;
+	}
+
+	/**
+	 * Gets activity in nice time format.
+	 *
+	 * @param int $post_id
+	 *
+	 * @return string
+	 */
+	public function get_post_time( $post_id ) {
+		$unix_published_date = get_post_datetime( $post_id, 'date', 'gmt' );
+		$time                = UM()->datetime()->time_diff( $unix_published_date->getTimestamp() );
+
+		return apply_filters( $this->wall->prefix . 'human_post_time', $time, $post_id );
+	}
+
+	/**
+	 * @Checks if post is reported
+	 **/
+	public function reported( $post_id, $reporter_id = null ) {
+		$reported = get_post_meta( $post_id, '_reported', true );
+		if ( $reporter_id ) {
+			$reported_by = get_post_meta( $post_id, '_reported_by', true );
+			if ( isset( $reported_by[ $reporter_id ] ) ) {
+				return 1;
+			}
+
+			return 0;
+		}
+
+		return ( $reported ) ? 1 : 0;
+	}
+
+	/**
+	 * Get a possible video
+	 *
+	 * @param int $post_id
+	 * @param array $args
+	 *
+	 * @return false|string
+	 */
+	public function get_video( $post_id = 0, $args = array() ) {
+		$uri = get_post_meta( $post_id, '_video_url', true );
+		if ( ! $uri ) {
+			return '';
+		}
+
+		$content = wp_oembed_get( $uri, $args );
+		$content = apply_filters( $this->wall->prefix . 'get_video', $content, $post_id, $args );
+
+		return $content;
+	}
+
+	/**
+	 * Get a possible photo
+	 *
+	 * @param int $post_id
+	 * @param string $class
+	 * @param null|int $author_id
+	 *
+	 * @return string
+	 */
+	public function get_photo( $post_id = 0, $class = '', $author_id = null ) {
+		$attachments = get_children(
+			array(
+				'post_parent'    => $post_id,
+				'post_type'      => 'attachment',
+				'post_mime_type' => 'image',
+				'numberposts'    => -1,
+			)
+		);
+
+		if ( ! empty( $attachments ) ) {
+			$content = '';
+			foreach ( $attachments as $attachment ) {
+				$url       = wp_get_attachment_url( $attachment->ID );
+				$photo_url = $this->get_download_link( $post_id, $author_id, $url, $attachment->ID );
+
+				if ( empty( $photo_url ) ) {
+					return '';
+				}
+				$photo_url = esc_attr( $photo_url );
+
+				if ( 'backend' === $class ) {
+					$uri = get_post_meta( $post_id, '_photo', true );
+					if ( ! $uri ) {
+						return '';
+					}
+					$uri           = wp_basename( $uri );
+					$user_base_dir = UM()->common()->filesystem()->get_user_uploads_dir( $author_id );
+
+					if ( file_exists( $user_base_dir . DIRECTORY_SEPARATOR . $uri ) ) {
+						$content .= "<a href=\"{$photo_url}\" target=\"_blank\"><img src=\"{$photo_url}\" alt=\"\" style=\"width: 100%;\" /></a>";
+					}
+				} else {
+					$content .= "<a href=\"#\" class=\"um-photo-modal\" data-src=\"{$photo_url}\"><img src=\"{$photo_url}\" alt=\"\" /></a>";
+				}
+			}
+		} else {
+			$content = $this->get_photo_v2( $post_id, $class, $author_id );
+		}
+
+		return apply_filters( $this->wall->prefix . 'get_photo_content', $content, $post_id, $class, $author_id );
+	}
+
+	public function get_photo_v2( $post_id = 0, $class = '', $author_id = null ) {
+		$photo_url = $this->get_download_link( $post_id, $author_id );
+		if ( empty( $photo_url ) ) {
+			return '';
+		}
+		$photo_url = esc_attr( $photo_url );
+
+		$content = '';
+		if ( 'backend' === $class ) {
+			$uri = get_post_meta( $post_id, '_photo', true );
+			if ( ! $uri ) {
+				return '';
+			}
+			$uri           = wp_basename( $uri );
+			$user_base_dir = UM()->common()->filesystem()->get_user_uploads_dir( $author_id );
+
+			if ( file_exists( $user_base_dir . DIRECTORY_SEPARATOR . $uri ) ) {
+				$content = "<a href=\"{$photo_url}\" target=\"_blank\"><img src=\"{$photo_url}\" alt=\"\" style=\"width: 100%;\" /></a>";
+			}
+		} else {
+			$content = "<a href=\"#\" class=\"um-photo-modal\" data-src=\"{$photo_url}\"><img src=\"{$photo_url}\" alt=\"\" /></a>";
+		}
+
+		return $content;
+	}
+
+	/**
+	 * @param int $post_id
+	 * @param int $author_id
+	 *
+	 * @return string
+	 */
+	public function get_download_link( $post_id, $author_id, $iamge_url = '', $attachment_id = 0 ) {
+		if ( empty( $iamge_url ) ) {
+			$uri = get_post_meta( $post_id, '_photo', true );
+		} else {
+			$uri = $iamge_url;
+		}
+
+		if ( ! $uri ) {
+			return '';
+		}
+
+		$uri      = wp_basename( $uri );
+		$userdir  = UM()->common()->filesystem()->get_user_uploads_dir( $author_id );
+		$filename = wp_normalize_path( "$userdir/$uri" );
+
+		if ( ! file_exists( $filename ) ) {
+			return '';
+		}
+
+		$filetype = wp_check_filetype( $filename );
+		$filetime = filemtime( $filename );
+
+		$nonce = wp_create_nonce( $author_id . $post_id . 'um-download-nonce' );
+
+		if ( UM()->is_permalinks ) {
+			if ( '' !== $iamge_url ) {
+				$url = home_url( "/um-wall-download/{$post_id}/{$author_id}/{$nonce}/{$attachment_id}.{$filetype['ext']}" );
+			} else {
+				$url = home_url( "/um-wall-download/{$post_id}/{$author_id}/{$nonce}/{$filetime}.{$filetype['ext']}" );
+			}
+		} else {
+			if ( '' !== $iamge_url ) {
+				$url = add_query_arg(
+					array(
+						'um_action'        => 'um-wall-download',
+						'um_post'          => $post_id,
+						'um_author'        => $author_id,
+						'um_verify'        => $nonce,
+						'um_attachment_id' => $attachment_id,
+					),
+					home_url()
+				);
+			} else {
+				$url = add_query_arg(
+					array(
+						'um_action'   => 'um-wall-download',
+						'um_post'     => $post_id,
+						'um_author'   => $author_id,
+						'um_verify'   => $nonce,
+						'um_filename' => $filetime . '.' . $filetype['ext'],
+					),
+					home_url()
+				);
+			}
+		}
+
+		$url = apply_filters( $this->wall->prefix . 'get_download_link', $url, $post_id, $author_id );
+
+		return $url;
 	}
 
 	/**
@@ -323,24 +538,6 @@ class Posts {
 		if ( ! empty( $arr_urls ) ) {
 			foreach ( $arr_urls as $key => $url ) {
 				if ( ! strstr( $url, 'vimeo' ) && ! strstr( $url, 'youtube' ) && ! strstr( $url, 'youtu.be' ) ) {
-
-					/**
-					 * Filter change content link.
-					 *
-					 * @since 2.3.6
-					 *
-					 * @hook um_activity_content_link
-					 *
-					 * @param {string}  $url      content link.
-					 * @param {string } $content  content.
-					 *
-					 * @example <caption>Change content link.</caption>
-					 * function my_um_activity_content_link( $url, $content ) {
-					 *     // your code here
-					 *    return $url;
-					 * }
-					 * add_filter( 'um_activity_content_link', 'my_um_activity_content_link', 10, 2 );
-					 */
 					$url = apply_filters( $this->wall->prefix . 'content_link', $url, $content );
 					return $url;
 				}
@@ -499,7 +696,7 @@ class Posts {
 		if ( isset( $tags['title'] ) ) {
 			$content = str_replace( '{post_title}', '<span class="post-title">' . mb_convert_encoding( $tags['title'], 'HTML-ENTITIES', 'UTF-8' ) . '</span>', $content );
 		} else {
-			$content = str_replace( '{post_title}', '<span class="post-title">' . esc_html__( 'Untitled', 'um-activity' ) . '</span>', $content );
+			$content = str_replace( '{post_title}', '<span class="post-title">' . esc_html__( 'Untitled', $this->wall->textdomain ) . '</span>', $content ); // phpcs:ignore WordPress.WP.I18n
 		}
 
 		if ( isset( $tags['image'] ) ) {

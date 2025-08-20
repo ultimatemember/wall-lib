@@ -812,6 +812,7 @@ function um_wall_ajax_request() {
 						}
 					}
 				}
+				UM.frontend.dropdown.init();
 
 				jQuery( document ).trigger('activity_loaded');
 

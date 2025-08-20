@@ -168,9 +168,13 @@
             .#{$prefix}wall-post-likes
               +flex( row, flex-start, center, nowrap )
               column-gap: $spacing-md
-      .um-photo-modal
+      .#{$prefix}photo-modal
         img
           max-width: 100%
+      .#{$prefix}wall-bodyinner-video
+        iframe
+          width: 100%
+          height: 300px
     .#{$prefix}wall-comments
       padding-top: $spacing-xl
       border-top: 1px solid $gray-200

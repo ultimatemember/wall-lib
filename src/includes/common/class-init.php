@@ -26,6 +26,7 @@ class Init {
 		$this->posts();
 		$this->comments();
 		$this->uploader();
+		$this->rewrite();
 	}
 
 	/**
@@ -66,5 +67,15 @@ class Init {
 			UM()->classes['WallLib\common\uploader'] = new Uploader( $this->wall );
 		}
 		return UM()->classes['WallLib\common\uploader'];
+	}
+
+	/**
+	 * @return Rewrite
+	 */
+	public function rewrite() {
+		if ( empty( UM()->classes['WallLib\common\rewrite'] ) ) {
+			UM()->classes['WallLib\common\rewrite'] = new Rewrite( $this->wall );
+		}
+		return UM()->classes['WallLib\common\rewrite'];
 	}
 }
