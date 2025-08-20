@@ -798,4 +798,62 @@ class Posts {
 			delete_post_meta( $post_id, '_video_oembed_data' );
 		}
 	}
+
+	/**
+	 * Get likes count
+	 *
+	 * @param $post_id
+	 *
+	 * @return int
+	 */
+	public function get_likes_number( $post_id ) {
+		return absint( get_post_meta( $post_id, '_likes', true ) );
+	}
+
+	/**
+	 * @Checks if user liked specific wall post
+	 */
+	public function user_liked( $post_id ) {
+		$res   = '';
+		$users = get_post_meta( $post_id, '_liked', true );
+		if ( $users && is_array( $users ) && in_array( get_current_user_id(), $users, true ) ) {
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Return to activity post after login
+	 *
+	 * @param $post_id
+	 *
+	 * @return string
+	 */
+	public function login_to_interact( $post_id = null ) {
+		if ( UM()->is_request( 'ajax' ) ) {
+			$curr_page = wp_get_referer();
+		} else {
+			$curr_page = UM()->permalinks()->get_current_url();
+		}
+		if ( ! empty( $post_id ) ) {
+			$curr_page = add_query_arg( 'wall_post', $post_id, $curr_page );
+		}
+
+		$pattern = __( 'Please <a href="{register_page}" class="um-link um-link-secondary um-link-underline">sign up</a> or <a href="{login_page}" class="um-link um-link-secondary um-link-underline">sign in</a> to like or comment on this post.', $this->wall->textdomain ); // phpcs:ignore WordPress.WP.I18n
+
+		return str_replace(
+			array(
+				'{current_page}',
+				'{login_page}',
+				'{register_page}',
+			),
+			array(
+				$curr_page,
+				add_query_arg( 'redirect_to', $curr_page, um_get_core_page( 'login' ) ),
+				add_query_arg( 'redirect_to', $curr_page, um_get_core_page( 'register' ) ),
+			),
+			$pattern
+		);
+	}
 }
