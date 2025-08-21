@@ -1,6 +1,7 @@
 <?php
 //namespace WallLib\common;
 namespace Dev\UM_Activity\WallLib\common;
+use DOMDocument;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;

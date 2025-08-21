@@ -226,8 +226,6 @@ class Posts {
 			WP_Filesystem( $credentials );
 		}
 
-		// $output['link'] = '';
-
 		if ( trim( $_post_content ) ) {
 			$orig_content = wp_kses(
 				trim( $_post_content ),
@@ -244,7 +242,6 @@ class Posts {
 
 			if ( isset( $shared_link ) && $shared_link && empty( $_post_images ) && ! $has_oembed ) {
 				$safe_content = str_replace( $shared_link, '', $safe_content );
-				// $output['_shared_link'] = $shared_link;
 			}
 
 			$args['post_content'] = $safe_content;
@@ -256,7 +253,7 @@ class Posts {
 
 		// shared a link
 		if ( isset( $shared_link ) && $shared_link && empty( $_post_images ) && ! $has_oembed ) {
-			$output['link'] = $this->wall->common()->posts()->set_url_meta( $shared_link, $post_id );
+			$this->wall->common()->posts()->set_url_meta( $shared_link, $post_id );
 		} else {
 			delete_post_meta( $post_id, '_shared_link' );
 		}
@@ -276,12 +273,11 @@ class Posts {
 			$this->wall->common()->posts()->hashtagit( $post_id, $safe_content );
 			$this->wall->common()->posts()->setup_video( $orig_content, $post_id );
 			update_post_meta( $post_id, '_original_content', $orig_content );
-			// $output['orig_content'] = stripslashes_deep( $orig_content );
 		}
 
 		if ( ! empty( $_post_images ) ) {
-			$allowed       = UM()->common()->filesystem()::image_mimes( 'allowed' );
-			$allowed       = apply_filters( $this->wall->prefix . 'wall_allowed_mime_types', $allowed );
+			$allowed = UM()->common()->filesystem()::image_mimes( 'allowed' );
+			$allowed = apply_filters( $this->wall->prefix . 'wall_allowed_mime_types', $allowed );
 			foreach ( $_post_images as $photo ) {
 				$path       = sanitize_file_name( $photo['path'] );
 				$filename   = sanitize_file_name( 'stream_photo_' . $photo['hash'] . '_' . $photo['filename'] );// Make the file name unique in the (new) upload directory.
