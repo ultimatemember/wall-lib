@@ -309,10 +309,6 @@ class Posts {
 			}
 		}
 
-//		$output['postid']  = $post_id;
-//		$output['content'] = $this->get_content( $post_id );
-//		$output['video']   = $this->get_video( $post_id );
-
 		do_action( 'um_wall_after_wall_post_published', $post_id, get_current_user_id(), $wall_id );
 
 		return $post_id;
@@ -592,22 +588,17 @@ class Posts {
 		if ( empty( $_POST['post_id'] ) || ! $this->wall->common()->posts()->exists( absint( $_POST['post_id'] ) ) ) {
 			wp_send_json_error( __( 'Wrong post ID.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
 		}
-
 		$post_id = absint( $_POST['post_id'] );
 
-		if ( ! wp_verify_nonce( $_POST['nonce'], 'um_wall_delete_post' . $post_id ) ) {
-			wp_send_json_error( __( 'Wrong nonce.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
-		}
+		check_ajax_referer( 'um_wall_delete_post' . $post_id, 'nonce' );
 		// phpcs:enable WordPress.Security.NonceVerification
 
 		if ( ! $this->wall->common()->user()->can_remove_post( $post_id ) ) {
-			wp_send_json_error( __( 'You are not authorized to remove this post.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
+			wp_send_json_error( array( 'message' => __( 'You are not authorized to remove this post.', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
 		}
 
 		wp_delete_post( $post_id, true );
 
 		wp_send_json_success();
 	}
-
-
 }

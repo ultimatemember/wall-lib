@@ -282,9 +282,11 @@ jQuery( document ).ready(function () {
 	jQuery( document.body ).on('click', '.um-wall-trash', function(e) {
 		let btn = jQuery(this);
 		var post_id = btn.attr('data-post_id');
-		var nonce = btn.attr('data-wpnonce');
+		var nonce = btn.attr('data-nonce');
 		var msg = btn.attr('data-msg');
 		var title = btn.attr('data-title');
+		let post = jQuery('#postid-' + post_id);
+		post.css('opacity', '0.5');
 
 		jQuery.um_confirm(
 			{
@@ -297,9 +299,18 @@ jQuery( document ).ready(function () {
 							nonce: nonce
 						},
 						success: function( response ) {
-							// todo: remove post from wall or redirect
+							post.remove();
 						},
 						error: function( data ) {
+							post.css('opacity', '1');
+							let error;
+							if ( data.message ) {
+								error = data.message;
+							}
+							jQuery(this).um_notice({
+								message: error,
+								type: 'error'
+							});
 							console.log( data );
 						}
 					});
