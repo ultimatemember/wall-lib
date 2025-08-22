@@ -17,7 +17,8 @@
       margin: 0 auto
   .#{$prefix}box
     &.#{$prefix}wall-new-post,
-    &.#{$prefix}wall-edit-post
+    &.#{$prefix}wall-edit-post,
+    .#{$prefix}wall-edit-post
       +flex( column, flex-start, stretch, nowrap )
       padding: $spacing-xl $spacing-3xl
       row-gap: $spacing-lg
@@ -66,6 +67,8 @@
             padding: 0
             +typography(text,sm,regular)
             color: $gray-600
+    .#{$prefix}wall-edit-post
+      padding: 0
   .#{$prefix}wall-commentl
     &.#{$prefix}wall-comment-area
       display: grid

@@ -158,9 +158,8 @@ jQuery( document ).ready(function () {
 
 					// UM_wall_autocomplete_start();
 				} else {
-					form.parents('.um-wall-widget').removeClass( 'editing' );
-
-					form.parents('.um-wall-body').html( data );
+					let post_id = form.find('input[name="_post_id"]').val()
+					jQuery('#postid-' + post_id ).replaceWith(data);
 				}
 
 
@@ -303,7 +302,7 @@ jQuery( document ).ready(function () {
 						},
 						error: function( data ) {
 							post.css('opacity', '1');
-							let error;
+							let error = jQuery(this).attr('data-error');
 							if ( data.message ) {
 								error = data.message;
 							}
@@ -316,6 +315,93 @@ jQuery( document ).ready(function () {
 					});
 				},
 				object: this
+			}
+		);
+	});
+
+	jQuery( document.body ).on( 'click', '.um-wall-cancel-edit', function() {
+		let post_id = jQuery(this).attr('data-post_id');
+		let widget = jQuery('#postid-' + post_id )
+		widget.find('.um-wall-post-form-wrapper').remove();
+		widget.find('.um-wall-body').umShow();
+		widget.find('.um-wall-comments').umShow();
+		widget.find('.um-wall-comment-form').umShow();
+	});
+
+	/* Edit Post */
+	jQuery( document.body ).on( 'click', '.um-wall-manage', function() {
+		let widget = jQuery(this).parents('.um-wall-widget');
+		let post_id = jQuery(this).attr('data-post_id');
+		let nonce = jQuery(this).attr('data-nonce');
+		let wall_id = jQuery('.um-wall-post-form-wrapper input[name="_wall_id"]').val() || 0;
+		let loader = widget.find('.um-wall-post-loader');
+
+		if ( jQuery(this).parents('.um-wall-dialog').length ) {
+			jQuery(this).parents('.um-wall-dialog').hide();
+		}
+
+		if ( widget.hasClass( 'editing' ) ) {
+			return;
+		}
+
+		loader.umShow();
+
+		wp.ajax.send(
+			'um_get_wall_post',
+			{
+				data: {
+					post_id: post_id,
+					wall_id: wall_id,
+					nonce: nonce
+				},
+				success: function( data ) {
+					loader.umHide();
+					widget.find('.um-wall-body').umHide();
+					widget.find('.um-wall-comments').umHide();
+					widget.find('.um-wall-comment-form').umHide();
+					widget.find('.um-wall-body').before(data);
+					let height = widget.find('.um-wall-textarea-elem')[0].scrollHeight;
+					widget.find('.um-wall-textarea-elem').height(height);
+
+
+
+					// widget.find('.um-activity-bodyinner-txt').hide();
+					// widget.find('.um-activity-bodyinner-photo').hide();
+					// widget.find('.um-activity-bodyinner-video').hide();
+					//
+					// var edit_template = wp.template( 'um-edit-post' );
+					// var edit_data = {
+					// 	'textarea' : data.orig_content,
+					// 	'post_id' : widget.attr('id').replace('postid-', ''),
+					// 	'_photo' : widget.find('.um-activity-bodyinner-edit').find('input[name="_photo"]').val(),
+					// 	'_photo_url' : widget.find('.um-activity-bodyinner-edit').find('input[name="_photo_url"]').val()
+					// };
+					//
+					// widget.find('.um-activity-bodyinner-edit').append( edit_template( edit_data ) );
+					// widget.find('.um-activity-bodyinner-edit').find('textarea:visible').trigger('focus');
+					// if ( widget.find('.um-activity-bodyinner-edit').find('input[name="_photo"]').val() ) {
+					// 	widget.find('.um-activity-preview').show();
+					// }
+					//
+					// autosize( widget.find('.um-activity-bodyinner-edit').find('textarea:visible') );
+					//
+					// UM_wall_img_upload();
+					// UM_wall_autocomplete_start();
+					//
+					// widget.addClass( 'editing' );
+				},
+				error: function(data) {
+					console.log(data);
+					loader.umHide();
+					let error = jQuery(this).attr('data-error');
+					if ( data.message ) {
+						error = data.message;
+					}
+					jQuery(this).um_notice({
+						message: error,
+						type: 'error'
+					});
+				}
 			}
 		);
 	});
@@ -847,51 +933,51 @@ function um_post_placeholder( obj ) {
 	obj.attr( 'placeholder', obj.attr( 'data-ph' ) );
 }
 
-function UM_wall_autocomplete_start() {
-	var textareas = jQuery( 'textarea.um-wall-textarea-elem,textarea.um-wall-comment-textarea' );
-
-	if ( textareas.length === 0 ) {
-		return;
-	}
-
-	textareas.each( function() {
-		var el = jQuery(this);
-
-		if (typeof jQuery.ui === 'undefined') {
-			return false;
-		}
-
-		var el_autocomplete = el.autocomplete({
-			minLength: 1,
-			source: function( request, response ) {
-
-				if ( um_extractLast( request.term ).charAt(0) === '@' ) {
-
-					jQuery.getJSON( wp.ajax.settings.url + '?action=um_activity_get_user_suggestions&term=' + um_extractLast( request.term )  + '&nonce=' + um_scripts.nonce, function( data ) {
-						response( data );
-					});
-
-				}
-
-			},
-			select: function( event, ui ) {
-				ui.item.name = ui.item.name.replace( '<strong>', '' );
-				ui.item.name = ui.item.name.replace( '</strong>', '' );
-
-				var terms = um_extract_string( this.value );
-				terms.pop();
-				terms.push( '@' + ui.item.username );
-				terms.push( "" );
-				this.value = jQuery.trim( terms.join(" ") );
-				return false;
-			}
-		});
-
-		if ( typeof el_autocomplete.data("ui-autocomplete") !== 'undefined' ) {
-			el_autocomplete.data("ui-autocomplete")._renderItem = function( ul, item ) {
-				return jQuery("<li />").data("item.autocomplete", item).append(item.photo + item.name + '<span>@' + item.username + '</span>').appendTo(ul);
-			}
-		}
-
-	});
-}
+// function UM_wall_autocomplete_start() {
+// 	var textareas = jQuery( 'textarea.um-wall-textarea-elem,textarea.um-wall-comment-textarea' );
+//
+// 	if ( textareas.length === 0 ) {
+// 		return;
+// 	}
+//
+// 	textareas.each( function() {
+// 		var el = jQuery(this);
+//
+// 		if (typeof jQuery.ui === 'undefined') {
+// 			return false;
+// 		}
+//
+// 		var el_autocomplete = el.autocomplete({
+// 			minLength: 1,
+// 			source: function( request, response ) {
+//
+// 				if ( um_extractLast( request.term ).charAt(0) === '@' ) {
+//
+// 					jQuery.getJSON( wp.ajax.settings.url + '?action=um_activity_get_user_suggestions&term=' + um_extractLast( request.term )  + '&nonce=' + um_scripts.nonce, function( data ) {
+// 						response( data );
+// 					});
+//
+// 				}
+//
+// 			},
+// 			select: function( event, ui ) {
+// 				ui.item.name = ui.item.name.replace( '<strong>', '' );
+// 				ui.item.name = ui.item.name.replace( '</strong>', '' );
+//
+// 				var terms = um_extract_string( this.value );
+// 				terms.pop();
+// 				terms.push( '@' + ui.item.username );
+// 				terms.push( "" );
+// 				this.value = jQuery.trim( terms.join(" ") );
+// 				return false;
+// 			}
+// 		});
+//
+// 		if ( typeof el_autocomplete.data("ui-autocomplete") !== 'undefined' ) {
+// 			el_autocomplete.data("ui-autocomplete")._renderItem = function( ul, item ) {
+// 				return jQuery("<li />").data("item.autocomplete", item).append(item.photo + item.name + '<span>@' + item.username + '</span>').appendTo(ul);
+// 			}
+// 		}
+//
+// 	});
+// }

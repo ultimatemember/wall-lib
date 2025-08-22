@@ -27,6 +27,7 @@ class Posts {
 		add_action( 'wp_ajax_nopriv_um_wall_load_posts', array( $this, 'ajax_load_wall' ) );
 
 		add_action( 'wp_ajax_um_wall_publish', array( $this, 'wall_publish' ) );
+		add_action( 'wp_ajax_um_get_wall_post', array( $this, 'ajax_get_wall_post' ) );
 
 		add_action( 'wp_ajax_um_wall_like_post', array( $this, 'like_post' ) );
 		add_action( 'wp_ajax_um_wall_unlike_post', array( $this, 'unlike_post' ) );
@@ -105,16 +106,69 @@ class Posts {
 	}
 
 	/**
+	 * Add a new wall post
+	 */
+	public function ajax_get_wall_post() {
+		// phpcs:disable WordPress.Security.NonceVerification
+		if ( empty( $_POST['post_id'] ) ) {
+			wp_send_json_error( array( 'message' => __( 'Invalid post ID', 'um-activity' ) ) );
+		}
+		$post_id = absint( $_POST['post_id'] );
+		$wall_id = absint( $_POST['wall_id'] );
+		// phpcs:enable WordPress.Security.NonceVerification
+
+		check_ajax_referer( 'um_wall_get_post' . $post_id, 'nonce' );
+
+		$post = get_post( $post_id );
+		if ( empty( $post ) || is_wp_error( $post ) ) {
+			wp_send_json_error( array( 'message' => __( 'Invalid post ID', 'um-activity' ) ) );
+		}
+
+		$t_args = array(
+			'post_id' => $post_id,
+			'wall_id' => $wall_id,
+			'post'    => $post,
+		);
+
+		$output = UM()->get_template( 'v3/edit-post.php', $this->wall->plugin_basename, $t_args );
+
+		wp_send_json_success( $output );
+
+		$output['postid'] = $post_id;
+
+		$photo_meta = get_post_meta( $post_id, '_photo_metadata', true );
+		if ( ! empty( $photo_meta ) ) {
+			$output['photo_base'] = $photo_meta['original_name'];
+		}
+		$output['orig_content'] = get_post_meta( $post_id, '_original_content', true );
+		$output['photo']        = get_post_meta( $post_id, '_photo', true );
+		$output['content']      = UM()->Activity_API()->common()->post()->get_content( $post_id );
+		$output['video']        = UM()->Activity_API()->common()->post()->get_video( $post_id );
+
+		// other output
+		$output['permalink']      = UM()->Activity_API()->common()->post()->get_permalink( $post_id );
+		$output['user_id']        = get_current_user_id();
+		$output['has_oembed']     = get_post_meta( $post_id, '_oembed', true );
+		$output['has_text_video'] = get_post_meta( $post_id, '_video_url', true );
+
+		wp_send_json_success( $output );
+	}
+
+	/**
 	 * Add a new wall post via AJAX
 	 */
 	public function wall_publish() {
-		check_ajax_referer( 'um-wall-post-publish', 'nonce' );
-
 		// When '_post_id' === 0 then insert, else edit.
 		if ( ! isset( $_POST['_post_id'] ) ) {
 			wp_send_json_error( array( 'message' => __( 'Please specify the post ID. It\'s required.', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
 		}
 		$post_id = absint( $_POST['_post_id'] );
+
+		if ( 0 === $post_id ) {
+			check_ajax_referer('um-wall-post-publish', 'nonce');
+		} else {
+			check_ajax_referer( 'um-wall-post-edit' . $post_id, 'nonce' );
+		}
 
 		$_post_content = '';
 		if ( ! empty( $_POST['_post_content'] ) ) {
@@ -159,7 +213,7 @@ class Posts {
 				$output = $this->prepare_response( $post_id );
 			}
 		} else {
-			$post_id = $this->handle_post_update( $_post_content, $_post_images, $wall_id );
+			$post_id = $this->handle_post_update( $post_id, $_post_content, $_post_images, $wall_id );
 			$output  = $this->prepare_response( $post_id );
 		}
 
@@ -314,9 +368,7 @@ class Posts {
 		return $post_id;
 	}
 
-	private function handle_post_update( $_post_content, $_post_images, $wall_id ) {
-		$output['link'] = '';
-
+	private function handle_post_update( $post_id, $_post_content, $_post_images, $wall_id ) {
 		if ( trim( $_post_content ) ) {
 			$orig_content = wp_kses(
 				trim( $_post_content ),
@@ -331,9 +383,8 @@ class Posts {
 			$shared_link = $this->wall->common()->posts()->get_content_link( $safe_content );
 			$has_oembed  = $this->wall->common()->posts()->is_oembed( $shared_link );
 
-			if ( isset( $shared_link ) && $shared_link && ! $_post_img && ! $has_oembed ) {
-				$safe_content   = str_replace( $shared_link, '', $safe_content );
-				$output['link'] = $this->wall->common()->posts()->set_url_meta( $shared_link, $post_id );
+			if ( isset( $shared_link ) && $shared_link && empty( $_post_images ) && ! $has_oembed ) {
+				$safe_content = str_replace( $shared_link, '', $safe_content );
 			} else {
 				delete_post_meta( $post_id, '_shared_link' );
 			}
@@ -355,55 +406,50 @@ class Posts {
 			$this->wall->common()->posts()->hashtagit( $post_id, $safe_content );
 			$this->wall->common()->posts()->setup_video( $orig_content, $post_id );
 			update_post_meta( $post_id, '_original_content', $orig_content );
-			$output['orig_content'] = stripslashes_deep( $orig_content );
 		}
 
-		if ( '' !== $_post_img ) {
+		if ( ! empty( $_post_images ) ) {
 
-			if ( um_is_temp_file( $_post_img ) ) {
-				$photo_uri = um_is_file_owner( $_post_img, get_current_user_id() ) ? $_post_img : false;
-
-				UM()->uploader()->replace_upload_dir = true;
-				UM()->uploader()->move_temporary_files( get_current_user_id(), array( '_photo' => $photo_uri ), true );
-				UM()->uploader()->replace_upload_dir = false;
-
-				update_post_meta( $post_id, '_photo', $photo_uri );
-				$filename       = wp_basename( $photo_uri );
-				$photo_metadata = get_transient( "um_{$filename}" );
-				update_post_meta( $post_id, '_photo_metadata', $photo_metadata );
-				delete_transient( "um_{$filename}" );
-			} else {
-				$filename = wp_basename( $_post_img );
-			}
-
-			if ( ! isset( $photo_metadata ) ) {
-				$photo_metadata = get_post_meta( $post_id, '_photo_metadata', true );
-			}
-
-			$output['photo']           = $this->wall->common()->posts()->get_download_link( $post_id, get_current_user_id() );
-			$output['photo_base']      = $photo_metadata['original_name'];
-			$output['photo_orig_url']  = UM()->uploader()->get_upload_base_url() . get_current_user_id() . '/' . $filename;
-			$output['photo_orig_base'] = wp_basename( $output['photo_orig_url'] );
+//			if ( um_is_temp_file( $_post_images ) ) {
+//				$photo_uri = um_is_file_owner( $_post_img, get_current_user_id() ) ? $_post_img : false;
+//
+//				UM()->uploader()->replace_upload_dir = true;
+//				UM()->uploader()->move_temporary_files( get_current_user_id(), array( '_photo' => $photo_uri ), true );
+//				UM()->uploader()->replace_upload_dir = false;
+//
+//				update_post_meta( $post_id, '_photo', $photo_uri );
+//				$filename       = wp_basename( $photo_uri );
+//				$photo_metadata = get_transient( "um_{$filename}" );
+//				update_post_meta( $post_id, '_photo_metadata', $photo_metadata );
+//				delete_transient( "um_{$filename}" );
+//			} else {
+//				$filename = wp_basename( $_post_img );
+//			}
+//
+//			if ( ! isset( $photo_metadata ) ) {
+//				$photo_metadata = get_post_meta( $post_id, '_photo_metadata', true );
+//			}
+//
+//			$output['photo']           = $this->wall->common()->posts()->get_download_link( $post_id, get_current_user_id() );
+//			$output['photo_base']      = $photo_metadata['original_name'];
+//			$output['photo_orig_url']  = UM()->uploader()->get_upload_base_url() . get_current_user_id() . '/' . $filename;
+//			$output['photo_orig_base'] = wp_basename( $output['photo_orig_url'] );
 
 		} else {
 
-			$photo_uri = get_post_meta( $post_id, '_photo', true );
-
-			UM()->uploader()->replace_upload_dir = true;
-			UM()->uploader()->delete_existing_file( $photo_uri );
-			UM()->uploader()->replace_upload_dir = false;
-
-			delete_post_meta( $post_id, '_photo' );
-			delete_post_meta( $post_id, '_photo_metadata' );
-
-			$filename = wp_basename( $photo_uri );
-			delete_transient( "um_{$filename}" );
+//			$photo_uri = get_post_meta( $post_id, '_photo', true );
+//
+//			UM()->uploader()->replace_upload_dir = true;
+//			UM()->uploader()->delete_existing_file( $photo_uri );
+//			UM()->uploader()->replace_upload_dir = false;
+//
+//			delete_post_meta( $post_id, '_photo' );
+//			delete_post_meta( $post_id, '_photo_metadata' );
+//
+//			$filename = wp_basename( $photo_uri );
+//			delete_transient( "um_{$filename}" );
 
 		}
-
-		$output['postid']  = $post_id;
-		$output['content'] = $this->wall->common()->posts()->get_content( $post_id );
-		$output['video']   = $this->wall->common()->posts()->get_video( $post_id );
 
 		do_action( 'um_wall_after_wall_post_updated', $post_id, get_current_user_id(), $wall_id );
 
