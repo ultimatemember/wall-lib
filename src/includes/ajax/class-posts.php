@@ -133,41 +133,54 @@ class Posts {
 			)
 		);
 
+		$old_ui = false;
 		if ( empty( $attachments ) ) {
 			if ( get_post_meta( $post_id, '_photo', true ) ) {
-				$attachments = get_post_meta( $post_id, '_photo', true );
+				$filename      = get_post_meta( $post_id, '_photo_filename', true );
+				$attachments[] = $filename;
+				$old_ui        = true;
 			}
 		}
 
+		$uploaded_photos = array();
+		if ( is_array( $attachments ) ) {
+			$count = count( $attachments );
+
+			if ( ! empty( $attachments ) ) {
+				foreach ( $attachments as $attachment_id => $attachment ) {
+					if ( $old_ui ) {
+						$preview_url = $this->wall->common()->posts()->get_download_link( $post_id, get_current_user_id() );
+					} else {
+						$image       = wp_get_attachment_image_src( $attachment_id );
+						$preview_url = $image[0];
+						$filename    = $attachment->post_title;
+					}
+
+					$args = array(
+						'photo_id'    => $attachment_id,
+						'preview_url' => $preview_url,
+						'filename'    => $filename,
+					);
+
+					$uploaded_photos[] = $args;
+				}
+			}
+		} else {
+			$count = '' !== $attachments ? 1 : 0;
+		}
+
 		$t_args = array(
-			'post_id'     => $post_id,
-			'wall_id'     => $wall_id,
-			'post'        => $post,
-			'attachments' => $attachments,
+			'post_id'         => $post_id,
+			'wall_id'         => $wall_id,
+			'post'            => $post,
+			'attachments'     => $attachments,
+			'count'           => $count,
+			'uploaded_photos' => $uploaded_photos,
 		);
 
 		$output = UM()->get_template( 'v3/edit-post.php', $this->wall->plugin_basename, $t_args );
 
 		wp_send_json_success( $output );
-
-//		$output['postid'] = $post_id;
-//
-//		$photo_meta = get_post_meta( $post_id, '_photo_metadata', true );
-//		if ( ! empty( $photo_meta ) ) {
-//			$output['photo_base'] = $photo_meta['original_name'];
-//		}
-//		$output['orig_content'] = get_post_meta( $post_id, '_original_content', true );
-//		$output['photo']        = get_post_meta( $post_id, '_photo', true );
-//		$output['content']      = UM()->Activity_API()->common()->post()->get_content( $post_id );
-//		$output['video']        = UM()->Activity_API()->common()->post()->get_video( $post_id );
-//
-//		// other output
-//		$output['permalink']      = UM()->Activity_API()->common()->post()->get_permalink( $post_id );
-//		$output['user_id']        = get_current_user_id();
-//		$output['has_oembed']     = get_post_meta( $post_id, '_oembed', true );
-//		$output['has_text_video'] = get_post_meta( $post_id, '_video_url', true );
-//
-//		wp_send_json_success( $output );
 	}
 
 	/**
@@ -399,7 +412,7 @@ class Posts {
 		}
 
 		// Upload new images
-		if ( ! empty( $_post_images ) ) {
+		if ( ! empty( $_post_images ) || get_post_meta( $post_id, '_photo', true ) ) {
 			$this->upload_images( $_post_images, $post_id );
 		}
 
@@ -419,34 +432,61 @@ class Posts {
 
 		$allowed = UM()->common()->filesystem()::image_mimes( 'allowed' );
 		$allowed = apply_filters( $this->wall->prefix . 'wall_allowed_mime_types', $allowed );
-		foreach ( $_post_images as $photo ) {
-			$path       = sanitize_file_name( $photo['path'] );
-			$filename   = sanitize_file_name( 'stream_photo_' . $photo['hash'] . '_' . $photo['filename'] );// Make the file name unique in the (new) upload directory.
-			$image_type = wp_check_filetype( $path, $allowed ); // Don't need checking empty condition below, because had validation above.
+		if ( is_array( $_post_images ) ) {
+			foreach ( $_post_images as $photo ) {
+				$path       = sanitize_file_name( $photo['path'] );
+				$filename   = sanitize_file_name( 'stream_photo_' . $photo['hash'] . '_' . $photo['filename'] );// Make the file name unique in the (new) upload directory.
+				$image_type = wp_check_filetype( $path, $allowed ); // Don't need checking empty condition below, because had validation above.
 
-			$old_path = wp_normalize_path( UM()->common()->filesystem()->get_file_by_hash( $photo['hash'] ) );
-			$new_path = wp_normalize_path( UM()->common()->filesystem()->get_user_uploads_dir( get_current_user_id() ) . DIRECTORY_SEPARATOR . $filename );
+				$old_path = wp_normalize_path( UM()->common()->filesystem()->get_file_by_hash( $photo['hash'] ) );
+				$new_path = wp_normalize_path( UM()->common()->filesystem()->get_user_uploads_dir( get_current_user_id() ) . DIRECTORY_SEPARATOR . $filename );
 
-			$move_result = $wp_filesystem->move( $old_path, $new_path, true );
-			if ( ! $move_result ) {
-				continue;
+				$move_result = $wp_filesystem->move( $old_path, $new_path, true );
+				if ( ! $move_result ) {
+					continue;
+				}
+
+				$attachment = array(
+					'guid'           => $new_path,
+					'post_mime_type' => $image_type['type'],
+					'post_title'     => sanitize_text_field( $filename ),
+					'post_content'   => '',
+					'post_parent'    => $post_id,
+					'post_author'    => get_current_user_id(),
+					'post_status'    => 'inherit',
+				);
+
+				$attach_id = wp_insert_attachment( $attachment, $new_path );
+				add_filter( 'intermediate_image_sizes_advanced', '__return_empty_array' );
+				$attach_data = wp_generate_attachment_metadata( $attach_id, $new_path );
+				wp_update_attachment_metadata( $attach_id, $attach_data );
+				remove_filter( 'intermediate_image_sizes_advanced', '__return_empty_array' );
 			}
+		}
+		// OLD UI image transfer
+		if ( get_post_meta( $post_id, '_photo', true ) ) {
+			$photo      = get_post_meta( $post_id, '_photo', true );
+			$path       = wp_normalize_path( UM()->common()->filesystem()->get_user_uploads_dir( get_current_user_id() ) . DIRECTORY_SEPARATOR . $photo );
+			$image_type = wp_check_filetype( $path, $allowed );
 
 			$attachment = array(
-				'guid'           => $new_path,
+				'guid'           => $path,
 				'post_mime_type' => $image_type['type'],
-				'post_title'     => sanitize_text_field( $filename ),
+				'post_title'     => sanitize_text_field( $photo ),
 				'post_content'   => '',
 				'post_parent'    => $post_id,
 				'post_author'    => get_current_user_id(),
 				'post_status'    => 'inherit',
 			);
 
-			$attach_id = wp_insert_attachment( $attachment, $new_path );
+			$attach_id = wp_insert_attachment( $attachment, $path );
 			add_filter( 'intermediate_image_sizes_advanced', '__return_empty_array' );
-			$attach_data = wp_generate_attachment_metadata( $attach_id, $new_path );
+			$attach_data = wp_generate_attachment_metadata( $attach_id, $path );
 			wp_update_attachment_metadata( $attach_id, $attach_data );
 			remove_filter( 'intermediate_image_sizes_advanced', '__return_empty_array' );
+
+			delete_post_meta( $post_id, '_photo' );
+			delete_post_meta( $post_id, '_photo_metadata' );
 		}
 	}
 
