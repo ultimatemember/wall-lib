@@ -230,9 +230,9 @@ class Posts {
 			}
 		} else {
 			if ( ! empty( $_POST['deleted_attachments'] ) ) {
-				$img_ids = explode( ',', sanitize_text_field( $_POST['deleted_attachments'] ) );
+				$deleted_ids = explode( ',', sanitize_text_field( $_POST['deleted_attachments'] ) );
 
-				foreach ( $img_ids as $id ) {
+				foreach ( $deleted_ids as $id ) {
 					$attachment_id = absint( $id );
 					if ( $attachment_id > 0 ) {
 						wp_delete_attachment( $attachment_id, true );
@@ -299,14 +299,6 @@ class Posts {
 			),
 		);
 
-		global $wp_filesystem;
-		if ( ! $wp_filesystem instanceof WP_Filesystem_Base ) {
-			require_once ABSPATH . 'wp-admin/includes/file.php';
-
-			$credentials = request_filesystem_credentials( site_url() );
-			WP_Filesystem( $credentials );
-		}
-
 		if ( trim( $_post_content ) ) {
 			$orig_content = wp_kses(
 				trim( $_post_content ),
@@ -356,38 +348,9 @@ class Posts {
 			update_post_meta( $post_id, '_original_content', $orig_content );
 		}
 
+		// Upload new images
 		if ( ! empty( $_post_images ) ) {
-			$allowed = UM()->common()->filesystem()::image_mimes( 'allowed' );
-			$allowed = apply_filters( $this->wall->prefix . 'wall_allowed_mime_types', $allowed );
-			foreach ( $_post_images as $photo ) {
-				$path       = sanitize_file_name( $photo['path'] );
-				$filename   = sanitize_file_name( 'stream_photo_' . $photo['hash'] . '_' . $photo['filename'] );// Make the file name unique in the (new) upload directory.
-				$image_type = wp_check_filetype( $path, $allowed ); // Don't need checking empty condition below, because had validation above.
-
-				$old_path = wp_normalize_path( UM()->common()->filesystem()->get_file_by_hash( $photo['hash'] ) );
-				$new_path = wp_normalize_path( UM()->common()->filesystem()->get_user_uploads_dir( get_current_user_id() ) . DIRECTORY_SEPARATOR . $filename );
-
-				$move_result = $wp_filesystem->move( $old_path, $new_path, true );
-				if ( ! $move_result ) {
-					continue;
-				}
-
-				$attachment = array(
-					'guid'           => $new_path,
-					'post_mime_type' => $image_type['type'],
-					'post_title'     => sanitize_text_field( $filename ),
-					'post_content'   => '',
-					'post_parent'    => $post_id,
-					'post_author'    => get_current_user_id(),
-					'post_status'    => 'inherit',
-				);
-
-				$attach_id = wp_insert_attachment( $attachment, $new_path );
-				add_filter( 'intermediate_image_sizes_advanced', '__return_empty_array' );
-				$attach_data = wp_generate_attachment_metadata( $attach_id, $new_path );
-				wp_update_attachment_metadata( $attach_id, $attach_data );
-				remove_filter( 'intermediate_image_sizes_advanced', '__return_empty_array' );
-			}
+			$this->upload_images( $_post_images, $post_id );
 		}
 
 		do_action( 'um_wall_after_wall_post_published', $post_id, get_current_user_id(), $wall_id );
@@ -435,52 +398,56 @@ class Posts {
 			update_post_meta( $post_id, '_original_content', $orig_content );
 		}
 
+		// Upload new images
 		if ( ! empty( $_post_images ) ) {
-
-//			if ( um_is_temp_file( $_post_images ) ) {
-//				$photo_uri = um_is_file_owner( $_post_img, get_current_user_id() ) ? $_post_img : false;
-//
-//				UM()->uploader()->replace_upload_dir = true;
-//				UM()->uploader()->move_temporary_files( get_current_user_id(), array( '_photo' => $photo_uri ), true );
-//				UM()->uploader()->replace_upload_dir = false;
-//
-//				update_post_meta( $post_id, '_photo', $photo_uri );
-//				$filename       = wp_basename( $photo_uri );
-//				$photo_metadata = get_transient( "um_{$filename}" );
-//				update_post_meta( $post_id, '_photo_metadata', $photo_metadata );
-//				delete_transient( "um_{$filename}" );
-//			} else {
-//				$filename = wp_basename( $_post_img );
-//			}
-//
-//			if ( ! isset( $photo_metadata ) ) {
-//				$photo_metadata = get_post_meta( $post_id, '_photo_metadata', true );
-//			}
-//
-//			$output['photo']           = $this->wall->common()->posts()->get_download_link( $post_id, get_current_user_id() );
-//			$output['photo_base']      = $photo_metadata['original_name'];
-//			$output['photo_orig_url']  = UM()->uploader()->get_upload_base_url() . get_current_user_id() . '/' . $filename;
-//			$output['photo_orig_base'] = wp_basename( $output['photo_orig_url'] );
-
-		} else {
-
-//			$photo_uri = get_post_meta( $post_id, '_photo', true );
-//
-//			UM()->uploader()->replace_upload_dir = true;
-//			UM()->uploader()->delete_existing_file( $photo_uri );
-//			UM()->uploader()->replace_upload_dir = false;
-//
-//			delete_post_meta( $post_id, '_photo' );
-//			delete_post_meta( $post_id, '_photo_metadata' );
-//
-//			$filename = wp_basename( $photo_uri );
-//			delete_transient( "um_{$filename}" );
-
+			$this->upload_images( $_post_images, $post_id );
 		}
 
 		do_action( 'um_wall_after_wall_post_updated', $post_id, get_current_user_id(), $wall_id );
 
 		return $post_id;
+	}
+
+	private function upload_images( $_post_images, $post_id ) {
+		global $wp_filesystem;
+		if ( ! $wp_filesystem instanceof WP_Filesystem_Base ) {
+			require_once ABSPATH . 'wp-admin/includes/file.php';
+
+			$credentials = request_filesystem_credentials( site_url() );
+			WP_Filesystem( $credentials );
+		}
+
+		$allowed = UM()->common()->filesystem()::image_mimes( 'allowed' );
+		$allowed = apply_filters( $this->wall->prefix . 'wall_allowed_mime_types', $allowed );
+		foreach ( $_post_images as $photo ) {
+			$path       = sanitize_file_name( $photo['path'] );
+			$filename   = sanitize_file_name( 'stream_photo_' . $photo['hash'] . '_' . $photo['filename'] );// Make the file name unique in the (new) upload directory.
+			$image_type = wp_check_filetype( $path, $allowed ); // Don't need checking empty condition below, because had validation above.
+
+			$old_path = wp_normalize_path( UM()->common()->filesystem()->get_file_by_hash( $photo['hash'] ) );
+			$new_path = wp_normalize_path( UM()->common()->filesystem()->get_user_uploads_dir( get_current_user_id() ) . DIRECTORY_SEPARATOR . $filename );
+
+			$move_result = $wp_filesystem->move( $old_path, $new_path, true );
+			if ( ! $move_result ) {
+				continue;
+			}
+
+			$attachment = array(
+				'guid'           => $new_path,
+				'post_mime_type' => $image_type['type'],
+				'post_title'     => sanitize_text_field( $filename ),
+				'post_content'   => '',
+				'post_parent'    => $post_id,
+				'post_author'    => get_current_user_id(),
+				'post_status'    => 'inherit',
+			);
+
+			$attach_id = wp_insert_attachment( $attachment, $new_path );
+			add_filter( 'intermediate_image_sizes_advanced', '__return_empty_array' );
+			$attach_data = wp_generate_attachment_metadata( $attach_id, $new_path );
+			wp_update_attachment_metadata( $attach_id, $attach_data );
+			remove_filter( 'intermediate_image_sizes_advanced', '__return_empty_array' );
+		}
 	}
 
 	/**

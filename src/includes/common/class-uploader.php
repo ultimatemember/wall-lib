@@ -56,6 +56,7 @@ class Uploader {
 			<div class="um-uploader-file-data">
 				<div class="um-uploader-file-preview-error um-display-none"></div>
 				<div class="um-uploader-wall-photos-data-wrapper">
+					<div class="um-uploader-file-preview" title="{{{name}}}"></div>
 					<div class="um-uploader-file-data-header">
 						<div class="um-uploader-file-data-header-info">
 							<div class="um-uploader-file-name">{{{name}}}</div>
@@ -69,11 +70,11 @@ class Uploader {
 								<path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
 							</svg>';
 							$button_args    = array(
-								'type'          => 'button',
-								'icon_position' => 'content',
-								'design'        => 'link-gray',
-								'size'          => 's',
-								'classes'       => array( 'um-uploader-file-remove' ),
+									'type'          => 'button',
+									'icon_position' => 'content',
+									'design'        => 'link-gray',
+									'size'          => 's',
+									'classes'       => array( 'um-uploader-file-remove' ),
 							);
 							echo wp_kses( UM()->frontend()::layouts()::button( $button_content, $button_args ), UM()->get_allowed_html( 'templates' ) );
 							?>
@@ -81,7 +82,6 @@ class Uploader {
 						<div class="um-supporting-text">{{{supporting}}}</div>
 						<?php echo wp_kses( UM()->frontend()::layouts()::progress_bar( array( 'label' => 'right' ) ), UM()->get_allowed_html( 'templates' ) ); ?>
 					</div>
-					<div class="um-uploader-file-preview" title="{{{name}}}"></div>
 				</div>
 				<?php
 				if ( true !== $args['async'] ) {
@@ -115,7 +115,6 @@ class Uploader {
 		}
 
 		$photo_id       = $edit_value_row['photo_id'];
-		$post_title     = $edit_value_row['title'];
 		$preview_url    = $edit_value_row['preview_url'];
 		$image_filename = $edit_value_row['filename'];
 
@@ -125,9 +124,12 @@ class Uploader {
 			<div class="um-uploader-file-data">
 				<div class="um-uploader-file-preview-error um-display-none"></div>
 				<div class="um-uploader-wall-photos-data-wrapper">
+					<div class="um-uploader-file-preview" title="<?php echo esc_attr( $image_filename ); ?>">
+						<img src="<?php echo esc_url( $preview_url ); ?>" alt="<?php echo esc_attr( $image_filename ); ?>" />
+					</div>
 					<div class="um-uploader-file-data-header">
 						<div class="um-uploader-file-data-header-info">
-							<div class="um-uploader-file-name"><?php echo esc_html( $post_title ); ?></div>
+							<div class="um-uploader-file-name"></div>
 							<?php
 							$button_content = '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-trash" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
 								<path stroke="none" d="M0 0h24v24H0z" fill="none"/>
@@ -160,9 +162,6 @@ class Uploader {
 							);
 							?>
 						</div>
-					</div>
-					<div class="um-uploader-file-preview" title="<?php echo esc_attr( $post_title ); ?>">
-						<img src="<?php echo esc_url( $preview_url ); ?>" alt="<?php echo esc_attr( $image_filename ); ?>" />
 					</div>
 				</div>
 			</div>
