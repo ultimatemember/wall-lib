@@ -124,34 +124,50 @@ class Posts {
 			wp_send_json_error( array( 'message' => __( 'Invalid post ID', 'um-activity' ) ) );
 		}
 
+		$attachments = get_children(
+			array(
+				'post_parent'    => $post_id,
+				'post_type'      => 'attachment',
+				'post_mime_type' => 'image',
+				'numberposts'    => -1,
+			)
+		);
+
+		if ( empty( $attachments ) ) {
+			if ( get_post_meta( $post_id, '_photo', true ) ) {
+				$attachments = get_post_meta( $post_id, '_photo', true );
+			}
+		}
+
 		$t_args = array(
-			'post_id' => $post_id,
-			'wall_id' => $wall_id,
-			'post'    => $post,
+			'post_id'     => $post_id,
+			'wall_id'     => $wall_id,
+			'post'        => $post,
+			'attachments' => $attachments,
 		);
 
 		$output = UM()->get_template( 'v3/edit-post.php', $this->wall->plugin_basename, $t_args );
 
 		wp_send_json_success( $output );
 
-		$output['postid'] = $post_id;
-
-		$photo_meta = get_post_meta( $post_id, '_photo_metadata', true );
-		if ( ! empty( $photo_meta ) ) {
-			$output['photo_base'] = $photo_meta['original_name'];
-		}
-		$output['orig_content'] = get_post_meta( $post_id, '_original_content', true );
-		$output['photo']        = get_post_meta( $post_id, '_photo', true );
-		$output['content']      = UM()->Activity_API()->common()->post()->get_content( $post_id );
-		$output['video']        = UM()->Activity_API()->common()->post()->get_video( $post_id );
-
-		// other output
-		$output['permalink']      = UM()->Activity_API()->common()->post()->get_permalink( $post_id );
-		$output['user_id']        = get_current_user_id();
-		$output['has_oembed']     = get_post_meta( $post_id, '_oembed', true );
-		$output['has_text_video'] = get_post_meta( $post_id, '_video_url', true );
-
-		wp_send_json_success( $output );
+//		$output['postid'] = $post_id;
+//
+//		$photo_meta = get_post_meta( $post_id, '_photo_metadata', true );
+//		if ( ! empty( $photo_meta ) ) {
+//			$output['photo_base'] = $photo_meta['original_name'];
+//		}
+//		$output['orig_content'] = get_post_meta( $post_id, '_original_content', true );
+//		$output['photo']        = get_post_meta( $post_id, '_photo', true );
+//		$output['content']      = UM()->Activity_API()->common()->post()->get_content( $post_id );
+//		$output['video']        = UM()->Activity_API()->common()->post()->get_video( $post_id );
+//
+//		// other output
+//		$output['permalink']      = UM()->Activity_API()->common()->post()->get_permalink( $post_id );
+//		$output['user_id']        = get_current_user_id();
+//		$output['has_oembed']     = get_post_meta( $post_id, '_oembed', true );
+//		$output['has_text_video'] = get_post_meta( $post_id, '_video_url', true );
+//
+//		wp_send_json_success( $output );
 	}
 
 	/**
@@ -165,7 +181,7 @@ class Posts {
 		$post_id = absint( $_POST['_post_id'] );
 
 		if ( 0 === $post_id ) {
-			check_ajax_referer('um-wall-post-publish', 'nonce');
+			check_ajax_referer( 'um-wall-post-publish', 'nonce' );
 		} else {
 			check_ajax_referer( 'um-wall-post-edit' . $post_id, 'nonce' );
 		}
@@ -208,11 +224,22 @@ class Posts {
 				// translators: %s - activity post URL
 
 				$permalink = apply_filters( $this->wall->prefix . 'wall_publish_permalink', '', $post_id );
-				$output    = wp_kses_post( sprintf( __( 'Post is submitted successfully. To view post <a href="%s" class="um-link">click here</a>.', 'um-activity' ), $permalink ) );
+				$output    = wp_kses_post( sprintf( __( 'Post is submitted successfully. To view post <a href="%s" class="um-link">click here</a>.', $this->wall->textdomain ), $permalink ) ); // phpcs:ignore WordPress.WP.I18n
 			} else {
 				$output = $this->prepare_response( $post_id );
 			}
 		} else {
+			if ( ! empty( $_POST['deleted_attachments'] ) ) {
+				$img_ids = explode( ',', sanitize_text_field( $_POST['deleted_attachments'] ) );
+
+				foreach ( $img_ids as $id ) {
+					$attachment_id = absint( $id );
+					if ( $attachment_id > 0 ) {
+						wp_delete_attachment( $attachment_id, true );
+					}
+				}
+			}
+
 			$post_id = $this->handle_post_update( $post_id, $_post_content, $_post_images, $wall_id );
 			$output  = $this->prepare_response( $post_id );
 		}

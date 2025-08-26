@@ -277,7 +277,7 @@ jQuery( document ).ready(function () {
 		// });
 	});
 
-	/* Trash post popup */
+	/* Trash post */
 	jQuery( document.body ).on('click', '.um-wall-trash', function(e) {
 		let btn = jQuery(this);
 		var post_id = btn.attr('data-post_id');
@@ -314,11 +314,15 @@ jQuery( document ).ready(function () {
 						}
 					});
 				},
+				onNo: function() {
+					post.css('opacity', '1');
+				},
 				object: this
 			}
 		);
 	});
 
+	/* Cancel Edit Post */
 	jQuery( document.body ).on( 'click', '.um-wall-cancel-edit', function() {
 		let post_id = jQuery(this).attr('data-post_id');
 		let widget = jQuery('#postid-' + post_id )
@@ -362,33 +366,7 @@ jQuery( document ).ready(function () {
 					widget.find('.um-wall-body').before(data);
 					let height = widget.find('.um-wall-textarea-elem')[0].scrollHeight;
 					widget.find('.um-wall-textarea-elem').height(height);
-
-
-
-					// widget.find('.um-activity-bodyinner-txt').hide();
-					// widget.find('.um-activity-bodyinner-photo').hide();
-					// widget.find('.um-activity-bodyinner-video').hide();
-					//
-					// var edit_template = wp.template( 'um-edit-post' );
-					// var edit_data = {
-					// 	'textarea' : data.orig_content,
-					// 	'post_id' : widget.attr('id').replace('postid-', ''),
-					// 	'_photo' : widget.find('.um-activity-bodyinner-edit').find('input[name="_photo"]').val(),
-					// 	'_photo_url' : widget.find('.um-activity-bodyinner-edit').find('input[name="_photo_url"]').val()
-					// };
-					//
-					// widget.find('.um-activity-bodyinner-edit').append( edit_template( edit_data ) );
-					// widget.find('.um-activity-bodyinner-edit').find('textarea:visible').trigger('focus');
-					// if ( widget.find('.um-activity-bodyinner-edit').find('input[name="_photo"]').val() ) {
-					// 	widget.find('.um-activity-preview').show();
-					// }
-					//
-					// autosize( widget.find('.um-activity-bodyinner-edit').find('textarea:visible') );
-					//
-					// UM_wall_img_upload();
-					// UM_wall_autocomplete_start();
-					//
-					// widget.addClass( 'editing' );
+					UM.frontend.uploader.init()
 				},
 				error: function(data) {
 					console.log(data);
@@ -404,6 +382,47 @@ jQuery( document ).ready(function () {
 				}
 			}
 		);
+	});
+
+	/* Delete photo from post */
+	jQuery( document ).on( 'click', '.um-wall-delete-photo', function ( e ) {
+		e.preventDefault();
+
+		let confirm_text = jQuery(this).data( 'confirmation' );
+
+		if ( ! confirm( confirm_text ) ) {
+			return false;
+		}
+
+		let id = jQuery(this).data( 'id' );
+		let $input = jQuery('#um_wall_deleted_attachments');
+		let currentVal = $input.val();
+		let ids = currentVal ? currentVal.split(',') : [];
+		if ( !ids.includes(String(id)) ) {
+			ids.push(id);
+			$input.val(ids.join(','));
+		}
+
+		let $uploader = jQuery(this).parents( '.um-uploader' );
+
+		let uploaderObj = UM.frontend.uploaders[ $uploader.data('plupload') ];
+
+		let button = uploaderObj.getOption( 'browse_button' )[0];
+
+		button.removeAttribute('disabled');
+		let dropZone = uploaderObj.getOption( 'drop_element' )[0];
+		if ( dropZone ) {
+			dropZone.classList.remove('um-dropzone-disabled');
+			let uploadLink = dropZone.querySelector( '.um-upload-link' );
+			if ( uploadLink ) {
+				uploadLink.classList.remove('um-link-disabled');
+			}
+		}
+
+		$uploader.find('.um-wall-photos-error').umHide();
+		jQuery(this).parents('.um-wall-widget').find('.um-wall-post').prop( 'disabled', false );
+		let $fileRow = jQuery( '#wall-photo-' + jQuery(this).data( 'id' ) );
+		$fileRow.remove();
 	});
 
 	/* Like a post */
@@ -509,6 +528,18 @@ jQuery( document ).ready(function () {
 			});
 		}
 	});
+
+
+
+
+
+
+
+
+
+
+
+
 
 	/* Reply to comment */
 	jQuery( document ).on( 'click', '.um-wall-edit-comment, .um-wall-edit-comment-cancel', function(e) {

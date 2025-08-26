@@ -131,6 +131,10 @@
 .um .um-wall-commentl.um-wall-comment-area .um-wall-comment-post {
   justify-self: right;
 }
+.um .um-wall-uploader-section .um-uploader-filelist .um-uploader-file img {
+  max-width: 100%;
+  height: auto;
+}
 
 .um .um-wall-widget {
   width: 100%;
