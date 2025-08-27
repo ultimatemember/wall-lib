@@ -116,6 +116,12 @@
       +typography( text, sm, regular )
       color: $gray-600
       word-wrap: break-word
+      .#{$prefix}wall-bodyinner
+        .#{$prefix}wall-bodyinner-txt
+          .#{$prefix}link
+            color: $link-color
+            &:hover
+              color: $link-hover-color
       .#{$prefix}wall-actions
         +flex( row, space-between, center, nowrap )
         row-gap: $spacing-xs

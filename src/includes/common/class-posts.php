@@ -481,6 +481,34 @@ class Posts {
 	}
 
 	/**
+	 * Get post image URL - thumbnail, first image, first cover
+	 *
+	 * @param int|array|null|WP_Post $post Optional. Post ID or WP_Post object.
+	 *
+	 * @return string URL
+	 */
+	public function get_post_image_url( $post = null ) {
+		$image_url = '';
+
+		if ( has_post_thumbnail( $post ) ) {
+			$image_urls = wp_get_attachment_image_src( get_post_thumbnail_id( $post ), 'large' );
+			$image_url  = current( $image_urls );
+		} else {
+			if ( is_numeric( $post ) ) {
+				$post = get_post( $post );
+			}
+			if ( is_a( $post, 'WP_Post' ) ) {
+				preg_match( '/[^"]+\.(jpeg|jpg|png)/im', $post->post_content, $matches );
+				if ( isset( $matches[0] ) ) {
+					$image_url = esc_url_raw( $matches[0] );
+				}
+			}
+		}
+
+		return (string) $image_url;
+	}
+
+	/**
 	 * Gets action type
 	 *
 	 * @param $post_id

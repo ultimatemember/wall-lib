@@ -173,7 +173,6 @@ class Posts {
 			'post_id'         => $post_id,
 			'wall_id'         => $wall_id,
 			'post'            => $post,
-			'attachments'     => $attachments,
 			'count'           => $count,
 			'uploaded_photos' => $uploaded_photos,
 		);
