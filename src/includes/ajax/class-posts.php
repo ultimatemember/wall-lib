@@ -93,7 +93,8 @@ class Posts {
 		$query = new \WP_Query( $args );
 
 		$t_args = array(
-			'wall_posts' => $query->get_posts(),
+			'wall_posts'       => $query->get_posts(),
+			'um_activity_wall' => um_activity_wall_lib(),
 		);
 
 		$t_args = apply_filters( $this->wall->prefix . 'wall_template_args', $t_args, $args, $query );
@@ -284,12 +285,13 @@ class Posts {
 
 	private function prepare_response( $post_id ) {
 		$t_args = array(
-			'allowed_html' => UM()->Activity_API()->common()->post()->get_allowed_html(),
-			'wall_post'    => $post_id,
-			'wall_posts'   => array( $post_id ),
-			'single_post'  => true,
+			'allowed_html'     => UM()->Activity_API()->common()->post()->get_allowed_html(),
+			'wall_post'        => $post_id,
+			'wall_posts'       => array( $post_id ),
+			'single_post'      => true,
+			'um_activity_wall' => um_activity_wall_lib(),
 		);
-		return UM()->ajax()->esc_html_spaces( UM()->get_template( 'v3/posts-loop.php', um_activity_plugin, $t_args ) );
+		return UM()->ajax()->esc_html_spaces( UM()->get_template( 'v3/posts-loop.php', UM_ACTIVITY_PLUGIN, $t_args ) );
 	}
 
 	private function handle_post_insert( $_post_content, $_post_images, $wall_id ) {

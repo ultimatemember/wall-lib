@@ -908,7 +908,7 @@ function um_wall_ajax_request() {
 		let loader = wall.parents('.um-activity').find('.um-wall-posts-loader');
 		let action = wall.attr('data-action') + '_wall_load_posts';
 		loader.umShow();
-		console.log(action)
+
 		wp.ajax.send( 'um_wall_load_posts', {
 			data: {
 				offset: offset,

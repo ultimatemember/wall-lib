@@ -509,6 +509,16 @@ class Posts {
 	}
 
 	/**
+	 * @Gets action name
+	 **/
+	public function get_action( $post_id ) {
+		$action = (string) get_post_meta( $post_id, '_action', true );
+		$action = ( $action ) ? $action : 'status';
+
+		return isset( $this->global_actions[ $action ] ) ? $this->global_actions[ $action ] : '';
+	}
+
+	/**
 	 * Gets action type
 	 *
 	 * @param $post_id
@@ -522,9 +532,9 @@ class Posts {
 		return $action;
 	}
 
-	/***
-	 ***    @shorten any string based on word count
-	 ***/
+	/**
+	 * @shorten any string based on word count
+	 **/
 	public function shorten_string( $string ) {
 		$retval        = $string;
 		$wordsreturned = UM()->options()->get( $this->wall->prefix . 'post_truncate' );
@@ -883,6 +893,25 @@ class Posts {
 				add_query_arg( 'redirect_to', $curr_page, um_get_core_page( 'register' ) ),
 			),
 			$pattern
+		);
+	}
+
+	public function get_wall_posts( $args ) {
+		$query = array(
+			'fields'      => 'ids',
+			'post_type'   => $this->wall->post_type,
+			'post_status' => 'publish',
+			'meta_query'  => array(),
+		);
+
+		$query = apply_filters( $this->wall->prefix . 'wall_posts_args', $query, $args );
+
+		// Get posts.
+		$query_obj = new \WP_Query( $query );
+
+		return array(
+			'result'      => $query_obj->get_posts(),
+			'total_posts' => $query_obj->found_posts,
 		);
 	}
 }

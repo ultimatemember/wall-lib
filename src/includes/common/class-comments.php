@@ -111,62 +111,61 @@ class Comments {
 //	}
 //
 //
-//	/**
-//	 * Checks if user hidden comment
-//	 *
-//	 * @param $comment_id
-//	 *
-//	 * @return int
-//	 */
-//	public function user_hidden_comment( $comment_id ) {
-//		$users   = get_comment_meta( $comment_id, '_hidden_from', true );
-//		$user_id = get_current_user_id();
-//
-//		if ( $users && is_array( $users ) && isset( $users[ $user_id ] ) ) {
-//			return 1;
-//		}
-//
-//		return 0;
-//	}
-//
-//
-//	/***
-//	 ***    @Checks if user liked specific wall comment
-//	 ***/
-//	public function user_liked_comment( $comment_id ) {
-//		$res   = '';
-//		$users = get_comment_meta( $comment_id, '_liked', true );
-//		if ( $users && is_array( $users ) && in_array( get_current_user_id(), $users, true ) ) {
-//			return true;
-//		}
-//
-//		return false;
-//	}
-//
-//	/**
-//	 * Get comment time.
-//	 *
-//	 * @param string $time
-//	 *
-//	 * @return string
-//	 */
-//	public function get_comment_time( $time ) {
-//		return UM()->datetime()->time_diff( strtotime( $time ) );
-//	}
-//
-//	/**
-//	 * Get comment link
-//	 *
-//	 * @param string $post_link
-//	 * @param int $comment_id
-//	 *
-//	 * @return string
-//	 */
-//	public function get_comment_link( $post_link, $comment_id ) {
-//		$link = add_query_arg( 'wall_comment_id', $comment_id, $post_link );
-//		return $link;
-//	}
-//
+	/**
+	 * Checks if user hidden comment
+	 *
+	 * @param $comment_id
+	 *
+	 * @return int
+	 */
+	public function user_hidden_comment( $comment_id ) {
+		$users   = get_comment_meta( $comment_id, '_hidden_from', true );
+		$user_id = get_current_user_id();
+
+		if ( $users && is_array( $users ) && isset( $users[ $user_id ] ) ) {
+			return 1;
+		}
+
+		return 0;
+	}
+
+	/**
+	 * @Checks if user liked specific wall comment
+	 **/
+	public function user_liked_comment( $comment_id ) {
+		$res   = '';
+		$users = get_comment_meta( $comment_id, '_liked', true );
+		if ( $users && is_array( $users ) && in_array( get_current_user_id(), $users, true ) ) {
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Get comment time.
+	 *
+	 * @param string $time
+	 *
+	 * @return string
+	 */
+	public function get_comment_time( $time ) {
+		return UM()->datetime()->time_diff( strtotime( $time ) );
+	}
+
+	/**
+	 * Get comment link
+	 *
+	 * @param string $post_link
+	 * @param int $comment_id
+	 *
+	 * @return string
+	 */
+	public function get_comment_link( $post_link, $comment_id ) {
+		$link = add_query_arg( 'wall_comment_id', $comment_id, $post_link );
+		return $link;
+	}
+
 	/**
 	 * Get comment count
 	 *
@@ -245,18 +244,18 @@ class Comments {
 //		update_comment_meta( $comment_id, '_hidden_from', $users );
 //	}
 //
-//	/***
-//	 ***    @get comment content
-//	 ***/
-//	public function commentcontent( $content ) {
-//		$content = convert_smilies( $content );
-//		//$content = preg_replace('$(\s|^)(https?://[a-z0-9_./?=&-]+)(?![^<>]*>)$i', ' <a class="um-link" href="$2" target="_blank" rel="nofollow">$2</a> ', $content." ");
-//		//$content = preg_replace('$(\s|^)(www\.[a-z0-9_./?=&-]+)(?![^<>]*>)$i', '<a class="um-link" target="_blank" href="http://$2"  target="_blank" rel="nofollow">$2</a> ', $content." ");
-//		$content = UM()->Activity_API()->common()->post()->make_links_clickable( $content );
-//		$content = UM()->Activity_API()->common()->post()->hashtag_links( $content );
-//
-//		return $content;
-//	}
+	/***
+	 ***    @get comment content
+	 ***/
+	public function commentcontent( $content ) {
+		$content = convert_smilies( $content );
+		//$content = preg_replace('$(\s|^)(https?://[a-z0-9_./?=&-]+)(?![^<>]*>)$i', ' <a class="um-link" href="$2" target="_blank" rel="nofollow">$2</a> ', $content." ");
+		//$content = preg_replace('$(\s|^)(www\.[a-z0-9_./?=&-]+)(?![^<>]*>)$i', '<a class="um-link" target="_blank" href="http://$2"  target="_blank" rel="nofollow">$2</a> ', $content." ");
+		$content = $this->wall->common()->posts()->make_links_clickable( $content );
+		$content = $this->wall->common()->posts()->hashtag_links( $content );
+
+		return $content;
+	}
 
 	/**
 	 *
