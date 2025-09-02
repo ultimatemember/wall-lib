@@ -285,7 +285,7 @@ class Posts {
 
 	private function prepare_response( $post_id ) {
 		$t_args = array(
-			'allowed_html'     => UM()->Activity_API()->common()->post()->get_allowed_html(),
+			'allowed_html'     => UM()->Activity_API()->common()->post()->get_allowed_html(), // @todo: fix allowed html for wall lib
 			'wall_post'        => $post_id,
 			'wall_posts'       => array( $post_id ),
 			'single_post'      => true,
@@ -485,9 +485,9 @@ class Posts {
 			$attach_data = wp_generate_attachment_metadata( $attach_id, $path );
 			wp_update_attachment_metadata( $attach_id, $attach_data );
 			remove_filter( 'intermediate_image_sizes_advanced', '__return_empty_array' );
-
-			delete_post_meta( $post_id, '_photo' );
-			delete_post_meta( $post_id, '_photo_metadata' );
+			// @todo check duplicates
+			// delete_post_meta( $post_id, '_photo' );
+			// delete_post_meta( $post_id, '_photo_metadata' );
 		}
 	}
 
