@@ -80,6 +80,8 @@ class Posts {
 			$data['show_pending'] = sanitize_key( $_POST['show_pending'] );
 		}
 		// phpcs:enable WordPress.Security.NonceVerification
+		$comm_num      = apply_filters( $this->wall->prefix . 'wall_comments_loadmore_number', 10 );
+		$order_comment = apply_filters( $this->wall->prefix . 'wall_comments_loadmore_order', 10 );
 
 		$args = array(
 			'fields'      => 'ids',
@@ -94,7 +96,9 @@ class Posts {
 
 		$t_args = array(
 			'wall_posts'       => $query->get_posts(),
-			'um_activity_wall' => um_activity_wall_lib(),
+			'um_activity_wall' => $this->wall,
+			'comm_num'         => $comm_num,
+			'order_comment'    => $order_comment,
 		);
 
 		$t_args = apply_filters( $this->wall->prefix . 'wall_template_args', $t_args, $args, $query );
@@ -284,12 +288,17 @@ class Posts {
 	}
 
 	private function prepare_response( $post_id ) {
+		$comm_num      = apply_filters( $this->wall->prefix . 'wall_comments_loadmore_number', 10 );
+		$order_comment = apply_filters( $this->wall->prefix . 'wall_comments_loadmore_order', 10 );
+
 		$t_args = array(
 			'allowed_html'     => UM()->Activity_API()->common()->post()->get_allowed_html(), // @todo: fix allowed html for wall lib
 			'wall_post'        => $post_id,
 			'wall_posts'       => array( $post_id ),
 			'single_post'      => true,
-			'um_activity_wall' => um_activity_wall_lib(),
+			'um_activity_wall' => $this->wall,
+			'comm_num'         => $comm_num,
+			'order_comment'    => $order_comment,
 		);
 		return UM()->ajax()->esc_html_spaces( UM()->get_template( 'v3/posts-loop.php', UM_ACTIVITY_PLUGIN, $t_args ) );
 	}

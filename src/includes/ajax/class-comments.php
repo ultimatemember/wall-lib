@@ -353,8 +353,7 @@ class Comments {
 		$post_link = $this->wall->common()->posts()->get_permalink( $post_id );
 		$comment   = get_comment( $commentid );
 		$comments  = array( $comment );
-		$comm_num  = ! empty( $_GET['wall_comment_id'] ) ? 10000 : 2; // phpcs:ignore WordPress.Security.NonceVerification
-		$comm_num  = apply_filters( $this->wall->prefix . 'wall_comment_number', $comm_num );
+		$comm_num  = apply_filters( $this->wall->prefix . 'wall_comments_loadmore_number', 10 );
 
 		if ( isset( $_POST['reply_to'] ) && absint( $_POST['reply_to'] ) ) {
 			$t_args   = array(
