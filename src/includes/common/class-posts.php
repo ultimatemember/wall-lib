@@ -165,6 +165,7 @@ class Posts {
 				'numberposts'    => -1,
 			)
 		);
+		$title     = esc_html__( 'Post image', $this->wall->textdomain ); // phpcs:ignore WordPress.WP.I18n
 
 		if ( ! empty( $attachments ) ) {
 			$content = '';
@@ -186,10 +187,10 @@ class Posts {
 					$user_base_dir = UM()->common()->filesystem()->get_user_uploads_dir( $author_id );
 
 					if ( file_exists( $user_base_dir . DIRECTORY_SEPARATOR . $uri ) ) {
-						$content .= "<a href=\"{$photo_url}\" target=\"_blank\"><img src=\"{$photo_url}\" alt=\"\" style=\"width: 100%;\" /></a>";
+						$content .= "<img src=\"{$photo_url}\" title=\"{$title}\" alt=\"\" style=\"width: 100%;\" />";
 					}
 				} else {
-					$content .= "<a href=\"#\" class=\"um-photo-modal\" data-src=\"{$photo_url}\"><img src=\"{$photo_url}\" alt=\"\" /></a>";
+					$content .= "<img src=\"{$photo_url}\" title=\"{$title}\" alt=\"\" />";
 				}
 			}
 		} else {
@@ -205,6 +206,7 @@ class Posts {
 			return '';
 		}
 		$photo_url = esc_attr( $photo_url );
+		$title     = esc_html__( 'Post image', $this->wall->textdomain ); // phpcs:ignore WordPress.WP.I18n
 
 		$content = '';
 		if ( 'backend' === $class ) {
@@ -216,10 +218,10 @@ class Posts {
 			$user_base_dir = UM()->common()->filesystem()->get_user_uploads_dir( $author_id );
 
 			if ( file_exists( $user_base_dir . DIRECTORY_SEPARATOR . $uri ) ) {
-				$content = "<a href=\"{$photo_url}\" target=\"_blank\"><img src=\"{$photo_url}\" alt=\"\" style=\"width: 100%;\" /></a>";
+				$content = "<img src=\"{$photo_url}\" title=\"{$title}\" alt=\"\" style=\"width: 100%;\" />";
 			}
 		} else {
-			$content = "<a href=\"#\" class=\"um-photo-modal\" data-src=\"{$photo_url}\"><img src=\"{$photo_url}\" alt=\"\" /></a>";
+			$content = "<img src=\"{$photo_url}\" title=\"{$title}\" alt=\"\" />";
 		}
 
 		return $content;

@@ -125,6 +125,11 @@
             color: $link-color
             &:hover
               color: $link-hover-color
+      .#{$prefix}wall-bodyinner-photo
+        img
+          max-width: 100%
+          height: auto
+          cursor: pointer
       .#{$prefix}wall-actions
         +flex( row, space-between, center, nowrap )
         row-gap: $spacing-xs
@@ -345,3 +350,10 @@
       .#{$prefix}form-submit
         +flex( row, flex-end, center, nowrap )
         gap: calc( $spacing-6xl + 4px )
+
+// modal
+.#{$prefix}wall-photo-view-modal
+  img
+    max-width: 100%
+    height: auto
+    max-height: 100% !important

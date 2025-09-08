@@ -195,6 +195,11 @@
 .um .um-wall-widget .um-wall-body .um-wall-bodyinner .um-wall-bodyinner-txt .um-link:hover {
   color: var(--um-primary-800-bg, #53389e);
 }
+.um .um-wall-widget .um-wall-body .um-wall-bodyinner-photo img {
+  max-width: 100%;
+  height: auto;
+  cursor: pointer;
+}
 .um .um-wall-widget .um-wall-body .um-wall-actions {
   display: flex;
   flex-direction: row;
@@ -516,4 +521,10 @@
   align-items: center;
   flex-wrap: nowrap;
   gap: 52px;
+}
+
+.um-wall-photo-view-modal img {
+  max-width: 100%;
+  height: auto;
+  max-height: 100% !important;
 }

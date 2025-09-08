@@ -882,6 +882,24 @@ jQuery( document ).ready(function () {
 			}
 		);
 	});
+
+	/* Trash comment popup */
+	jQuery( document.body ).on('click', '.um-wall-bodyinner-photo img', function(e) {
+		e.preventDefault();
+		let image = '<div class="um-wall-photo-view-modal-wrap"><img src="' + jQuery(this).attr('src') + '" alt="" /></div>';
+		let header = jQuery(this).attr('title');
+		let settings = {
+			classes:  'um-wall-photo-view-modal',
+			duration: 400,
+			header:   header,
+			footer:   '',
+			size:     'large',
+			content:  image
+		};
+
+		UM.modal.addModal( settings, null );
+
+	});
 });
 
 // AJAX wall request on scroll
