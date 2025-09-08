@@ -322,6 +322,7 @@ class Posts {
 			),
 		);
 
+		$orig_content = '';
 		if ( trim( $_post_content ) ) {
 			$orig_content = wp_kses(
 				trim( $_post_content ),
@@ -440,16 +441,19 @@ class Posts {
 			WP_Filesystem( $credentials );
 		}
 
-		$allowed = UM()->common()->filesystem()::image_mimes( 'allowed' );
-		$allowed = apply_filters( $this->wall->prefix . 'wall_allowed_mime_types', $allowed );
+		$allowed      = UM()->common()->filesystem()::image_mimes( 'allowed' );
+		$allowed      = apply_filters( $this->wall->prefix . 'wall_allowed_mime_types', $allowed );
+		$user_basedir = UM()->common()->filesystem()->get_user_uploads_dir( get_current_user_id() );
 		if ( is_array( $_post_images ) ) {
 			foreach ( $_post_images as $photo ) {
 				$path       = sanitize_file_name( $photo['path'] );
-				$filename   = sanitize_file_name( 'stream_photo_' . $photo['hash'] . '_' . $photo['filename'] );// Make the file name unique in the (new) upload directory.
+				$filename   = sanitize_file_name( $photo['filename'] );
 				$image_type = wp_check_filetype( $path, $allowed ); // Don't need checking empty condition below, because had validation above.
-
-				$old_path = wp_normalize_path( UM()->common()->filesystem()->get_file_by_hash( $photo['hash'] ) );
-				$new_path = wp_normalize_path( UM()->common()->filesystem()->get_user_uploads_dir( get_current_user_id() ) . DIRECTORY_SEPARATOR . $filename );
+				$old_path   = wp_normalize_path( UM()->common()->filesystem()->get_file_by_hash( $photo['hash'] ) );
+				if ( file_exists( $user_basedir . DIRECTORY_SEPARATOR . $filename ) ) {
+					$filename = wp_unique_filename( $user_basedir . DIRECTORY_SEPARATOR, $filename ); // Make the file name unique in the (new) upload directory.
+				}
+				$new_path = wp_normalize_path( $user_basedir . DIRECTORY_SEPARATOR . $filename );
 
 				$move_result = $wp_filesystem->move( $old_path, $new_path, true );
 				if ( ! $move_result ) {
@@ -476,27 +480,38 @@ class Posts {
 		// OLD UI image transfer
 		if ( get_post_meta( $post_id, '_photo', true ) ) {
 			$photo      = get_post_meta( $post_id, '_photo', true );
-			$path       = wp_normalize_path( UM()->common()->filesystem()->get_user_uploads_dir( get_current_user_id() ) . DIRECTORY_SEPARATOR . $photo );
-			$image_type = wp_check_filetype( $path, $allowed );
+			$photo_data = get_post_meta( $post_id, '_photo_metadata', true );
+			$filename   = $photo;
+			if ( isset( $photo_data['original_name'] ) && '' !== $photo_data['original_name'] ) {
+				$filename = $photo_data['original_name'];
+				$old_path = wp_normalize_path( UM()->common()->filesystem()->get_user_uploads_dir( get_current_user_id() ) . DIRECTORY_SEPARATOR . $photo );
+				if ( file_exists( $user_basedir . DIRECTORY_SEPARATOR . $filename ) ) {
+					$filename = wp_unique_filename( $user_basedir . DIRECTORY_SEPARATOR, $filename ); // Make the file name unique in the (new) upload directory.
+				}
+				$new_path = wp_normalize_path( UM()->common()->filesystem()->get_user_uploads_dir( get_current_user_id() ) . DIRECTORY_SEPARATOR . $filename );
+				$wp_filesystem->move( $old_path, $new_path, true );
+			}
+
+			$image_type = wp_check_filetype( $new_path, $allowed );
 
 			$attachment = array(
-				'guid'           => $path,
+				'guid'           => $new_path,
 				'post_mime_type' => $image_type['type'],
-				'post_title'     => sanitize_text_field( $photo ),
+				'post_title'     => sanitize_text_field( $filename ),
 				'post_content'   => '',
 				'post_parent'    => $post_id,
 				'post_author'    => get_current_user_id(),
 				'post_status'    => 'inherit',
 			);
 
-			$attach_id = wp_insert_attachment( $attachment, $path );
+			$attach_id = wp_insert_attachment( $attachment, $new_path );
 			add_filter( 'intermediate_image_sizes_advanced', '__return_empty_array' );
-			$attach_data = wp_generate_attachment_metadata( $attach_id, $path );
+			$attach_data = wp_generate_attachment_metadata( $attach_id, $new_path );
 			wp_update_attachment_metadata( $attach_id, $attach_data );
 			remove_filter( 'intermediate_image_sizes_advanced', '__return_empty_array' );
-			// @todo check duplicates
-			// delete_post_meta( $post_id, '_photo' );
-			// delete_post_meta( $post_id, '_photo_metadata' );
+
+			// transfer old UI image meta to new UI
+			update_post_meta( $post_id, '_transfer_new_ui', 1 );
 		}
 	}
 
