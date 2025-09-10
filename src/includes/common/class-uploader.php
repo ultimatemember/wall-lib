@@ -70,11 +70,11 @@ class Uploader {
 								<path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
 							</svg>';
 							$button_args    = array(
-									'type'          => 'button',
-									'icon_position' => 'content',
-									'design'        => 'link-gray',
-									'size'          => 's',
-									'classes'       => array( 'um-uploader-file-remove' ),
+								'type'          => 'button',
+								'icon_position' => 'content',
+								'design'        => 'link-gray',
+								'size'          => 's',
+								'classes'       => array( 'um-uploader-file-remove' ),
 							);
 							echo wp_kses( UM()->frontend()::layouts()::button( $button_content, $button_args ), UM()->get_allowed_html( 'templates' ) );
 							?>

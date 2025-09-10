@@ -157,7 +157,6 @@ class Init {
 		} elseif ( UM()->is_request( 'frontend' ) ) {
 			$this->frontend()->includes();
 		}
-		$this->integrations()->includes();
 	}
 
 	/**
@@ -191,17 +190,6 @@ class Init {
 			UM()->classes['WallLib\common\Init'] = new common\Init( $this );
 		}
 		return UM()->classes['WallLib\common\Init'];
-	}
-
-	/**
-	 *
-	 * @return integrations\Init
-	 */
-	public function integrations() {
-		if ( empty( UM()->classes['WallLib\integrations\Init'] ) ) {
-			UM()->classes['WallLib\integrations\Init'] = new integrations\Init( $this );
-		}
-		return UM()->classes['WallLib\integrations\Init'];
 	}
 
 	public function get_plugin_info() {

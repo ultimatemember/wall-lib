@@ -564,7 +564,7 @@ class Comments {
 			)
 		);
 
-		$comments_all     = $this->wall->common()->comments()->get_comments_number( $post_id );
+		$comments_all = $this->wall->common()->comments()->get_comments_number( $post_id );
 
 		$t_args = array(
 			'comments'         => $comments,

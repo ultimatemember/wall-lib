@@ -559,7 +559,7 @@ class Posts {
 
 		if ( $increase_likes ) {
 			update_post_meta( $post_id, '_liked', $liked );
-			$likes ++;
+			++$likes;
 			update_post_meta( $post_id, '_likes', $likes );
 		}
 
