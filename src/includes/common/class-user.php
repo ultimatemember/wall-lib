@@ -58,16 +58,8 @@ class User {
 			$can_view = false;
 		}
 
-		$in_users     = array();
-		$followed_ids = $this->wall->integrations()->followers()->followed_ids();
-		if ( $followed_ids ) {
-			$in_users = array_merge( $in_users, $followed_ids );
-		}
-
-		$friends_ids = $this->wall->integrations()->friends()->friends_ids();
-		if ( $friends_ids ) {
-			$in_users = array_merge( $in_users, $friends_ids );
-		}
+		$in_users = array();
+		$in_users = apply_filters( $this->wall->prefix . 'wall_post_can_view_in_users', $in_users, $post_id );
 
 		if ( ! empty( $in_users ) ) {
 			$in_users[] = get_current_user_id();

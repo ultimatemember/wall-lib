@@ -23,6 +23,15 @@ class Posts {
 		$this->wall = $wall;
 	}
 
+	public function get_allowed_html() {
+		// Adds iframe and onclick to allowed tags and attributes only for activity wall.
+		add_filter( 'um_late_escaping_allowed_tags', array( &$this, 'add_extra_kses_allowed_tags' ), 10, 2 );
+		$allowed_html = UM()->get_allowed_html( 'templates' );
+		remove_filter( 'um_late_escaping_allowed_tags', array( &$this, 'add_extra_kses_allowed_tags' ) );
+
+		return $allowed_html;
+	}
+
 	public function add_extra_kses_allowed_tags( $allowed_html, $context ) {
 		if ( 'templates' === $context ) {
 			$allowed_html['iframe'] = array(
@@ -39,6 +48,7 @@ class Posts {
 
 			$allowed_html['strong']['onclick'] = true;
 		}
+
 		return $allowed_html;
 	}
 

@@ -292,7 +292,7 @@ class Posts {
 		$order_comment = apply_filters( $this->wall->prefix . 'wall_comments_loadmore_order', 10 );
 
 		$t_args = array(
-			'allowed_html'     => UM()->Activity_API()->common()->post()->get_allowed_html(), // @todo: fix allowed html for wall lib
+			'allowed_html'     => $this->wall->common()->posts()->get_allowed_html(),
 			'wall_post'        => $post_id,
 			'wall_posts'       => array( $post_id ),
 			'single_post'      => true,
@@ -300,7 +300,10 @@ class Posts {
 			'comm_num'         => $comm_num,
 			'order_comment'    => $order_comment,
 		);
-		return UM()->ajax()->esc_html_spaces( UM()->get_template( 'v3/posts-loop.php', UM_ACTIVITY_PLUGIN, $t_args ) );
+
+		$template_name = apply_filters( $this->wall->prefix . 'wall_posts_template', 'v3/posts-loop.php' );
+
+		return UM()->ajax()->esc_html_spaces( UM()->get_template( $template_name, $this->wall->plugin_basename, $t_args ) );
 	}
 
 	private function handle_post_insert( $_post_content, $_post_images, $wall_id ) {
