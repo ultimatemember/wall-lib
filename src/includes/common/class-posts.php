@@ -53,6 +53,29 @@ class Posts {
 	}
 
 	/**
+	 * Filter the list of allowed CSS attributes. Needed to restore position for WP < 6.2.0.
+	 *
+	 * @param array $allowed_attr
+	 * @return array
+	 */
+	public function add_extra_safe_style_css( $allowed_attr ) {
+		if ( version_compare( get_bloginfo( 'version' ), '6.2', '>=' ) ) {
+			return $allowed_attr;
+		}
+
+		return array_merge(
+			$allowed_attr,
+			array(
+				'position',
+				'top',
+				'right',
+				'bottom',
+				'left',
+			)
+		);
+	}
+
+	/**
 	 * Gets post permalink
 	 *
 	 * @param int $post_id

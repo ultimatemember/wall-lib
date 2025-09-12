@@ -103,9 +103,9 @@ class Posts {
 
 		$t_args = apply_filters( $this->wall->prefix . 'wall_template_args', $t_args, $args, $query );
 
-//		add_filter( 'safe_style_css', array( &$this, 'add_extra_safe_style_css' ) );
+//		add_filter( 'safe_style_css', array( $this->wall->common()->posts(), 'add_extra_safe_style_css' ) );
 		$output = UM()->get_template( 'v3/posts-loop.php', $this->wall->plugin_basename, $t_args );
-//		remove_filter( 'safe_style_css', array( &$this, 'add_extra_safe_style_css' ) );
+//		remove_filter( 'safe_style_css', array( $this->wall->common()->posts(), 'add_extra_safe_style_css' ) );
 
 		wp_send_json_success( $output );
 	}
