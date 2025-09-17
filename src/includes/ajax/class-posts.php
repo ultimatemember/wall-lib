@@ -116,7 +116,7 @@ class Posts {
 	public function ajax_get_wall_post() {
 		// phpcs:disable WordPress.Security.NonceVerification
 		if ( empty( $_POST['post_id'] ) ) {
-			wp_send_json_error( array( 'message' => __( 'Invalid post ID', 'um-activity' ) ) );
+			wp_send_json_error( array( 'message' => __( 'Invalid post ID', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
 		}
 		$post_id = absint( $_POST['post_id'] );
 		$wall_id = absint( $_POST['wall_id'] );
@@ -126,7 +126,7 @@ class Posts {
 
 		$post = get_post( $post_id );
 		if ( empty( $post ) || is_wp_error( $post ) ) {
-			wp_send_json_error( array( 'message' => __( 'Invalid post ID', 'um-activity' ) ) );
+			wp_send_json_error( array( 'message' => __( 'Invalid post ID', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
 		}
 
 		$attachments = get_children(

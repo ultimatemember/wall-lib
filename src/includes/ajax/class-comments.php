@@ -554,17 +554,8 @@ class Comments {
 		$post_link = $this->wall->common()->posts()->get_permalink( $post_id );
 		// phpcs:enable WordPress.Security.NonceVerification
 
-		$comments = get_comments(
-			array(
-				'post_id' => $post_id,
-				'parent'  => 0,
-				'number'  => absint( $number ),
-				'offset'  => $offset,
-				'order'   => $order,
-			)
-		);
-
-		$comments_all = $this->wall->common()->comments()->get_comments_number( $post_id );
+		$comments     = $this->wall->common()->comments()->get_comments( $post_id, absint( $number ), $order );
+		$comments_all = count( $comments );
 
 		$t_args = array(
 			'comments'         => $comments,
@@ -621,17 +612,8 @@ class Comments {
 		$post_link = $this->wall->common()->posts()->get_permalink( $post_id );
 		// phpcs:enable WordPress.Security.NonceVerification
 
-		$child = get_comments(
-			array(
-				'post_id' => $post_id,
-				'parent'  => $comment_id,
-				'number'  => absint( $number ),
-				'offset'  => $offset,
-				'order'   => $order,
-			)
-		);
-
-		$child_all = $this->wall->common()->comments()->get_replies_number( $post_id, $comment_id );
+		$child     = $this->wall->common()->comments()->get_replies( $post_id, $comment_id, absint( $number ), $order );
+		$child_all = count( $child );
 
 		$content = '';
 		foreach ( $child as $commentc ) {

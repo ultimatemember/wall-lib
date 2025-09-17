@@ -186,6 +186,70 @@ class Comments {
 	}
 
 	/**
+	 * Get comments
+	 *
+	 * @param int $post_id
+	 *
+	 * @return int
+	 */
+	public function get_comments( $post_id, $comm_num, $order_comment ) {
+		$in_users = array();
+		if ( UM()->roles()->um_user_can( 'can_view_all' ) ) {
+			$roles = UM()->roles()->um_user_can( 'can_view_roles' );
+			if ( ! empty( $roles ) ) {
+				$args  = array(
+					'role__in' => $roles,
+					'number'   => -1,
+					'fields'   => array( 'ID' ),
+				);
+				$users = get_users( $args );
+				if ( ! empty( $users ) ) {
+					$in_users_roles = array();
+					foreach ( $users as $user_id ) {
+						$in_users_roles[] = $user_id->ID;
+					}
+				}
+			}
+		}
+		$comments_arg = array(
+			'post_id' => $post_id,
+			'parent'  => 0,
+			'number'  => $comm_num,
+			'offset'  => 0,
+			'order'   => $order_comment,
+		);
+
+		if ( UM()->roles()->um_user_can( 'can_view_all' ) ) {
+			if ( ! empty( $in_users ) && ! empty( $in_users_roles ) ) {
+				$in_users = array_unique( $in_users );
+				$in_users = array_intersect( $in_users, $in_users_roles );
+			} elseif ( empty( $in_users ) && ! empty( $in_users_roles ) ) {
+				$in_users = $in_users_roles;
+			}
+		}
+
+		if ( ! UM()->roles()->um_user_can( 'can_view_all' ) ) {
+			$in_users[] = get_current_user_id();
+		} else {
+			if ( ! empty( $roles ) && empty( $in_users_roles ) ) {
+				$in_users[] = get_current_user_id();
+			} elseif ( ! empty( $roles ) && ! empty( $in_users_roles ) ) {
+				$in_users[] = get_current_user_id();
+			}
+		}
+
+		if ( ! empty( $in_users ) ) {
+			$comments_arg['author__in'] = $in_users;
+		}
+
+		$wall_comments = get_comments(
+			$comments_arg
+		);
+
+		return $wall_comments;
+	}
+
+	/**
 	 * Get replies count
 	 *
 	 * @param int $post_id
@@ -203,6 +267,72 @@ class Comments {
 			)
 		);
 		return count( $replies_all );
+	}
+
+	/**
+	 * Get replies
+	 *
+	 * @param int $post_id
+	 * @param int $comment_id
+	 *
+	 * @return int
+	 */
+	public function get_replies( $post_id, $comment_id, $comm_num, $order_comment ) {
+		$in_users = array();
+		if ( UM()->roles()->um_user_can( 'can_view_all' ) ) {
+			$roles = UM()->roles()->um_user_can( 'can_view_roles' );
+			if ( ! empty( $roles ) ) {
+				$args  = array(
+					'role__in' => $roles,
+					'number'   => -1,
+					'fields'   => array( 'ID' ),
+				);
+				$users = get_users( $args );
+				if ( ! empty( $users ) ) {
+					$in_users_roles = array();
+					foreach ( $users as $user_id ) {
+						$in_users_roles[] = $user_id->ID;
+					}
+				}
+			}
+		}
+
+		$replies_arg = array(
+			'post_id' => $post_id,
+			'parent'  => $comment_id,
+			'number'  => $comm_num,
+			'offset'  => 0,
+			'order'   => $order_comment,
+		);
+
+		if ( UM()->roles()->um_user_can( 'can_view_all' ) ) {
+			if ( ! empty( $in_users ) && ! empty( $in_users_roles ) ) {
+				$in_users = array_unique( $in_users );
+				$in_users = array_intersect( $in_users, $in_users_roles );
+			} elseif ( empty( $in_users ) && ! empty( $in_users_roles ) ) {
+				$in_users = $in_users_roles;
+			}
+		}
+
+		if ( ! UM()->roles()->um_user_can( 'can_view_all' ) ) {
+			$in_users[] = get_current_user_id();
+		} else {
+			if ( ! empty( $roles ) && empty( $in_users_roles ) ) {
+				$in_users[] = get_current_user_id();
+			} elseif ( ! empty( $roles ) && ! empty( $in_users_roles ) ) {
+				$in_users[] = get_current_user_id();
+			}
+		}
+
+		if ( ! empty( $in_users ) ) {
+			$replies_arg['author__in'] = $in_users;
+		}
+
+		$replies_all = get_comments(
+			$replies_arg
+		);
+
+		return $replies_all;
 	}
 
 //	/**
@@ -249,8 +379,6 @@ class Comments {
 	 ***/
 	public function commentcontent( $content ) {
 		$content = convert_smilies( $content );
-		//$content = preg_replace('$(\s|^)(https?://[a-z0-9_./?=&-]+)(?![^<>]*>)$i', ' <a class="um-link" href="$2" target="_blank" rel="nofollow">$2</a> ', $content." ");
-		//$content = preg_replace('$(\s|^)(www\.[a-z0-9_./?=&-]+)(?![^<>]*>)$i', '<a class="um-link" target="_blank" href="http://$2"  target="_blank" rel="nofollow">$2</a> ', $content." ");
 		$content = $this->wall->common()->posts()->make_links_clickable( $content );
 		$content = $this->wall->common()->posts()->hashtag_links( $content );
 
