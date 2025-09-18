@@ -546,9 +546,15 @@ class Posts {
 			wp_send_json_error( array( 'message' => __( 'You already liked this post', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
 		}
 
+		$liked_array = is_array( $liked ) ? $liked : array();
+		foreach ( $liked as $key => $user_id ) {
+			if ( ! UM()->common()->users()->can_view_user( $user_id ) ) {
+				unset( $liked_array[ $key ] );
+			}
+		}
+
 		$increase_likes = false;
-		$likes          = get_post_meta( $post_id, '_likes', true );
-		$likes          = absint( $likes );
+		$likes          = count( $liked_array );
 
 		if ( empty( $liked ) || ! is_array( $liked ) ) {
 			$liked          = array( get_current_user_id() );
@@ -617,8 +623,14 @@ class Posts {
 			wp_send_json_error( array( 'message' => __( 'You didn\'t like this post', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
 		}
 
-		$likes = get_post_meta( $post_id, '_likes', true );
-		$likes = absint( $likes );
+		$liked_array = is_array( $liked ) ? $liked : array();
+		foreach ( $liked as $key => $user_id ) {
+			if ( ! UM()->common()->users()->can_view_user( $user_id ) ) {
+				unset( $liked_array[ $key ] );
+			}
+		}
+
+		$likes = count( $liked_array );
 
 		$liked = array_diff( $liked, array( get_current_user_id() ) );
 		update_post_meta( $post_id, '_liked', $liked );
@@ -667,6 +679,12 @@ class Posts {
 		$likes = get_post_meta( $post_id, '_liked', true );
 		if ( empty( $likes ) ) {
 			$likes = array();
+		}
+
+		foreach ( $likes as $key => $user_id ) {
+			if ( ! UM()->common()->users()->can_view_user( $user_id ) ) {
+				unset( $likes[ $key ] );
+			}
 		}
 
 		$template = apply_filters( $this->wall->prefix . 'wall_likes_template', 'modal/likes.php' );

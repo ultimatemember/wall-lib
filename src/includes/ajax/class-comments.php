@@ -108,9 +108,14 @@ class Comments {
 			wp_send_json_error( __( 'You already liked this comment', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
 		}
 
+		$liked_array = is_array( $liked ) ? $liked : array();
+		foreach ( $liked as $key => $user_id ) {
+			if ( ! UM()->common()->users()->can_view_user( $user_id ) ) {
+				unset( $liked_array[ $key ] );
+			}
+		}
 		$increase_likes = false;
-		$likes          = get_comment_meta( $comment_id, '_likes', true );
-		$likes          = absint( $likes );
+		$likes          = count( $liked_array );
 
 		if ( empty( $liked ) || ! is_array( $liked ) ) {
 			$liked          = array( get_current_user_id() );
@@ -179,8 +184,14 @@ class Comments {
 			wp_send_json_error( __( 'You didn\'t like this comment', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
 		}
 
-		$likes = get_comment_meta( $comment_id, '_likes', true );
-		$likes = absint( $likes );
+		$liked_array = is_array( $liked ) ? $liked : array();
+		foreach ( $liked as $key => $user_id ) {
+			if ( ! UM()->common()->users()->can_view_user( $user_id ) ) {
+				unset( $liked_array[ $key ] );
+			}
+		}
+
+		$likes = count( $liked_array );
 
 		$liked = array_diff( $liked, array( get_current_user_id() ) );
 		update_comment_meta( $comment_id, '_liked', $liked );

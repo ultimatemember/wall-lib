@@ -881,7 +881,18 @@ class Posts {
 	 * @return int
 	 */
 	public function get_likes_number( $post_id ) {
-		return absint( get_post_meta( $post_id, '_likes', true ) );
+		$likes = get_post_meta( $post_id, '_liked', true );
+		if ( empty( $likes ) ) {
+			return 0;
+		}
+
+		foreach ( $likes as $key => $user_id ) {
+			if ( ! UM()->common()->users()->can_view_user( $user_id ) ) {
+				unset( $likes[ $key ] );
+			}
+		}
+
+		return count( $likes );
 	}
 
 	/**
