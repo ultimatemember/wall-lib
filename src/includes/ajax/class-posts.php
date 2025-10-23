@@ -36,6 +36,8 @@ class Posts {
 		add_action( 'wp_ajax_nopriv_um_wall_get_post_likes', array( $this, 'get_post_likes' ) );
 
 		add_action( 'wp_ajax_um_wall_remove_post', array( $this, 'remove_post' ) );
+
+		add_action( 'wp_ajax_um_wall_get_full_post', array( $this, 'get_full_post' ) );
 	}
 
 	/**
@@ -726,5 +728,29 @@ class Posts {
 		wp_delete_post( $post_id, true );
 
 		wp_send_json_success();
+	}
+
+	/**
+	 * Get full post via AJAX
+	 */
+	public function get_full_post() {
+		// phpcs:disable WordPress.Security.NonceVerification
+		if ( empty( $_POST['post_id'] ) ) {
+			wp_send_json_error( __( 'Wrong post ID.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
+		}
+
+		$post_id = absint( $_POST['post_id'] );
+		// phpcs:enable WordPress.Security.NonceVerification
+		check_ajax_referer( 'um_wall_see_more' . $post_id, 'nonce' );
+
+		// phpcs:enable WordPress.Security.NonceVerification
+		$content_raw = get_post_field( 'post_content', $post_id );
+		$content     = do_blocks( $content_raw );
+		$content     = wpautop( $content );
+		$content     = do_shortcode( $content );
+		global $wp_embed;
+		$content = $wp_embed->autoembed( $content );
+
+		wp_send_json_success( array( 'content' => $content ) );
 	}
 }

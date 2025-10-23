@@ -531,18 +531,6 @@ jQuery( document ).ready(function () {
 		}
 	});
 
-
-
-
-
-
-
-
-
-
-
-
-
 	/* Reply to comment */
 	jQuery( document ).on( 'click', '.um-wall-edit-comment, .um-wall-edit-comment-cancel', function(e) {
 		let wrap = jQuery(this).parents('.um-wall-commentl');
@@ -898,7 +886,32 @@ jQuery( document ).ready(function () {
 		};
 
 		UM.modal.addModal( settings, null );
+	});
 
+	/* Show hidden post content */
+	jQuery( document.body ).on('click', '.um-wall-seemore', function(e) {
+		let post_id = jQuery(this).attr('data-post_id');
+		let container = jQuery(this).parents('.um-wall-bodyinner-txt');
+		let nonce = jQuery(this).attr('data-nonce');
+		container.addClass('loading');
+
+		wp.ajax.send(
+			'um_wall_get_full_post',
+			{
+				data: {
+					post_id: post_id,
+					nonce: nonce
+				},
+				success: function( data ) {
+					container.removeClass('loading');
+					container.html( data.content );
+				},
+				error: function(e) {
+					container.removeClass('loading');
+					console.log( 'UM Wall Error', e );
+				}
+			}
+		);
 	});
 });
 

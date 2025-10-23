@@ -121,7 +121,25 @@
       word-wrap: break-word
       .#{$prefix}wall-bodyinner
         .#{$prefix}wall-bodyinner-txt
+          &.loading
+            opacity: 0.5
+          .#{$prefix}meta-preview
+            border: 1px solid $gray-200
+            padding: $spacing-sm
+            position: relative
+            p
+              display: none
+          .twitter-tweet
+            width: 100% !important
+          iframe
+            width: 100%
+            max-width: 100%
+          img
+            width: 100%
+            height: auto
+          .#{$prefix}wall-seemore,
           .#{$prefix}link
+            cursor: pointer
             color: $link-color
             &:hover
               color: $link-hover-color

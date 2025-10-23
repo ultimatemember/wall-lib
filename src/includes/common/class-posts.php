@@ -44,6 +44,12 @@ class Posts {
 				'src'            => true,
 				'srcdoc'         => true,
 				'title'          => true,
+				'width'          => true,
+				'height'         => true,
+			);
+
+			$allowed_html['figure'] = array(
+				'class' => true,
 			);
 
 			$allowed_html['strong']['onclick'] = true;
