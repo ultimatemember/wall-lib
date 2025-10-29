@@ -345,10 +345,10 @@ class Posts {
 			$converted_content = $this->generate_embed_blocks_from_text( $safe_content );
 			$converted_content = $this->wrap_links_with_meta_cards( $converted_content, $post_id );
 			$converted_content = $this->linkify_hashtags_in_content( $converted_content );
-			$converted_content = convert_smilies( $converted_content );
-			if ( isset( UM()->shortcodes()->emoji ) ) {
-				$converted_content = UM()->shortcodes()->emotize( $converted_content );
-			}
+			// Replace emojis codes
+			$converted_content = convert_smilies( $converted_content ); // WordPress native converts text equivalent of smilies to images.
+			$converted_content = UM()->shortcodes()->emotize( $converted_content ); // UM legacy emoji convert from the predefined list of emoji.
+			$converted_content = wp_staticize_emoji( $converted_content ); // WordPress native converts emoji to a static img element.
 			$converted_content = preg_replace( '#<p[^>]*?>#i', '', $converted_content );
 			$converted_content = str_replace( '</p>', '<br>', $converted_content );
 			$excerpt_content   = $this->shorten_string( $converted_content );
@@ -410,10 +410,10 @@ class Posts {
 			$converted_content = $this->generate_embed_blocks_from_text( $safe_content );
 			$converted_content = $this->wrap_links_with_meta_cards( $converted_content, $post_id );
 			$converted_content = $this->linkify_hashtags_in_content( $converted_content );
-			$converted_content = convert_smilies( $converted_content );
-			if ( isset( UM()->shortcodes()->emoji ) ) {
-				$converted_content = UM()->shortcodes()->emotize( $converted_content );
-			}
+			// Replace emojis codes
+			$converted_content = convert_smilies( $converted_content ); // WordPress native converts text equivalent of smilies to images.
+			$converted_content = UM()->shortcodes()->emotize( $converted_content ); // UM legacy emoji convert from the predefined list of emoji.
+			$converted_content = wp_staticize_emoji( $converted_content ); // WordPress native converts emoji to a static img element.
 			$converted_content = preg_replace( '#<p[^>]*?>#i', '', $converted_content );
 			$converted_content = str_replace( '</p>', '<br>', $converted_content );
 			$excerpt_content   = $this->shorten_string( $converted_content );
