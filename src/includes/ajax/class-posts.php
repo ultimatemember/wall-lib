@@ -320,110 +320,113 @@ class Posts {
 				'_user_id'          => get_current_user_id(),
 				'_likes'            => 0,
 				'_comments'         => 0,
-				'_oembed'           => false,
 				'_action'           => 'status',
 				'_original_content' => '',
-				'_shared_link'      => '',
 			),
 		);
 
 		$orig_content = '';
 		if ( trim( $_post_content ) ) {
-			$orig_content = wp_kses(
-				trim( $_post_content ),
-				array(
-					'br' => array(),
-				)
-			);
-
-			$safe_content = apply_filters( 'um_wall_new_post', $orig_content, 0 );
-
-			// shared a link
-			$shared_link = $this->wall->common()->posts()->get_content_link( $safe_content );
-			$has_oembed  = $this->wall->common()->posts()->is_oembed( $shared_link );
-
-			if ( isset( $shared_link ) && $shared_link && empty( $_post_images ) && ! $has_oembed ) {
-				$safe_content = str_replace( $shared_link, '', $safe_content );
-			}
-
-			$args['post_content'] = $safe_content;
+			$orig_content = wp_kses_post( $_post_content );
+			$safe_content = apply_filters( $this->wall->prefix . 'new_post', $orig_content, 0 );
 		}
 
-		$args = apply_filters( 'um_wall_insert_post_args', $args );
-
+		$args    = apply_filters( $this->wall->prefix . 'insert_post_args', $args );
 		$post_id = wp_insert_post( $args );
 
-		// shared a link
-		if ( isset( $shared_link ) && $shared_link && empty( $_post_images ) && ! $has_oembed ) {
-			$this->wall->common()->posts()->set_url_meta( $shared_link, $post_id );
-		} else {
-			delete_post_meta( $post_id, '_shared_link' );
+		// Hashtags taxonomy
+		if ( '' !== $safe_content ) {
+			$this->wall->common()->posts()->hashtagit( $post_id, $safe_content );
 		}
 
-		$args['post_content'] = apply_filters( 'um_wall_insert_post_content_filter', $args['post_content'], get_current_user_id(), $post_id, 'new' );
+		$converted_content = '';
+		$excerpt_content   = '';
+		if ( isset( $safe_content ) && '' !== $safe_content ) {
+			$converted_content = $this->generate_embed_blocks_from_text( $safe_content );
+			$converted_content = $this->wrap_links_with_meta_cards( $converted_content, $post_id );
+			$converted_content = $this->linkify_hashtags_in_content( $converted_content );
+			$converted_content = convert_smilies( $converted_content );
+			if ( isset( UM()->shortcodes()->emoji ) ) {
+				$converted_content = UM()->shortcodes()->emotize( $converted_content );
+			}
+			$converted_content = preg_replace( '#<p[^>]*?>#i', '', $converted_content );
+			$converted_content = str_replace( '</p>', '<br>', $converted_content );
+			$excerpt_content   = $this->shorten_string( $converted_content );
 
+			update_post_meta( $post_id, '_original_content', $orig_content );
+		}
+
+		$content_final = apply_filters(
+			$this->wall->prefix . 'insert_post_content_filter',
+			$converted_content,
+			get_current_user_id(),
+			$post_id,
+			'new'
+		);
+
+		// update post
 		wp_update_post(
 			array(
 				'ID'           => $post_id,
 				'post_title'   => $post_id,
 				'post_name'    => $post_id,
-				'post_content' => $args['post_content'],
+				'post_content' => $content_final,
+				'post_excerpt' => $excerpt_content,
 			)
 		);
-
-		if ( isset( $safe_content ) ) {
-			$this->wall->common()->posts()->hashtagit( $post_id, $safe_content );
-			$this->wall->common()->posts()->setup_video( $orig_content, $post_id );
-			update_post_meta( $post_id, '_original_content', $orig_content );
-		}
 
 		// Upload new images
 		if ( ! empty( $_post_images ) ) {
 			$this->upload_images( $_post_images, $post_id );
 		}
 
-		do_action( 'um_wall_after_wall_post_published', $post_id, get_current_user_id(), $wall_id );
+		do_action( $this->wall->prefix . 'after_wall_post_published', $post_id, get_current_user_id(), $wall_id );
+
+		update_post_meta( $post_id, '_um_post_version', $this->wall->plugin_version );
 
 		return $post_id;
 	}
 
 	private function handle_post_update( $post_id, $_post_content, $_post_images, $wall_id ) {
 		if ( trim( $_post_content ) ) {
-			$orig_content = wp_kses(
-				trim( $_post_content ),
-				array(
-					'br' => array(),
-				)
-			);
+			$orig_content = wp_kses_post( $_post_content );
+			$safe_content = apply_filters( $this->wall->prefix . 'edit_post', $orig_content, 0 );
 
-			$safe_content = apply_filters( 'um_wall_edit_post', $orig_content, 0 );
-
-			// shared a link
-			$shared_link = $this->wall->common()->posts()->get_content_link( $safe_content );
-			$has_oembed  = $this->wall->common()->posts()->is_oembed( $shared_link );
-
-			if ( isset( $shared_link ) && $shared_link && empty( $_post_images ) && ! $has_oembed ) {
-				$safe_content = str_replace( $shared_link, '', $safe_content );
-			} else {
-				delete_post_meta( $post_id, '_shared_link' );
-			}
-
-			$safe_content = apply_filters( 'um_wall_update_post_content_filter', $safe_content, $this->wall->common()->posts()->get_author( $post_id ), $post_id, 'save' );
+			$safe_content = apply_filters( $this->wall->prefix . 'update_post_content_filter', $safe_content, $this->wall->common()->posts()->get_author( $post_id ), $post_id, 'save' );
 
 			$args['post_content'] = $safe_content;
 		}
 
 		$args['ID'] = $post_id;
-		$args       = apply_filters( 'um_wall_update_post_args', $args );
-
-		// Hash tag replies.
-		// $args['post_content'] = apply_filters( 'um_wall_insert_post_content_filter', $args['post_content'], get_current_user_id(), $post_id, 'new' );
-
+		$args       = apply_filters( $this->wall->prefix . 'update_post_args', $args );
 		wp_update_post( $args );
 
-		if ( isset( $safe_content ) ) {
+		// Hashtags taxonomy
+		if ( '' !== $safe_content ) {
 			$this->wall->common()->posts()->hashtagit( $post_id, $safe_content );
-			$this->wall->common()->posts()->setup_video( $orig_content, $post_id );
+		}
+
+		if ( isset( $safe_content ) && '' !== $safe_content ) {
+			$converted_content = $this->generate_embed_blocks_from_text( $safe_content );
+			$converted_content = $this->wrap_links_with_meta_cards( $converted_content, $post_id );
+			$converted_content = $this->linkify_hashtags_in_content( $converted_content );
+			$converted_content = convert_smilies( $converted_content );
+			if ( isset( UM()->shortcodes()->emoji ) ) {
+				$converted_content = UM()->shortcodes()->emotize( $converted_content );
+			}
+			$converted_content = preg_replace( '#<p[^>]*?>#i', '', $converted_content );
+			$converted_content = str_replace( '</p>', '<br>', $converted_content );
+			$excerpt_content   = $this->shorten_string( $converted_content );
+			if ( $converted_content !== $safe_content ) {
+				wp_update_post(
+					array(
+						'ID'           => $post_id,
+						'post_content' => $converted_content,
+						'post_excerpt' => $excerpt_content,
+					)
+				);
+			}
+
 			update_post_meta( $post_id, '_original_content', $orig_content );
 		}
 
@@ -432,9 +435,576 @@ class Posts {
 			$this->upload_images( $_post_images, $post_id );
 		}
 
-		do_action( 'um_wall_after_wall_post_updated', $post_id, get_current_user_id(), $wall_id );
+		do_action( $this->wall->prefix . 'after_wall_post_updated', $post_id, get_current_user_id(), $wall_id );
+
+		update_post_meta( $post_id, '_um_post_version', $this->wall->plugin_version );
 
 		return $post_id;
+	}
+
+	/**
+	 * Generate embed blocks from the text content
+	 *
+	 * @param string $raw_text original text
+	 *
+	 * @return string new text with embed blocks
+	 */
+	public function generate_embed_blocks_from_text( $raw_text ) {
+		wp_oembed_add_provider(
+			'#https?://(www\.)?x\.com/.+#i',
+			'https://publish.twitter.com/oembed',
+			true
+		);
+
+		$lines     = explode( "\n", trim( $raw_text ) );
+		$result    = '';
+		$site_host = wp_parse_url( home_url(), PHP_URL_HOST );
+
+		foreach ( $lines as $line ) {
+			$line = trim( $line );
+
+			if ( empty( $line ) ) {
+				continue;
+			}
+
+			// get a link from the string
+			if ( preg_match( '#(https?://[^\s]+)#', $line, $matches ) ) {
+				$url = $matches[1];
+
+				$url_host = wp_parse_url( $url, PHP_URL_HOST );
+				if ( $url_host && $url_host === $site_host ) {
+					$result .= '<p>' . esc_html( $line ) . "</p>\n";
+					continue;
+				}
+
+				// Get oEmbed data
+				$wp_embed    = _wp_oembed_get_object();
+				$provider    = $wp_embed->get_provider( $url );
+				$oembed_data = $wp_embed->get_data( $url );
+
+				if ( $provider && $oembed_data ) {
+					$type          = isset( $oembed_data->type ) ? esc_attr( $oembed_data->type ) : 'rich';
+					$provider_slug = isset( $oembed_data->provider_name ) ? sanitize_title( $oembed_data->provider_name ) : 'unknown';
+
+					$block_json = wp_json_encode(
+						array(
+							'url'              => $url,
+							'type'             => $type,
+							'providerNameSlug' => $provider_slug,
+							'responsive'       => true,
+						)
+					);
+
+					$result .= <<<BLOCK
+					<!-- wp:embed {$block_json} -->
+					<figure class="um-active-oembed is-type-{$type} is-provider-{$provider_slug}">
+					  <div class="um-active-oembed__wrappe is-type-{$type}">
+						{$url}
+					  </div>
+					</figure>
+					<!-- /wp:embed -->
+					BLOCK;
+				} else {
+					// simple link
+					$linked_line = preg_replace_callback(
+						'#(https?://[^\s]+)#',
+						function ( $m ) {
+							$url = esc_url( $m[1] );
+							return "<a target='_blank' rel='nofollow' class='um-link' href=\"{$url}\">{$url}</a>";
+						},
+						$line
+					);
+
+					$result .= "<p'>{$linked_line}</p>\n";
+				}
+			} else {
+				$result .= '<p>' . esc_html( $line ) . "</p>\n";
+			}
+		}
+
+		return $result;
+	}
+
+	public function wrap_links_with_meta_cards( $content, $post_id = 0 ) {
+		remove_filter( 'the_content', 'wpautop' );
+		// Get all URLs in the content
+		$raw_urls = wp_extract_urls( $content );
+		if ( empty( $raw_urls ) ) {
+			return $content;
+		}
+
+		$all_urls = array_map( array( $this, 'normalize_url_candidate' ), $raw_urls );
+		$all_urls = array_filter( $all_urls );                 // remove empty
+		$all_urls = array_values( array_unique( $all_urls ) ); // remove duplicates
+
+		if ( empty( $all_urls ) ) {
+			return $content;
+		}
+
+		// Get URLs inside <figure> blocks to skip them
+		$skip_urls = array();
+		if ( preg_match_all( '#<figure[^>]*>.*?</figure>#si', $content, $figure_blocks ) ) {
+			foreach ( $figure_blocks[0] as $figure_html ) {
+				$figure_urls = wp_extract_urls( $figure_html );
+				if ( $figure_urls ) {
+					$skip_urls = array_merge( $skip_urls, $figure_urls );
+				}
+			}
+		}
+
+		// Process each unique URL
+		foreach ( array_unique( $all_urls ) as $url ) {
+			if ( in_array( $url, $skip_urls, true ) ) {
+				continue;
+			}
+
+			$meta_card = $this->generate_link_preview_card( esc_url_raw( $url ), $post_id );
+
+			// Replace only "naked" links not inside <a> or <iframe>
+			$content = preg_replace_callback(
+				'#<a\s+[^>]*href=["\']' . preg_quote( $url, '#' ) . '["\'][^>]*>\s*' . preg_quote( $url, '#' ) . '\s*</a>#i',
+				function () use ( $meta_card ) {
+					return $meta_card;
+				},
+				$content
+			);
+
+			$content = preg_replace_callback(
+				'#(?<!["\'=])(' . preg_quote( $url, '#' ) . ')(?![^<]*?>)#',
+				function () use ( $meta_card ) {
+					return $meta_card;
+				},
+				$content
+			);
+			$content = preg_replace( '#<a[^>]*>\s*</a>#i', '', $content );
+		}
+
+		return $content;
+	}
+
+	private function normalize_url_candidate( $u ) {
+		if ( ! is_string( $u ) ) {
+			return '';
+		}
+
+		$u = html_entity_decode( $u, ENT_QUOTES, 'UTF-8' );
+		$u = trim( $u );
+
+		if ( strpos( $u, '\/' ) !== false ) {
+			$u = str_replace( '\/', '/', $u );
+		}
+		if ( strpos( $u, '\\' ) !== false ) {
+			$u = str_replace( '\\', '', $u );
+		}
+
+		if ( strpos( $u, '//' ) === 0 ) {
+			$u = 'https:' . $u;
+		}
+
+		if ( ! preg_match( '~^https?://~i', $u ) ) {
+			return '';
+		}
+		$u = esc_url_raw( $u );
+
+		return $u;
+	}
+
+	private function absolutize_url( string $maybe, string $base ): string {
+		$maybe = trim( $maybe );
+		if ( '' === $maybe ) {
+			return '';
+		}
+
+		// protocol-relative //example.com/...
+		if ( strpos( $maybe, '//' ) === 0 ) {
+			$scheme = parse_url( $base, PHP_URL_SCHEME ) ?: 'https';
+			return $scheme . ':' . $maybe;
+		}
+
+		// absolute http/https
+		if ( preg_match( '~^https?://~i', $maybe ) ) {
+			return $maybe;
+		}
+
+		// relative /path or path
+		$bp = wp_parse_url( $base );
+		if ( empty( $bp['scheme'] ) || empty( $bp['host'] ) ) {
+			return $maybe;
+		}
+		$scheme   = $bp['scheme'];
+		$host     = $bp['host'];
+		$port     = isset($bp['port']) ? ':' . $bp['port'] : '';
+		$basePath = isset($bp['path']) ? $bp['path'] : '/';
+
+		// если начинается с / — от корня, иначе от директории
+		if ( strpos( $maybe, '/' ) === 0 ) {
+			$path = $maybe;
+		} else {
+			$dir  = rtrim( preg_replace( '~/[^/]*$~', '/', $basePath ), '/' ) . '/';
+			$path = $dir . $maybe;
+		}
+
+		// нормализовать ../ и ./
+		$parts = array();
+		foreach ( explode( '/', $path ) as $seg ) {
+			if ( '' === $seg || '.' === $seg ) {
+				continue;
+			}
+			if ( '..' === $seg ) {
+				array_pop( $parts ); {
+				continue;
+				}
+			}
+			$parts[] = $seg;
+		}
+		$path = '/' . implode( '/', $parts );
+
+		return "{$scheme}://{$host}{$port}{$path}";
+	}
+
+	private function generate_link_preview_card( $url, $post_id = 0 ) {
+		$url = esc_url_raw( $url );
+
+		$response = wp_remote_get(
+			$url,
+			array(
+				'timeout'     => 5,
+				'redirection' => 3,
+				'headers'     => array(
+					'User-Agent' => 'Mozilla/5.0 (compatible; WordPress/LinkPreview)',
+					'Accept'     => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+				),
+			)
+		);
+
+		if ( is_wp_error( $response ) ) {
+			return '<a class="um-link" href="' . esc_url( $url ) . '" target="_blank" rel="noopener nofollow ugc">' . esc_html( $url ) . '</a>';
+		}
+
+		$body = wp_remote_retrieve_body( $response );
+		if ( '' === $body ) {
+			return '<a class="um-link" href="' . esc_url( $url ) . '" target="_blank" rel="noopener nofollow ugc">' . esc_html( $url ) . '</a>';
+		}
+
+		libxml_use_internal_errors( true );
+		$doc    = new \DOMDocument();
+		$loaded = $doc->loadHTML( '<?xml encoding="utf-8" ?>' . $body );
+		libxml_clear_errors();
+
+		// если HTML не распарсился — фоллбек
+		if ( ! $loaded ) {
+			return '<a class="um-link" href="' . esc_url( $url ) . '" target="_blank" rel="noopener nofollow ugc">' . esc_html( $url ) . '</a>';
+		}
+
+		$title = $desc = $img = '';
+		$image_width = $image_height = null;
+
+		// Собираем OG/Meta
+		$metas = $doc->getElementsByTagName( 'meta' );
+		foreach ( $metas as $meta ) {
+			if ( ! $meta instanceof \DOMElement ) {
+				continue;
+			}
+			$prop = strtolower( (string) $meta->getAttribute( 'property' ) );
+			$name = strtolower( (string) $meta->getAttribute( 'name' ) );
+			$val  = trim( (string) $meta->getAttribute( 'content' ) );
+			if ( '' === $val ) {
+				continue;
+			}
+
+			if ( 'og:title' === $prop || 'title' === $name ) {
+				$title = $val;
+			} elseif ( 'og:description' === $prop || 'description' === $name ) {
+				$desc = $val;
+			} elseif ( 'og:image' === $prop ) {
+				$img = $this->absolutize_url( $val, $url );
+			} elseif ( 'og:image:width' === $prop ) {
+				$image_width = absint( $val );
+			} elseif ( 'og:image:height' === $prop ) {
+				$image_height = absint( $val );
+			}
+		}
+
+		// Fallback: <title>
+		if ( '' === $title ) {
+			$nodes = $doc->getElementsByTagName( 'title' );
+			if ( $nodes->length > 0 ) {
+				$title = trim( (string) $nodes->item(0)->nodeValue );
+			}
+		}
+
+		// Fallback: first <img>
+		if ( '' === $img ) {
+			$imgs = $doc->getElementsByTagName( 'img' );
+			foreach ( $imgs as $img_tag ) {
+				$src = trim( (string) $img_tag->getAttribute( 'src' ) );
+				if ( '' === $src ) {
+					continue;
+				}
+				$img = $this->absolutize_url( $src, $url );
+				if ( preg_match( '~^https?://~i', $img ) ) {
+					break;
+				}
+				$img = '';
+			}
+		}
+
+		$domain = parse_url( $url, PHP_URL_HOST );
+		$domain = $domain ? strtoupper( preg_replace( '~^www\.~i', '', $domain ) ) : '';
+
+		$title_esc   = $title ? esc_html( $title ) : esc_html__( 'Untitled', 'um-activity' );
+		$desc_html   = $desc   ? '<div class="um-meta-desc">' . esc_html( mb_substr( $desc, 0, 240 ) ) . '</div>' : '';
+		$domain_html = $domain ? '<div class="um-meta-domain">' . esc_html( $domain ) . '</div>' : '';
+
+		if ( $img ) {
+			if ( $image_width && $image_width <= 400 ) {
+				$img_tag    = '<div class="um-meta-thumb um-meta-thumb-profile"><img src="' . esc_url( $img ) . '" alt="" class="um-activity-featured-img" /></div>';
+				$link_class = 'um-meta-link-profile';
+			} else {
+				$img_tag    = '<div class="um-meta-thumb"><img src="' . esc_url( $img ) . '" alt="" /></div>';
+				$link_class = '';
+			}
+		} else {
+			$img_tag    = '';
+			$link_class = '';
+		}
+
+		$url_attr = esc_url( $url );
+
+		return <<<HTML
+<figure class="um-meta-preview">
+  <a href="{$url_attr}" class="{$link_class}" target="_blank" rel="noopener nofollow ugc">
+    {$img_tag}
+    <div><span class="um-meta-text"><span class="um-meta-title">{$title_esc}</span>{$desc_html}{$domain_html}</span></div>
+  </a>
+</figure>
+HTML;
+	}
+//	private function generate_link_preview_card( $url, $post_id = 0 ) {
+//		$response = wp_remote_get(
+//			$url,
+//			array(
+//				'timeout' => 5,
+//				'headers' => array(
+//					'User-Agent' => 'Mozilla/5.0 (compatible; WordPress/LinkPreview)',
+//				),
+//			),
+//		);
+//
+//		if ( is_wp_error( $response ) ) {
+//			return '<a class="um-link" href="' . esc_url( $url ) . '" target="_blank">' . esc_html( $url ) . '</a>';
+//		}
+//
+//		$body = wp_remote_retrieve_body( $response );
+//		if ( empty( $body ) ) {
+//			return '<a class="um-link" href="' . esc_url( $url ) . '" target="_blank">' . esc_html( $url ) . '</a>';
+//		}
+//
+//		libxml_use_internal_errors( true );
+//		$doc = new \DOMDocument();
+/*		$doc->loadHTML( '<?xml encoding="utf-8" ?>' . $body );*/
+//
+//		$title = $desc = $img = '';
+//
+//		foreach ( $doc->getElementsByTagName( 'meta' ) as $meta ) {
+//			$prop = $meta->getAttribute( 'property' );
+//			$name = $meta->getAttribute( 'name' );
+//
+//			if ( 'og:title' === $prop || 'title' === $name ) {
+//				$title = $meta->getAttribute( 'content' );
+//			}
+//			if ( 'og:description' === $prop || 'description' === $name ) {
+//				$desc = $meta->getAttribute( 'content' );
+//			}
+//			if ( 'og:image' === $meta->getAttribute( 'property' ) ) {
+//				$img  = $src = trim( str_replace( '\\', '/', $meta->getAttribute( 'content' ) ) );
+//				$data = $this->is_image( $src );
+//				if ( is_array( $data ) ) {
+//					$img          = $src;
+//					$image_width  = $data[0];
+//					$image_height = $data[1];
+//				}
+//			}
+//
+//			if ( 'og:image:width' === $meta->getAttribute( 'property' ) ) {
+//				$image_width = trim( $meta->getAttribute( 'content' ) );
+//			}
+//			if ( 'og:image:height' === $meta->getAttribute( 'property' ) ) {
+//				$image_height = trim( $meta->getAttribute( 'content' ) );
+//			}
+//		}
+//
+//		// Fallback: use <title> tag
+//		if ( empty( $title ) ) {
+//			$nodes = $doc->getElementsByTagName( 'title' );
+//			if ( $nodes->length > 0 ) {
+//				$title = $nodes->item( 0 )->nodeValue;
+//			}
+//		}
+//
+//		// Fallback: get first image from page if no og:image
+//		if ( empty( $img ) ) {
+//			foreach ( $doc->getElementsByTagName( 'img' ) as $img_tag ) {
+//				$src = $img_tag->getAttribute( 'src' );
+//				if ( strpos( $src, '//' ) === 0 ) {
+//					$src = 'http:' . $src;
+//				}
+//				if ( filter_var( $src, FILTER_VALIDATE_URL ) ) {
+//					$img = $src;
+//					break;
+//				}
+//			}
+//		}
+//
+//		$domain = wp_parse_url( $url, PHP_URL_HOST );
+//		$title  = $title ? esc_html( $title ) : esc_html__( 'Untitled', 'um-activity' );
+//		$desc   = $desc ? '<div class="um-meta-desc">' . esc_html( $desc ) . '</div>' : '';
+//		$domain = $domain ? '<div class="um-meta-domain">' . esc_html( strtoupper( $domain ) ) . '</div>' : '';
+//		if ( isset( $image_width ) && $image_width <= 400 ) {
+//			$img_tag    = '<div class="um-meta-thumb um-meta-thumb-profile"><img src="' . esc_url( $img ) . '" alt="" class="um-activity-featured-img" /></div>';
+//			$link_class = 'um-meta-link-profile';
+//		} else {
+//			$img_tag    = $img ? '<div class="um-meta-thumb"><img src="' . esc_url( $img ) . '" alt=""></div>' : '';
+//			$link_class = '';
+//		}
+//
+//		return <<<HTML
+//		<figure class="um-meta-preview"><a href="{$url}" class="{$link_class}" target="_blank">{$img_tag}<div><span class="um-meta-text"><span class="um-meta-title">{$title}</span>{$desc}{$domain}</span></div></a></figure>
+//		HTML;
+//	}
+
+	/**
+	 * Change #hashtags in the text to links to the hashtag archive page
+	 *
+	 * @param string $content original text
+	 *
+	 * @return string new text with links
+	 */
+	public function linkify_hashtags_in_content( $content ) {
+		$taxonomy = 'um_hashtag';
+
+		return preg_replace_callback(
+			'/(?<!\w)#([\p{Pc}\p{N}\p{L}\p{Mn}]+)/um',
+			function ( $m ) use ( $taxonomy ) {
+				$tag_name = $m[1];
+
+				$term = get_term_by( 'name', $tag_name, $taxonomy );
+				if ( ! $term || is_wp_error( $term ) ) {
+					$term = get_term_by( 'slug', sanitize_title( $tag_name ), $taxonomy );
+				}
+
+				if ( $term && ! is_wp_error( $term ) ) {
+					$link = um_get_core_page( 'activity' ) . '?hashtag=' . $term->slug;
+					if ( $link ) {
+						return '<a class="um-hashtag um-link" href="' . esc_url( $link ) . '">#' . esc_html( $tag_name ) . '</a>';
+					}
+				}
+
+				return '#' . esc_html( $tag_name );
+			},
+			$content
+		);
+	}
+
+	/***
+	 ***    @shorten any string based on word count
+	 ***/
+	public function shorten_string( $string ) {
+		$words_limit = absint( UM()->options()->get( 'activity_post_truncate' ) );
+		if ( ! $words_limit ) {
+			return $string;
+		}
+
+		$blocks = array();
+		$offset = 0;
+
+		// find all <figure> blocks
+		preg_match_all( '#<figure.*?</figure>#si', $string, $figure_matches, PREG_OFFSET_CAPTURE );
+
+		foreach ( $figure_matches[0] as $match ) {
+			$pos   = $match[1];
+			$len   = strlen( $match[0] );
+			$block = substr( $string, $offset, $pos - $offset );
+
+			$text_chunks = preg_split( '/<br\s*\/?>/i', $block );
+			foreach ( $text_chunks as $chunk ) {
+				$chunk = trim( $chunk );
+				if ( '' !== $chunk ) {
+					$blocks[] = array(
+						'type'    => 'text',
+						'content' => $chunk,
+					);
+				}
+			}
+
+			$blocks[] = array(
+				'type'    => 'figure',
+				'content' => $match[0],
+			);
+			$offset   = $pos + $len;
+		}
+
+		// add remaining text after last <figure>
+		if ( $offset < strlen( $string ) ) {
+			$remaining   = substr( $string, $offset );
+			$text_chunks = preg_split( '/<br\s*\/?>/i', $remaining );
+			foreach ( $text_chunks as $chunk ) {
+				$chunk = trim( $chunk );
+				if ( '' !== $chunk ) {
+					$blocks[] = array(
+						'type'    => 'text',
+						'content' => $chunk,
+					);
+				}
+			}
+		}
+
+		// count total words
+		$total_words = 0;
+		foreach ( $blocks as $block ) {
+			if ( 'figure' === $block['type'] ) {
+				++$total_words;
+			} else {
+				$words        = preg_split( '/\s+/', wp_strip_all_tags( $block['content'] ) );
+				$total_words += count( $words );
+			}
+		}
+
+		// return empty if within limit
+		if ( $total_words <= $words_limit ) {
+			return '';
+		}
+
+		// get excerpt
+		$excerpt = '';
+		$count   = 0;
+
+		foreach ( $blocks as $block ) {
+			if ( $count >= $words_limit ) {
+				break;
+			}
+
+			if ( 'figure' === $block['type'] ) {
+				if ( $count + 1 <= $words_limit ) {
+					$excerpt .= $block['content'];
+					++$count;
+				}
+			} else {
+				$text  = wp_strip_all_tags( $block['content'] );
+				$words = preg_split( '/\s+/', $text );
+
+				$remaining = $words_limit - $count;
+				if ( count( $words ) <= $remaining ) {
+					$excerpt .= $block['content'] . '<br>';
+					$count   += count( $words );
+				} else {
+					$excerpt .= esc_html( implode( ' ', array_slice( $words, 0, $remaining ) ) );
+					break;
+				}
+			}
+		}
+
+		return $excerpt;
 	}
 
 	private function upload_images( $_post_images, $post_id ) {
