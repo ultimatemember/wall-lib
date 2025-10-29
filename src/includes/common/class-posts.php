@@ -501,10 +501,9 @@ class Posts {
 		}
 
 		// Replace emojis codes
-		$content = convert_smilies( $content );
-		if ( isset( UM()->shortcodes()->emoji ) ) {
-			$content = UM()->shortcodes()->emotize( $content );
-		}
+		$content = convert_smilies( $content ); // WordPress native converts text equivalent of smilies to images.
+		$content = UM()->shortcodes()->emotize( $content ); // UM legacy emoji convert from the predefined list of emoji.
+		$content = wp_staticize_emoji( $content ); // WordPress native converts emoji to a static img element.
 
 		// Add related image if no image
 		if ( ! strpos( $content, '<span class="post-image">' ) ) {
