@@ -310,12 +310,11 @@ class Posts {
 
 	private function handle_post_insert( $_post_content, $_post_images, $wall_id ) {
 		$args = array(
-			'post_title'   => '',
-			'post_type'    => $this->wall->post_type,
-			'post_status'  => 'publish',
-			'post_author'  => get_current_user_id(),
-			'post_content' => '',
-			'meta_input'   => array(
+			'post_title'  => '',
+			'post_type'   => $this->wall->post_type,
+			'post_status' => 'publish',
+			'post_author' => get_current_user_id(),
+			'meta_input'  => array(
 				'_wall_id'          => $wall_id,
 				'_user_id'          => get_current_user_id(),
 				'_likes'            => 0,
@@ -331,6 +330,17 @@ class Posts {
 			$safe_content = apply_filters( $this->wall->prefix . 'new_post', $orig_content, 0 );
 		}
 
+		$converted_content = '';
+		$excerpt_content   = '';
+		if ( isset( $safe_content ) && '' !== $safe_content ) {
+			$converted_content = $this->preapre_post_content( $safe_content ); // prepare blocks and preview cards from the text
+			$excerpt_content   = $this->shorten_string( $converted_content ); // create post excerpt
+
+			$args['meta_input']['_original_content'] = $orig_content;
+		}
+		$args['post_content'] = $converted_content;
+		$args['post_excerpt'] = $excerpt_content;
+
 		$args    = apply_filters( $this->wall->prefix . 'insert_post_args', $args );
 		$post_id = wp_insert_post( $args );
 
@@ -338,42 +348,6 @@ class Posts {
 		if ( '' !== $safe_content ) {
 			$this->wall->common()->posts()->hashtagit( $post_id, $safe_content );
 		}
-
-		$converted_content = '';
-		$excerpt_content   = '';
-		if ( isset( $safe_content ) && '' !== $safe_content ) {
-			$converted_content = $this->generate_embed_blocks_from_text( $safe_content );
-			$converted_content = $this->wrap_links_with_meta_cards( $converted_content, $post_id );
-			$converted_content = $this->linkify_hashtags_in_content( $converted_content );
-			// Replace emojis codes
-			$converted_content = convert_smilies( $converted_content ); // WordPress native converts text equivalent of smilies to images.
-			$converted_content = UM()->shortcodes()->emotize( $converted_content ); // UM legacy emoji convert from the predefined list of emoji.
-			$converted_content = wp_staticize_emoji( $converted_content ); // WordPress native converts emoji to a static img element.
-			$converted_content = preg_replace( '#<p[^>]*?>#i', '', $converted_content );
-			$converted_content = str_replace( '</p>', '<br>', $converted_content );
-			$excerpt_content   = $this->shorten_string( $converted_content );
-
-			update_post_meta( $post_id, '_original_content', $orig_content );
-		}
-
-		$content_final = apply_filters(
-			$this->wall->prefix . 'insert_post_content_filter',
-			$converted_content,
-			get_current_user_id(),
-			$post_id,
-			'new'
-		);
-
-		// update post
-		wp_update_post(
-			array(
-				'ID'           => $post_id,
-				'post_title'   => $post_id,
-				'post_name'    => $post_id,
-				'post_content' => $content_final,
-				'post_excerpt' => $excerpt_content,
-			)
-		);
 
 		// Upload new images
 		if ( ! empty( $_post_images ) ) {
@@ -392,42 +366,27 @@ class Posts {
 			$orig_content = wp_kses_post( $_post_content );
 			$safe_content = apply_filters( $this->wall->prefix . 'edit_post', $orig_content, 0 );
 
-			$safe_content = apply_filters( $this->wall->prefix . 'update_post_content_filter', $safe_content, $this->wall->common()->posts()->get_author( $post_id ), $post_id, 'save' );
-
 			$args['post_content'] = $safe_content;
 		}
 
 		$args['ID'] = $post_id;
-		$args       = apply_filters( $this->wall->prefix . 'update_post_args', $args );
+		if ( isset( $safe_content ) && '' !== $safe_content ) {
+			$converted_content = $this->preapre_post_content( $safe_content ); // prepare blocks and preview cards from the text
+			$excerpt_content   = $this->shorten_string( $converted_content ); // create post excerpt
+			if ( $converted_content !== $safe_content ) {
+				$args['post_content'] = $converted_content;
+				$args['post_excerpt'] = $excerpt_content;
+
+				$args['meta_input']['_original_content'] = $orig_content;
+			}
+		}
+
+		$args = apply_filters( $this->wall->prefix . 'update_post_args', $args );
 		wp_update_post( $args );
 
 		// Hashtags taxonomy
 		if ( '' !== $safe_content ) {
 			$this->wall->common()->posts()->hashtagit( $post_id, $safe_content );
-		}
-
-		if ( isset( $safe_content ) && '' !== $safe_content ) {
-			$converted_content = $this->generate_embed_blocks_from_text( $safe_content );
-			$converted_content = $this->wrap_links_with_meta_cards( $converted_content, $post_id );
-			$converted_content = $this->linkify_hashtags_in_content( $converted_content );
-			// Replace emojis codes
-			$converted_content = convert_smilies( $converted_content ); // WordPress native converts text equivalent of smilies to images.
-			$converted_content = UM()->shortcodes()->emotize( $converted_content ); // UM legacy emoji convert from the predefined list of emoji.
-			$converted_content = wp_staticize_emoji( $converted_content ); // WordPress native converts emoji to a static img element.
-			$converted_content = preg_replace( '#<p[^>]*?>#i', '', $converted_content );
-			$converted_content = str_replace( '</p>', '<br>', $converted_content );
-			$excerpt_content   = $this->shorten_string( $converted_content );
-			if ( $converted_content !== $safe_content ) {
-				wp_update_post(
-					array(
-						'ID'           => $post_id,
-						'post_content' => $converted_content,
-						'post_excerpt' => $excerpt_content,
-					)
-				);
-			}
-
-			update_post_meta( $post_id, '_original_content', $orig_content );
 		}
 
 		// Upload new images
@@ -443,6 +402,26 @@ class Posts {
 	}
 
 	/**
+	 * Prepare post content before saving
+	 *
+	 * @param string $safe_content safe content
+	 *
+	 * @return string converted content
+	 */
+	private function preapre_post_content( $safe_content ) {
+		$converted_content = $this->generate_embed_blocks_from_text( $safe_content ); // generate wp blocks with a figure tags
+		$converted_content = $this->wrap_links_with_meta_cards( $converted_content ); // create meta cards for links
+		$converted_content = $this->linkify_hashtags_in_content( $converted_content ); // crate links for hashtags
+		$converted_content = convert_smilies( $converted_content ); // WordPress native converts text equivalent of smilies to images.
+		$converted_content = UM()->shortcodes()->emotize( $converted_content ); // UM legacy emoji convert from the predefined list of emoji.
+		$converted_content = wp_staticize_emoji( $converted_content ); // WordPress native converts emoji to a static img element.
+		$converted_content = preg_replace( '#<p[^>]*?>#i', '', $converted_content ); // remove <p> tags
+		$converted_content = str_replace( '</p>', '<br>', $converted_content ); // replace </p> with <br>
+
+		return $converted_content;
+	}
+
+	/**
 	 * Generate embed blocks from the text content
 	 *
 	 * @param string $raw_text original text
@@ -450,6 +429,7 @@ class Posts {
 	 * @return string new text with embed blocks
 	 */
 	public function generate_embed_blocks_from_text( $raw_text ) {
+		// Add X.com (formerly Twitter) oEmbed provider
 		wp_oembed_add_provider(
 			'#https?://(www\.)?x\.com/.+#i',
 			'https://publish.twitter.com/oembed',
@@ -478,13 +458,30 @@ class Posts {
 				}
 
 				// Get oEmbed data
-				$wp_embed    = _wp_oembed_get_object();
-				$provider    = $wp_embed->get_provider( $url );
+				$wp_embed = _wp_oembed_get_object();
+				if ( ! $wp_embed || ! is_object( $wp_embed ) ) {
+					continue;
+				}
+
+				// Check if we have a provider for this URL
+				$provider = $wp_embed->get_provider( $url );
+				if ( is_wp_error( $provider ) || empty( $provider ) ) {
+					$provider = false;
+				}
+
+				// Fetch oEmbed data
 				$oembed_data = $wp_embed->get_data( $url );
+				if ( is_wp_error( $oembed_data ) || empty( $oembed_data ) ) {
+					$oembed_data = null;
+				}
 
 				if ( $provider && $oembed_data ) {
-					$type          = isset( $oembed_data->type ) ? esc_attr( $oembed_data->type ) : 'rich';
-					$provider_slug = isset( $oembed_data->provider_name ) ? sanitize_title( $oembed_data->provider_name ) : 'unknown';
+					$data = get_object_vars( $oembed_data );
+
+					$type_raw      = isset( $data['type'] ) ? (string) $data['type'] : 'rich';
+					$provider_name = isset( $data['provider_name'] ) ? (string) $data['provider_name'] : 'unknown';
+					$type          = sanitize_key( $type_raw );
+					$provider_slug = sanitize_title( $provider_name );
 
 					$block_json = wp_json_encode(
 						array(
@@ -558,6 +555,7 @@ class Posts {
 				continue;
 			}
 
+			// Generate meta card HTML
 			$meta_card = $this->generate_link_preview_card( esc_url_raw( $url ), $post_id );
 
 			// Replace only "naked" links not inside <a> or <iframe>
@@ -582,6 +580,13 @@ class Posts {
 		return $content;
 	}
 
+	/**
+	 * Normalize URL candidate
+	 *
+	 * @param mixed $u URL candidate
+	 *
+	 * @return string normalized URL or empty string if invalid
+	 */
 	private function normalize_url_candidate( $u ) {
 		if ( ! is_string( $u ) ) {
 			return '';
@@ -609,6 +614,14 @@ class Posts {
 		return $u;
 	}
 
+	/**
+	 * Convert a possibly relative URL to an absolute one based on a base URL
+	 *
+	 * @param string $maybe URL to convert
+	 * @param string $base  Base URL
+	 *
+	 * @return string absolute URL
+	 */
 	private function absolutize_url( string $maybe, string $base ): string {
 		$maybe = trim( $maybe );
 		if ( '' === $maybe ) {
@@ -617,7 +630,9 @@ class Posts {
 
 		// protocol-relative //example.com/...
 		if ( strpos( $maybe, '//' ) === 0 ) {
-			$scheme = parse_url( $base, PHP_URL_SCHEME ) ?: 'https';
+			$parsed = wp_parse_url( $base );
+			$scheme = ! empty( $parsed['scheme'] ) ? $parsed['scheme'] : 'https';
+
 			return $scheme . ':' . $maybe;
 		}
 
@@ -631,20 +646,20 @@ class Posts {
 		if ( empty( $bp['scheme'] ) || empty( $bp['host'] ) ) {
 			return $maybe;
 		}
-		$scheme   = $bp['scheme'];
-		$host     = $bp['host'];
-		$port     = isset($bp['port']) ? ':' . $bp['port'] : '';
-		$basePath = isset($bp['path']) ? $bp['path'] : '/';
+		$scheme    = $bp['scheme'];
+		$host      = $bp['host'];
+		$port      = isset( $bp['port'] ) ? ':' . $bp['port'] : '';
+		$base_path = isset( $bp['path'] ) ? $bp['path'] : '/';
 
-		// если начинается с / — от корня, иначе от директории
+		// build full path
 		if ( strpos( $maybe, '/' ) === 0 ) {
 			$path = $maybe;
 		} else {
-			$dir  = rtrim( preg_replace( '~/[^/]*$~', '/', $basePath ), '/' ) . '/';
+			$dir  = rtrim( preg_replace( '~/[^/]*$~', '/', $base_path ), '/' ) . '/';
 			$path = $dir . $maybe;
 		}
 
-		// нормализовать ../ и ./
+		// normalize path (remove ./ and ../)
 		$parts = array();
 		foreach ( explode( '/', $path ) as $seg ) {
 			if ( '' === $seg || '.' === $seg ) {
@@ -662,9 +677,17 @@ class Posts {
 		return "{$scheme}://{$host}{$port}{$path}";
 	}
 
-	private function generate_link_preview_card( $url, $post_id = 0 ) {
+	/**
+	 * Generate link preview card HTML
+	 *
+	 * @param string $url URL to generate preview for
+	 *
+	 * @return string HTML of the link preview card
+	 */
+	private function generate_link_preview_card( $url ) {
 		$url = esc_url_raw( $url );
 
+		// Fetch the URL content
 		$response = wp_remote_get(
 			$url,
 			array(
@@ -691,15 +714,14 @@ class Posts {
 		$loaded = $doc->loadHTML( '<?xml encoding="utf-8" ?>' . $body );
 		libxml_clear_errors();
 
-		// если HTML не распарсился — фоллбек
 		if ( ! $loaded ) {
 			return '<a class="um-link" href="' . esc_url( $url ) . '" target="_blank" rel="noopener nofollow ugc">' . esc_html( $url ) . '</a>';
 		}
 
-		$title = $desc = $img = '';
+		$title       = $desc = $img = '';
 		$image_width = $image_height = null;
 
-		// Собираем OG/Meta
+		// Extract meta tags
 		$metas = $doc->getElementsByTagName( 'meta' );
 		foreach ( $metas as $meta ) {
 			if ( ! $meta instanceof \DOMElement ) {
@@ -749,7 +771,8 @@ class Posts {
 			}
 		}
 
-		$domain = parse_url( $url, PHP_URL_HOST );
+		// Fallback: use domain as title if no title found
+		$domain = wp_parse_url( $url, PHP_URL_HOST );
 		$domain = $domain ? strtoupper( preg_replace( '~^www\.~i', '', $domain ) ) : '';
 
 		$title_esc   = $title ? esc_html( $title ) : esc_html__( 'Untitled', 'um-activity' );
@@ -772,106 +795,9 @@ class Posts {
 		$url_attr = esc_url( $url );
 
 		return <<<HTML
-<figure class="um-meta-preview">
-  <a href="{$url_attr}" class="{$link_class}" target="_blank" rel="noopener nofollow ugc">
-    {$img_tag}
-    <div><span class="um-meta-text"><span class="um-meta-title">{$title_esc}</span>{$desc_html}{$domain_html}</span></div>
-  </a>
-</figure>
-HTML;
+		<figure class="um-meta-preview"><a href="{$url_attr}" class="{$link_class}" target="_blank">{$img_tag}<div><span class="um-meta-text"><span class="um-meta-title">{$title_esc}</span>{$desc_html}{$domain_html}</span></div></a></figure>
+		HTML;
 	}
-//	private function generate_link_preview_card( $url, $post_id = 0 ) {
-//		$response = wp_remote_get(
-//			$url,
-//			array(
-//				'timeout' => 5,
-//				'headers' => array(
-//					'User-Agent' => 'Mozilla/5.0 (compatible; WordPress/LinkPreview)',
-//				),
-//			),
-//		);
-//
-//		if ( is_wp_error( $response ) ) {
-//			return '<a class="um-link" href="' . esc_url( $url ) . '" target="_blank">' . esc_html( $url ) . '</a>';
-//		}
-//
-//		$body = wp_remote_retrieve_body( $response );
-//		if ( empty( $body ) ) {
-//			return '<a class="um-link" href="' . esc_url( $url ) . '" target="_blank">' . esc_html( $url ) . '</a>';
-//		}
-//
-//		libxml_use_internal_errors( true );
-//		$doc = new \DOMDocument();
-/*		$doc->loadHTML( '<?xml encoding="utf-8" ?>' . $body );*/
-//
-//		$title = $desc = $img = '';
-//
-//		foreach ( $doc->getElementsByTagName( 'meta' ) as $meta ) {
-//			$prop = $meta->getAttribute( 'property' );
-//			$name = $meta->getAttribute( 'name' );
-//
-//			if ( 'og:title' === $prop || 'title' === $name ) {
-//				$title = $meta->getAttribute( 'content' );
-//			}
-//			if ( 'og:description' === $prop || 'description' === $name ) {
-//				$desc = $meta->getAttribute( 'content' );
-//			}
-//			if ( 'og:image' === $meta->getAttribute( 'property' ) ) {
-//				$img  = $src = trim( str_replace( '\\', '/', $meta->getAttribute( 'content' ) ) );
-//				$data = $this->is_image( $src );
-//				if ( is_array( $data ) ) {
-//					$img          = $src;
-//					$image_width  = $data[0];
-//					$image_height = $data[1];
-//				}
-//			}
-//
-//			if ( 'og:image:width' === $meta->getAttribute( 'property' ) ) {
-//				$image_width = trim( $meta->getAttribute( 'content' ) );
-//			}
-//			if ( 'og:image:height' === $meta->getAttribute( 'property' ) ) {
-//				$image_height = trim( $meta->getAttribute( 'content' ) );
-//			}
-//		}
-//
-//		// Fallback: use <title> tag
-//		if ( empty( $title ) ) {
-//			$nodes = $doc->getElementsByTagName( 'title' );
-//			if ( $nodes->length > 0 ) {
-//				$title = $nodes->item( 0 )->nodeValue;
-//			}
-//		}
-//
-//		// Fallback: get first image from page if no og:image
-//		if ( empty( $img ) ) {
-//			foreach ( $doc->getElementsByTagName( 'img' ) as $img_tag ) {
-//				$src = $img_tag->getAttribute( 'src' );
-//				if ( strpos( $src, '//' ) === 0 ) {
-//					$src = 'http:' . $src;
-//				}
-//				if ( filter_var( $src, FILTER_VALIDATE_URL ) ) {
-//					$img = $src;
-//					break;
-//				}
-//			}
-//		}
-//
-//		$domain = wp_parse_url( $url, PHP_URL_HOST );
-//		$title  = $title ? esc_html( $title ) : esc_html__( 'Untitled', 'um-activity' );
-//		$desc   = $desc ? '<div class="um-meta-desc">' . esc_html( $desc ) . '</div>' : '';
-//		$domain = $domain ? '<div class="um-meta-domain">' . esc_html( strtoupper( $domain ) ) . '</div>' : '';
-//		if ( isset( $image_width ) && $image_width <= 400 ) {
-//			$img_tag    = '<div class="um-meta-thumb um-meta-thumb-profile"><img src="' . esc_url( $img ) . '" alt="" class="um-activity-featured-img" /></div>';
-//			$link_class = 'um-meta-link-profile';
-//		} else {
-//			$img_tag    = $img ? '<div class="um-meta-thumb"><img src="' . esc_url( $img ) . '" alt=""></div>' : '';
-//			$link_class = '';
-//		}
-//
-//		return <<<HTML
-//		<figure class="um-meta-preview"><a href="{$url}" class="{$link_class}" target="_blank">{$img_tag}<div><span class="um-meta-text"><span class="um-meta-title">{$title}</span>{$desc}{$domain}</span></div></a></figure>
-//		HTML;
-//	}
 
 	/**
 	 * Change #hashtags in the text to links to the hashtag archive page
