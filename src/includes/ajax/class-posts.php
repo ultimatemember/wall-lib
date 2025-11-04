@@ -333,7 +333,7 @@ class Posts {
 		$converted_content = '';
 		$excerpt_content   = '';
 		if ( isset( $safe_content ) && '' !== $safe_content ) {
-			$converted_content = $this->preapre_post_content( $safe_content ); // prepare blocks and preview cards from the text
+			$converted_content = $this->prepare_post_content( $safe_content ); // prepare blocks and preview cards from the text
 			$excerpt_content   = $this->shorten_string( $converted_content ); // create post excerpt
 
 			$args['meta_input']['_original_content'] = $orig_content;
@@ -371,7 +371,7 @@ class Posts {
 
 		$args['ID'] = $post_id;
 		if ( isset( $safe_content ) && '' !== $safe_content ) {
-			$converted_content = $this->preapre_post_content( $safe_content ); // prepare blocks and preview cards from the text
+			$converted_content = $this->prepare_post_content( $safe_content ); // prepare blocks and preview cards from the text
 			$excerpt_content   = $this->shorten_string( $converted_content ); // create post excerpt
 			if ( $converted_content !== $safe_content ) {
 				$args['post_content'] = $converted_content;
@@ -408,7 +408,7 @@ class Posts {
 	 *
 	 * @return string converted content
 	 */
-	private function preapre_post_content( $safe_content ) {
+	private function prepare_post_content( $safe_content ) {
 		$converted_content = $this->generate_embed_blocks_from_text( $safe_content ); // generate wp blocks with a figure tags
 		$converted_content = $this->wrap_links_with_meta_cards( $converted_content ); // create meta cards for links
 		$converted_content = $this->linkify_hashtags_in_content( $converted_content ); // crate links for hashtags
