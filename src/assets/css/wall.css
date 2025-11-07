@@ -377,6 +377,12 @@
 .um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-commentl .um-wall-comment-info .um-wall-comment-data {
   width: 100%;
 }
+.um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-commentl .um-wall-comment-info .um-wall-comment-data .um-wall-comment-text .um-link {
+  color: var(--um-primary-700-bg, #6941c6);
+}
+.um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-commentl .um-wall-comment-info .um-wall-comment-data .um-wall-comment-text .um-link:hover {
+  color: var(--um-primary-800-bg, #53389e);
+}
 .um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-commentl .um-wall-comment-info .um-wall-comment-data .um-wall-comment-edit-actions {
   display: flex;
   flex-direction: row;

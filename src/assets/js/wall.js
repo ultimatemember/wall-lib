@@ -280,10 +280,10 @@ jQuery( document ).ready(function () {
 	/* Trash post */
 	jQuery( document.body ).on('click', '.um-wall-trash', function(e) {
 		let btn = jQuery(this);
-		var post_id = btn.attr('data-post_id');
-		var nonce = btn.attr('data-nonce');
-		var msg = btn.attr('data-msg');
-		var title = btn.attr('data-title');
+		let post_id = btn.attr('data-post_id');
+		let nonce = btn.attr('data-nonce');
+		let msg = btn.attr('data-msg');
+		let title = btn.attr('data-title');
 		let post = jQuery('#postid-' + post_id);
 		post.css('opacity', '0.5');
 
@@ -839,10 +839,11 @@ jQuery( document ).ready(function () {
 	/* Trash comment popup */
 	jQuery( document.body ).on('click', '.um-wall-delete-comment', function(e) {
 		let btn = jQuery(this);
-		var comment_id = btn.attr('data-comment_id');
-		var nonce = btn.attr('data-wpnonce');
-		var msg = btn.attr('data-msg');
-		var title = btn.attr('data-title');
+		let comment_id = btn.attr('data-comment_id');
+		let nonce = btn.attr('data-wpnonce');
+		let msg = btn.attr('data-msg');
+		let title = btn.attr('data-title');
+		let wrap = btn.parents('.um-wall-widget');
 
 		jQuery.um_confirm(
 			{
@@ -860,6 +861,9 @@ jQuery( document ).ready(function () {
 							} else {
 								btn.parents('.um-wall-commentwrap').remove();
 							}
+
+							let count = wrap.parent().find('.um-wall-comments-toggle .um-badge');
+							count.html( parseInt( count.html() ) - 1 );
 						},
 						error: function( data ) {
 							console.log( data );
@@ -917,7 +921,7 @@ jQuery( document ).ready(function () {
 
 // AJAX wall request on scroll
 jQuery( window ).on( 'scroll', function() {
-	var wall = jQuery('.um-wall:not([data-single_post="1"])');
+	let wall = jQuery('.um-wall:not([data-single_post="1"])');
 	if ( wall.length > 0 && jQuery(window).scrollTop() + jQuery(window).height() >= wall.offset().top + wall.height() ) {
 		um_wall_ajax_request();
 	}

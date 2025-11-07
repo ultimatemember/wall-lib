@@ -248,6 +248,11 @@
                   column-gap: $spacing-md
               .#{$prefix}wall-comment-data
                 width: 100%
+                .#{$prefix}wall-comment-text
+                  .#{$prefix}link
+                    color: $link-color
+                    &:hover
+                      color: $link-hover-color
                 .#{$prefix}wall-comment-edit-actions
                   +flex( row, end, start, nowrap )
                   column-gap: $spacing-md

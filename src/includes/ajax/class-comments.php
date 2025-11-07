@@ -109,9 +109,11 @@ class Comments {
 		}
 
 		$liked_array = is_array( $liked ) ? $liked : array();
-		foreach ( $liked as $key => $user_id ) {
-			if ( ! UM()->common()->users()->can_view_user( $user_id ) ) {
-				unset( $liked_array[ $key ] );
+		if ( ! empty( $liked ) ) {
+			foreach ( $liked as $key => $user_id ) {
+				if ( ! UM()->common()->users()->can_view_user( $user_id ) ) {
+					unset( $liked_array[ $key ] );
+				}
 			}
 		}
 		$increase_likes = false;
@@ -185,9 +187,11 @@ class Comments {
 		}
 
 		$liked_array = is_array( $liked ) ? $liked : array();
-		foreach ( $liked as $key => $user_id ) {
-			if ( ! UM()->common()->users()->can_view_user( $user_id ) ) {
-				unset( $liked_array[ $key ] );
+		if ( ! empty( $liked ) ) {
+			foreach ( $liked as $key => $user_id ) {
+				if ( ! UM()->common()->users()->can_view_user( $user_id ) ) {
+					unset( $liked_array[ $key ] );
+				}
 			}
 		}
 
@@ -382,6 +386,7 @@ class Comments {
 				'post_link'        => $post_link,
 				'um_activity_wall' => $this->wall,
 				'comm_num'         => $comm_num,
+				'order_comment'    => UM()->options()->get( 'activity_order_comment' ),
 			);
 			$template = apply_filters( $this->wall->prefix . 'wall_comment_template', 'comment.php' );
 		}
@@ -564,15 +569,19 @@ class Comments {
 		$offset    = absint( $_POST['offset'] );
 		$post_link = $this->wall->common()->posts()->get_permalink( $post_id );
 		// phpcs:enable WordPress.Security.NonceVerification
+		$comm_num      = UM()->options()->get( 'activity_init_comments_count' );
+		$order_comment = UM()->options()->get( 'activity_order_comment' );
 
-		$comments     = $this->wall->common()->comments()->get_comments( $post_id, absint( $number ), $order );
-		$comments_all = count( $comments );
+		$comments     = $this->wall->common()->comments()->get_comments( $post_id, absint( $number ), $order, $offset );
+		$comments_all = $this->wall->common()->comments()->get_comments_number( $post_id );
 
 		$t_args = array(
 			'comments'         => $comments,
 			'post_id'          => $post_id,
 			'post_link'        => $post_link,
 			'um_activity_wall' => $this->wall,
+			'comm_num'         => $comm_num,
+			'order_comment'   => $order_comment,
 		);
 
 		$template = apply_filters( $this->wall->prefix . 'wall_comment_template', 'comment.php' );
@@ -623,8 +632,8 @@ class Comments {
 		$post_link = $this->wall->common()->posts()->get_permalink( $post_id );
 		// phpcs:enable WordPress.Security.NonceVerification
 
-		$child     = $this->wall->common()->comments()->get_replies( $post_id, $comment_id, absint( $number ), $order );
-		$child_all = count( $child );
+		$child     = $this->wall->common()->comments()->get_replies( $post_id, $comment_id, absint( $number ), $order, $offset );
+		$child_all = $this->wall->common()->comments()->get_replies_number( $post_id, $comment_id );
 
 		$content = '';
 		foreach ( $child as $commentc ) {

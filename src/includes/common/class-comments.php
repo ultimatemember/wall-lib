@@ -192,7 +192,7 @@ class Comments {
 	 *
 	 * @return int
 	 */
-	public function get_comments( $post_id, $comm_num, $order_comment ) {
+	public function get_comments( $post_id, $comm_num, $order_comment, $offset = 0 ) {
 		$in_users = array();
 		if ( UM()->roles()->um_user_can( 'can_view_all' ) ) {
 			$roles = UM()->roles()->um_user_can( 'can_view_roles' );
@@ -215,7 +215,7 @@ class Comments {
 			'post_id' => $post_id,
 			'parent'  => 0,
 			'number'  => $comm_num,
-			'offset'  => 0,
+			'offset'  => $offset,
 			'order'   => $order_comment,
 		);
 
@@ -277,7 +277,7 @@ class Comments {
 	 *
 	 * @return int
 	 */
-	public function get_replies( $post_id, $comment_id, $comm_num, $order_comment ) {
+	public function get_replies( $post_id, $comment_id, $comm_num, $order_comment, $offset = 0 ) {
 		$in_users = array();
 		if ( UM()->roles()->um_user_can( 'can_view_all' ) ) {
 			$roles = UM()->roles()->um_user_can( 'can_view_roles' );
@@ -301,7 +301,7 @@ class Comments {
 			'post_id' => $post_id,
 			'parent'  => $comment_id,
 			'number'  => $comm_num,
-			'offset'  => 0,
+			'offset'  => $offset,
 			'order'   => $order_comment,
 		);
 

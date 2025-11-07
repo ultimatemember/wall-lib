@@ -182,6 +182,8 @@ class Posts {
 			'post'            => $post,
 			'count'           => $count,
 			'uploaded_photos' => $uploaded_photos,
+			'attachments'     => $attachments,
+			'allowed_html'    => $this->wall->common()->posts()->get_allowed_html(),
 		);
 
 		$output = UM()->get_template( 'v3/edit-post.php', $this->wall->plugin_basename, $t_args );
@@ -1045,9 +1047,11 @@ class Posts {
 		}
 
 		$liked_array = is_array( $liked ) ? $liked : array();
-		foreach ( $liked as $key => $user_id ) {
-			if ( ! UM()->common()->users()->can_view_user( $user_id ) ) {
-				unset( $liked_array[ $key ] );
+		if ( ! empty( $liked ) ) {
+			foreach ( $liked as $key => $user_id ) {
+				if ( ! UM()->common()->users()->can_view_user( $user_id ) ) {
+					unset( $liked_array[ $key ] );
+				}
 			}
 		}
 
@@ -1122,9 +1126,11 @@ class Posts {
 		}
 
 		$liked_array = is_array( $liked ) ? $liked : array();
-		foreach ( $liked as $key => $user_id ) {
-			if ( ! UM()->common()->users()->can_view_user( $user_id ) ) {
-				unset( $liked_array[ $key ] );
+		if ( ! empty( $liked ) ) {
+			foreach ( $liked as $key => $user_id ) {
+				if ( ! UM()->common()->users()->can_view_user( $user_id ) ) {
+					unset( $liked_array[ $key ] );
+				}
 			}
 		}
 
