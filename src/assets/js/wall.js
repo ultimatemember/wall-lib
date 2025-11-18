@@ -661,6 +661,7 @@ jQuery( document ).ready(function () {
 				nonce: nonce
 			},
 			success: function( response ) {
+				console.log(response)
 				loader.umHide();
 				textarea.val('');
 				btn.attr('disabled', true);

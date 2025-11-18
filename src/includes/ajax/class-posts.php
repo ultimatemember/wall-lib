@@ -207,10 +207,8 @@ class Posts {
 			check_ajax_referer( 'um-wall-post-edit' . $post_id, 'nonce' );
 		}
 
-		$_post_content = '';
-		if ( ! empty( $_POST['_post_content'] ) ) {
-			$_post_content = wp_kses_post( trim( wp_unslash( $_POST['_post_content'] ) ) );
-		}
+		$_post_content = wp_kses_post( wp_unslash( trim( $_POST['_post_content'] ) ) );
+		$_post_content = ! empty( $_post_content ) ? $_post_content : '';
 
 		$_post_images = array();
 		if ( ! empty( $_POST['activity_post_photo'] ) ) {
@@ -311,44 +309,49 @@ class Posts {
 	}
 
 	private function handle_post_insert( $_post_content, $_post_images, $wall_id ) {
+		$current_user_id = get_current_user_id();
+		$orig_content    = apply_filters( $this->wall->prefix . 'new_post', $_post_content );
+
 		$args = array(
-			'post_title'  => '',
-			'post_type'   => $this->wall->post_type,
-			'post_status' => 'publish',
-			'post_author' => get_current_user_id(),
-			'meta_input'  => array(
+			'post_title'   => '',
+			'post_type'    => $this->wall->post_type,
+			'post_status'  => 'publish',
+			'post_author'  => $current_user_id,
+			'post_content' => '',
+			'post_excerpt' => '',
+			'meta_input'   => array(
 				'_wall_id'          => $wall_id,
-				'_user_id'          => get_current_user_id(),
+				'_user_id'          => $current_user_id,
 				'_likes'            => 0,
 				'_comments'         => 0,
 				'_action'           => 'status',
-				'_original_content' => '',
+				'_original_content' => wp_slash( $orig_content ),
 			),
 		);
 
-		$orig_content = '';
-		if ( trim( $_post_content ) ) {
-			$orig_content = wp_kses_post( $_post_content );
-			$safe_content = apply_filters( $this->wall->prefix . 'new_post', $orig_content, 0 );
-		}
-
-		$converted_content = '';
-		$excerpt_content   = '';
-		if ( isset( $safe_content ) && '' !== $safe_content ) {
-			$converted_content = $this->prepare_post_content( $safe_content ); // prepare blocks and preview cards from the text
-			$excerpt_content   = $this->shorten_string( $converted_content ); // create post excerpt
-
-			$args['meta_input']['_original_content'] = $orig_content;
-		}
-		$args['post_content'] = $converted_content;
-		$args['post_excerpt'] = $excerpt_content;
-
 		$args    = apply_filters( $this->wall->prefix . 'insert_post_args', $args );
 		$post_id = wp_insert_post( $args );
+		if ( empty( $post_id ) || is_wp_error( $post_id ) ) {
+			wp_send_json_error( __( 'Something went wrong with post store.', 'um-activity' ) );
+		} else {
+			if ( '' !== $orig_content ) {
+				// Apply hashtags for the post.
+				$this->wall->common()->posts()->hashtagit( $post_id, $orig_content );
 
-		// Hashtags taxonomy
-		if ( '' !== $safe_content ) {
-			$this->wall->common()->posts()->hashtagit( $post_id, $safe_content );
+				$data = array(
+					'ID' => $post_id,
+				);
+
+				$converted_content = $this->prepare_post_content( $orig_content ); // prepare blocks and preview cards from the text
+				$excerpt_content   = $this->shorten_string( $orig_content ); // prepare post excerpt
+				if ( $excerpt_content !== $orig_content ) {
+					$data['post_excerpt'] = wp_slash( $excerpt_content ); // create post excerpt
+				}
+				$data['post_content'] = wp_slash( $converted_content );
+
+				$data = apply_filters( $this->wall->prefix . 'update_prepared_post_args', $data );
+				wp_update_post( $data );
+			}
 		}
 
 		// Upload new images
@@ -364,31 +367,43 @@ class Posts {
 	}
 
 	private function handle_post_update( $post_id, $_post_content, $_post_images, $wall_id ) {
-		if ( trim( $_post_content ) ) {
-			$orig_content = wp_kses_post( $_post_content );
-			$safe_content = apply_filters( $this->wall->prefix . 'edit_post', $orig_content, 0 );
+		// Update post
+		$args = array( 'ID' => $post_id );
 
-			$args['post_content'] = $safe_content;
+		$orig_content        = apply_filters( $this->wall->prefix . 'edit_post', $_post_content );
+		$old_data            = get_post( $post_id );
+		$old_data->post_meta = get_post_meta( $post_id );
+
+		// Compare new changed content with the saved original content.
+		if ( $old_data->post_meta['_original_content'] !== $orig_content ) {
+			$args['meta_input']['_original_content'] = wp_slash( $orig_content );
 		}
 
-		$args['ID'] = $post_id;
-		if ( isset( $safe_content ) && '' !== $safe_content ) {
-			$converted_content = $this->prepare_post_content( $safe_content ); // prepare blocks and preview cards from the text
-			$excerpt_content   = $this->shorten_string( $converted_content ); // create post excerpt
-			if ( $converted_content !== $safe_content ) {
-				$args['post_content'] = $converted_content;
-				$args['post_excerpt'] = $excerpt_content;
+		$args    = apply_filters( $this->wall->prefix . 'update_post_args', $args );
+		$post_id = wp_update_post( $args );
 
-				$args['meta_input']['_original_content'] = $orig_content;
+		if ( empty( $post_id ) || is_wp_error( $post_id ) ) {
+			wp_send_json_error( __( 'Something went wrong with post store.', 'um-activity' ) );
+		} else {
+			if ( $old_data->post_meta['_original_content'] !== $orig_content ) {
+				$this->wall->common()->posts()->hashtagit( $post_id, $orig_content ); // Update hashtags for the post.
+
+				$data = array(
+					'ID' => $post_id,
+				);
+
+				$converted_content = $this->prepare_post_content( $orig_content ); // prepare blocks and preview cards from the text
+				$excerpt_content   = $this->shorten_string( $orig_content ); // prepare post excerpt
+
+				$data['post_excerpt'] = '';
+				if ( $excerpt_content !== $orig_content ) {
+					$data['post_excerpt'] = wp_slash( $excerpt_content ); // create post excerpt
+				}
+				$data['post_content'] = wp_slash( $converted_content );
+
+				$data = apply_filters( $this->wall->prefix . 'update_prepared_post_args', $data );
+				wp_update_post( $data );
 			}
-		}
-
-		$args = apply_filters( $this->wall->prefix . 'update_post_args', $args );
-		wp_update_post( $args );
-
-		// Hashtags taxonomy
-		if ( '' !== $safe_content ) {
-			$this->wall->common()->posts()->hashtagit( $post_id, $safe_content );
 		}
 
 		// Upload new images
@@ -411,14 +426,11 @@ class Posts {
 	 * @return string converted content
 	 */
 	private function prepare_post_content( $safe_content ) {
-		$converted_content = $this->generate_embed_blocks_from_text( $safe_content ); // generate wp blocks with a figure tags
-		$converted_content = $this->wrap_links_with_meta_cards( $converted_content ); // create meta cards for links
-		$converted_content = $this->linkify_hashtags_in_content( $converted_content ); // crate links for hashtags
+		$converted_content = $this->handle_links( $safe_content ); // generate wp blocks with a figure tags
+		$converted_content = $this->linkify_hashtags_in_content( $converted_content ); // create meta cards for links
 		$converted_content = convert_smilies( $converted_content ); // WordPress native converts text equivalent of smilies to images.
-		$converted_content = UM()->shortcodes()->emotize( $converted_content ); // UM legacy emoji convert from the predefined list of emoji.
+		$converted_content = UM()->shortcodes()->emotize( $converted_content, false ); // UM legacy emoji convert from the predefined list of emoji.
 		$converted_content = wp_staticize_emoji( $converted_content ); // WordPress native converts emoji to a static img element.
-		$converted_content = preg_replace( '#<p[^>]*?>#i', '', $converted_content ); // remove <p> tags
-		$converted_content = str_replace( '</p>', '<br>', $converted_content ); // replace </p> with <br>
 
 		return $converted_content;
 	}
@@ -430,253 +442,72 @@ class Posts {
 	 *
 	 * @return string new text with embed blocks
 	 */
-	public function generate_embed_blocks_from_text( $raw_text ) {
+	private function handle_links( $raw_text ) {
 		// Add X.com (formerly Twitter) oEmbed provider
 		wp_oembed_add_provider(
 			'#https?://(www\.)?x\.com/.+#i',
 			'https://publish.twitter.com/oembed',
 			true
 		);
-
-		$lines     = explode( "\n", trim( $raw_text ) );
-		$result    = '';
 		$site_host = wp_parse_url( home_url(), PHP_URL_HOST );
+		$wp_embed  = _wp_oembed_get_object();
 
-		foreach ( $lines as $line ) {
-			$line = trim( $line );
+		$processed_text = preg_replace_callback(
+			'#(?<!href=")(https?://[^\s]+)#',
+			function ( $m ) use ( $site_host, $wp_embed ) {
+				$url = esc_url_raw( $m[0] );
 
-			if ( empty( $line ) ) {
-				continue;
-			}
+				if ( $wp_embed && is_object( $wp_embed ) ) {
+					$provider    = $wp_embed->get_provider( $url );
+					$oembed_data = $wp_embed->get_data( $url );
 
-			// get a link from the string
-			if ( preg_match( '#(https?://[^\s]+)#', $line, $matches ) ) {
-				$url = $matches[1];
+					if ( ! empty( $provider ) && ! empty( $oembed_data ) && ! is_wp_error( $provider ) && ! is_wp_error( $oembed_data ) ) {
+						$url_host = wp_parse_url( $url, PHP_URL_HOST );
+						if ( ! $url_host || $url_host !== $site_host ) { // Don't make embed the current website URLs.
+							$data = get_object_vars( $oembed_data );
 
-				$url_host = wp_parse_url( $url, PHP_URL_HOST );
-				if ( $url_host && $url_host === $site_host ) {
-					$result .= '<p>' . esc_html( $line ) . "</p>\n";
-					continue;
+							$type_raw      = isset( $data['type'] ) ? (string) $data['type'] : 'rich';
+							$provider_name = isset( $data['provider_name'] ) ? (string) $data['provider_name'] : 'unknown';
+							$type          = sanitize_key( $type_raw );
+							$provider_slug = sanitize_title( $provider_name );
+
+							$block_json = wp_json_encode(
+								array(
+									'url'              => $url,
+									'type'             => $type,
+									'providerNameSlug' => $provider_slug,
+									'responsive'       => true,
+								)
+							);
+
+							$esc_url           = esc_url( $m[0] );
+							$esc_type          = esc_attr( $type );
+							$esc_provider_slug = esc_attr( $provider_slug );
+							return <<<BLOCK
+							<!-- wp:embed {$block_json} --><figure class="um-active-oembed is-type-{$esc_type} is-provider-{$esc_provider_slug}">
+								<div class="um-active-oembed__wrappe is-type-{$esc_type}">
+									{$esc_url}
+								</div>
+							</figure><!-- /wp:embed -->
+							BLOCK;
+						}
+					}
 				}
 
-				// Get oEmbed data
-				$wp_embed = _wp_oembed_get_object();
-				if ( ! $wp_embed || ! is_object( $wp_embed ) ) {
-					continue;
-				}
-
-				// Check if we have a provider for this URL
-				$provider = $wp_embed->get_provider( $url );
-				if ( is_wp_error( $provider ) || empty( $provider ) ) {
-					$provider = false;
-				}
-
-				// Fetch oEmbed data
-				$oembed_data = $wp_embed->get_data( $url );
-				if ( is_wp_error( $oembed_data ) || empty( $oembed_data ) ) {
-					$oembed_data = null;
-				}
-
-				if ( $provider && $oembed_data ) {
-					$data = get_object_vars( $oembed_data );
-
-					$type_raw      = isset( $data['type'] ) ? (string) $data['type'] : 'rich';
-					$provider_name = isset( $data['provider_name'] ) ? (string) $data['provider_name'] : 'unknown';
-					$type          = sanitize_key( $type_raw );
-					$provider_slug = sanitize_title( $provider_name );
-
-					$block_json = wp_json_encode(
-						array(
-							'url'              => $url,
-							'type'             => $type,
-							'providerNameSlug' => $provider_slug,
-							'responsive'       => true,
-						)
-					);
-
-					$result .= <<<BLOCK
-					<!-- wp:embed {$block_json} -->
-					<figure class="um-active-oembed is-type-{$type} is-provider-{$provider_slug}">
-					  <div class="um-active-oembed__wrappe is-type-{$type}">
-						{$url}
-					  </div>
-					</figure>
-					<!-- /wp:embed -->
-					BLOCK;
-				} else {
-					// simple link
-					$linked_line = preg_replace_callback(
-						'#(https?://[^\s]+)#',
-						function ( $m ) {
-							$url = esc_url( $m[1] );
-							return "<a target='_blank' rel='nofollow' class='um-link' href=\"{$url}\">{$url}</a>";
-						},
-						$line
-					);
-
-					$result .= "<p'>{$linked_line}</p>\n";
-				}
-			} else {
-				$result .= '<p>' . esc_html( $line ) . "</p>\n";
-			}
-		}
-
-		return $result;
-	}
-
-	public function wrap_links_with_meta_cards( $content, $post_id = 0 ) {
-		remove_filter( 'the_content', 'wpautop' );
-		// Get all URLs in the content
-		$raw_urls = wp_extract_urls( $content );
-		if ( empty( $raw_urls ) ) {
-			return $content;
-		}
-
-		$all_urls = array_map( array( $this, 'normalize_url_candidate' ), $raw_urls );
-		$all_urls = array_filter( $all_urls );                 // remove empty
-		$all_urls = array_values( array_unique( $all_urls ) ); // remove duplicates
-
-		if ( empty( $all_urls ) ) {
-			return $content;
-		}
-
-		// Get URLs inside <figure> blocks to skip them
-		$skip_urls = array();
-		if ( preg_match_all( '#<figure[^>]*>.*?</figure>#si', $content, $figure_blocks ) ) {
-			foreach ( $figure_blocks[0] as $figure_html ) {
-				$figure_urls = wp_extract_urls( $figure_html );
-				if ( $figure_urls ) {
-					$skip_urls = array_merge( $skip_urls, $figure_urls );
-				}
-			}
-		}
-
-		// Process each unique URL
-		foreach ( array_unique( $all_urls ) as $url ) {
-			if ( in_array( $url, $skip_urls, true ) ) {
-				continue;
-			}
-
-			// Generate meta card HTML
-			$meta_card = $this->generate_link_preview_card( esc_url_raw( $url ), $post_id );
-
-			// Replace only "naked" links not inside <a> or <iframe>
-			$content = preg_replace_callback(
-				'#<a\s+[^>]*href=["\']' . preg_quote( $url, '#' ) . '["\'][^>]*>\s*' . preg_quote( $url, '#' ) . '\s*</a>#i',
-				function () use ( $meta_card ) {
+				// Fetch the link preview card for the raw URL.
+				$meta_card = $this->generate_link_preview_card( $url );
+				if ( false !== $meta_card  ) {
+					// If the meta card was successfully generated, return it.
 					return $meta_card;
-				},
-				$content
-			);
-
-			$content = preg_replace_callback(
-				'#(?<!["\'=])(' . preg_quote( $url, '#' ) . ')(?![^<]*?>)#',
-				function () use ( $meta_card ) {
-					return $meta_card;
-				},
-				$content
-			);
-			$content = preg_replace( '#<a[^>]*>\s*</a>#i', '', $content );
-		}
-
-		return $content;
-	}
-
-	/**
-	 * Normalize URL candidate
-	 *
-	 * @param mixed $u URL candidate
-	 *
-	 * @return string normalized URL or empty string if invalid
-	 */
-	private function normalize_url_candidate( $u ) {
-		if ( ! is_string( $u ) ) {
-			return '';
-		}
-
-		$u = html_entity_decode( $u, ENT_QUOTES, 'UTF-8' );
-		$u = trim( $u );
-
-		if ( strpos( $u, '\/' ) !== false ) {
-			$u = str_replace( '\/', '/', $u );
-		}
-		if ( strpos( $u, '\\' ) !== false ) {
-			$u = str_replace( '\\', '', $u );
-		}
-
-		if ( strpos( $u, '//' ) === 0 ) {
-			$u = 'https:' . $u;
-		}
-
-		if ( ! preg_match( '~^https?://~i', $u ) ) {
-			return '';
-		}
-		$u = esc_url_raw( $u );
-
-		return $u;
-	}
-
-	/**
-	 * Convert a possibly relative URL to an absolute one based on a base URL
-	 *
-	 * @param string $maybe URL to convert
-	 * @param string $base  Base URL
-	 *
-	 * @return string absolute URL
-	 */
-	private function absolutize_url( string $maybe, string $base ): string {
-		$maybe = trim( $maybe );
-		if ( '' === $maybe ) {
-			return '';
-		}
-
-		// protocol-relative //example.com/...
-		if ( strpos( $maybe, '//' ) === 0 ) {
-			$parsed = wp_parse_url( $base );
-			$scheme = ! empty( $parsed['scheme'] ) ? $parsed['scheme'] : 'https';
-
-			return $scheme . ':' . $maybe;
-		}
-
-		// absolute http/https
-		if ( preg_match( '~^https?://~i', $maybe ) ) {
-			return $maybe;
-		}
-
-		// relative /path or path
-		$bp = wp_parse_url( $base );
-		if ( empty( $bp['scheme'] ) || empty( $bp['host'] ) ) {
-			return $maybe;
-		}
-		$scheme    = $bp['scheme'];
-		$host      = $bp['host'];
-		$port      = isset( $bp['port'] ) ? ':' . $bp['port'] : '';
-		$base_path = isset( $bp['path'] ) ? $bp['path'] : '/';
-
-		// build full path
-		if ( strpos( $maybe, '/' ) === 0 ) {
-			$path = $maybe;
-		} else {
-			$dir  = rtrim( preg_replace( '~/[^/]*$~', '/', $base_path ), '/' ) . '/';
-			$path = $dir . $maybe;
-		}
-
-		// normalize path (remove ./ and ../)
-		$parts = array();
-		foreach ( explode( '/', $path ) as $seg ) {
-			if ( '' === $seg || '.' === $seg ) {
-				continue;
-			}
-			if ( '..' === $seg ) {
-				array_pop( $parts ); {
-				continue;
 				}
-			}
-			$parts[] = $seg;
-		}
-		$path = '/' . implode( '/', $parts );
 
-		return "{$scheme}://{$host}{$port}{$path}";
+				// Otherwise, just make a link clickable if there isn't oembed or preview meta card object based on it.
+				return '<a target="_blank" rel="noopener nofollow ugc" class="um-link" href="' . esc_url( $m[0] ) . '">' . esc_html( $m[0] ) . '</a>';
+			},
+			$raw_text
+		);
+
+		return $processed_text;
 	}
 
 	/**
@@ -684,11 +515,9 @@ class Posts {
 	 *
 	 * @param string $url URL to generate preview for
 	 *
-	 * @return string HTML of the link preview card
+	 * @return false|string HTML of the link preview card
 	 */
 	private function generate_link_preview_card( $url ) {
-		$url = esc_url_raw( $url );
-
 		// Fetch the URL content
 		$response = wp_remote_get(
 			$url,
@@ -703,12 +532,12 @@ class Posts {
 		);
 
 		if ( is_wp_error( $response ) ) {
-			return '<a class="um-link" href="' . esc_url( $url ) . '" target="_blank" rel="noopener nofollow ugc">' . esc_html( $url ) . '</a>';
+			return false;
 		}
 
 		$body = wp_remote_retrieve_body( $response );
 		if ( '' === $body ) {
-			return '<a class="um-link" href="' . esc_url( $url ) . '" target="_blank" rel="noopener nofollow ugc">' . esc_html( $url ) . '</a>';
+			return false;
 		}
 
 		libxml_use_internal_errors( true );
@@ -717,7 +546,7 @@ class Posts {
 		libxml_clear_errors();
 
 		if ( ! $loaded ) {
-			return '<a class="um-link" href="' . esc_url( $url ) . '" target="_blank" rel="noopener nofollow ugc">' . esc_html( $url ) . '</a>';
+			return false;
 		}
 
 		$title       = $desc = $img = '';
@@ -774,7 +603,7 @@ class Posts {
 		}
 
 		// Fallback: use domain as title if no title found
-		$domain = wp_parse_url( $url, PHP_URL_HOST );
+		$domain = parse_url( $url, PHP_URL_HOST );
 		$domain = $domain ? strtoupper( preg_replace( '~^www\.~i', '', $domain ) ) : '';
 
 		$title_esc   = $title ? esc_html( $title ) : esc_html__( 'Untitled', 'um-activity' );
@@ -794,11 +623,75 @@ class Posts {
 			$link_class = '';
 		}
 
-		$url_attr = esc_url( $url );
+		$url_attr        = esc_url( $url );
+		$link_class_attr = esc_attr( $link_class );
 
 		return <<<HTML
-		<figure class="um-meta-preview"><a href="{$url_attr}" class="{$link_class}" target="_blank">{$img_tag}<div><span class="um-meta-text"><span class="um-meta-title">{$title_esc}</span>{$desc_html}{$domain_html}</span></div></a></figure>
+		<figure class="um-meta-preview"><a href="{$url_attr}" class="{$link_class_attr}" target="_blank">{$img_tag}<div><span class="um-meta-text"><span class="um-meta-title">{$title_esc}</span>{$desc_html}{$domain_html}</span></div></a></figure>
 		HTML;
+	}
+
+	/**
+	 * Convert a possibly relative URL to an absolute one based on a base URL
+	 *
+	 * @param string $maybe URL to convert
+	 * @param string $base  Base URL
+	 *
+	 * @return string absolute URL
+	 */
+	private function absolutize_url( string $maybe, string $base ): string {
+		$maybe = trim( $maybe );
+		if ( '' === $maybe ) {
+			return '';
+		}
+
+		// protocol-relative //example.com/...
+		if ( strpos( $maybe, '//' ) === 0 ) {
+			$parsed = wp_parse_url( $base );
+			$scheme = ! empty( $parsed['scheme'] ) ? $parsed['scheme'] : 'https';
+
+			return $scheme . ':' . $maybe;
+		}
+
+		// absolute http/https
+		if ( preg_match( '~^https?://~i', $maybe ) ) {
+			return $maybe;
+		}
+
+		// relative /path or path
+		$bp = wp_parse_url( $base );
+		if ( empty( $bp['scheme'] ) || empty( $bp['host'] ) ) {
+			return $maybe;
+		}
+		$scheme    = $bp['scheme'];
+		$host      = $bp['host'];
+		$port      = isset( $bp['port'] ) ? ':' . $bp['port'] : '';
+		$base_path = isset( $bp['path'] ) ? $bp['path'] : '/';
+
+		// build full path
+		if ( strpos( $maybe, '/' ) === 0 ) {
+			$path = $maybe;
+		} else {
+			$dir  = rtrim( preg_replace( '~/[^/]*$~', '/', $base_path ), '/' ) . '/';
+			$path = $dir . $maybe;
+		}
+
+		// normalize path (remove ./ and ../)
+		$parts = array();
+		foreach ( explode( '/', $path ) as $seg ) {
+			if ( '' === $seg || '.' === $seg ) {
+				continue;
+			}
+			if ( '..' === $seg ) {
+				array_pop( $parts ); {
+					continue;
+				}
+			}
+			$parts[] = $seg;
+		}
+		$path = '/' . implode( '/', $parts );
+
+		return "{$scheme}://{$host}{$port}{$path}";
 	}
 
 	/**
@@ -809,130 +702,63 @@ class Posts {
 	 * @return string new text with links
 	 */
 	public function linkify_hashtags_in_content( $content ) {
-		$taxonomy = 'um_hashtag';
-
 		return preg_replace_callback(
 			'/(?<!\w)#([\p{Pc}\p{N}\p{L}\p{Mn}]+)/um',
-			function ( $m ) use ( $taxonomy ) {
+			function ( $m ) {
 				$tag_name = $m[1];
 
-				$term = get_term_by( 'name', $tag_name, $taxonomy );
+				$term = get_term_by( 'name', $tag_name, 'um_hashtag' );
 				if ( ! $term || is_wp_error( $term ) ) {
-					$term = get_term_by( 'slug', sanitize_title( $tag_name ), $taxonomy );
+					$term = get_term_by( 'slug', sanitize_title( $tag_name ), 'um_hashtag' );
 				}
 
 				if ( $term && ! is_wp_error( $term ) ) {
 					$link = um_get_core_page( 'activity' ) . '?hashtag=' . $term->slug;
 					if ( $link ) {
-						return '<a class="um-hashtag um-link" href="' . esc_url( $link ) . '">#' . esc_html( $tag_name ) . '</a>';
+						return '<a class="um-hashtag um-link" href="' . esc_url( $link ) . '">#' . $tag_name . '</a>';
 					}
 				}
 
-				return '#' . esc_html( $tag_name );
+				return '#' . $tag_name;
 			},
 			$content
 		);
 	}
 
-	/***
-	 ***    @shorten any string based on word count
-	 ***/
+	/**
+	 * Shorten any string based on word count
+	 *
+	 * @param string $string
+	 *
+	 * @return string
+	 */
 	public function shorten_string( $string ) {
 		$words_limit = absint( UM()->options()->get( 'activity_post_truncate' ) );
-		if ( ! $words_limit ) {
+		if ( empty( $words_limit ) ) {
 			return $string;
 		}
 
-		$blocks = array();
-		$offset = 0;
+		/**
+		 * \p{L} matches any kind of letter from any language, \p{N} matches any kind of digit from any language,
+		 * \p{Pd} matches any kind of dash or hyphen, \p{Pc} matches a punctuation character such as an underscore that connects words,
+		 * \p{Sm} matches any math symbol,
+		 * :/?#=@%\.& includes the characters :, ., /, =, &, ?, %, which commonly appear in URLs.
+		 */
+		preg_match_all( '~[\p{L}\p{N}\p{Pd}\p{Pc}\p{Pd}\p{Sm}:/?#=@%\.&]+~u', $string, $matches, PREG_OFFSET_CAPTURE );
 
-		// find all <figure> blocks
-		preg_match_all( '#<figure.*?</figure>#si', $string, $figure_matches, PREG_OFFSET_CAPTURE );
-
-		foreach ( $figure_matches[0] as $match ) {
-			$pos   = $match[1];
-			$len   = strlen( $match[0] );
-			$block = substr( $string, $offset, $pos - $offset );
-
-			$text_chunks = preg_split( '/<br\s*\/?>/i', $block );
-			foreach ( $text_chunks as $chunk ) {
-				$chunk = trim( $chunk );
-				if ( '' !== $chunk ) {
-					$blocks[] = array(
-						'type'    => 'text',
-						'content' => $chunk,
-					);
-				}
-			}
-
-			$blocks[] = array(
-				'type'    => 'figure',
-				'content' => $match[0],
-			);
-			$offset   = $pos + $len;
+		$str_words = array();
+		foreach ( $matches[0] as $match ) {
+			$str_words[ $match[1] ] = $match[0]; // $match[0] - word, $match[1] - starting position.
 		}
 
-		// add remaining text after last <figure>
-		if ( $offset < strlen( $string ) ) {
-			$remaining   = substr( $string, $offset );
-			$text_chunks = preg_split( '/<br\s*\/?>/i', $remaining );
-			foreach ( $text_chunks as $chunk ) {
-				$chunk = trim( $chunk );
-				if ( '' !== $chunk ) {
-					$blocks[] = array(
-						'type'    => 'text',
-						'content' => $chunk,
-					);
-				}
-			}
+		$positions = array_keys( $str_words );
+
+		if ( array_key_exists( $words_limit + 1, $positions ) ) {
+			$trimmed = substr( $string, 0, $positions[ $words_limit ] - 1 );
+			return $this->prepare_post_content( $trimmed );
 		}
 
-		// count total words
-		$total_words = 0;
-		foreach ( $blocks as $block ) {
-			if ( 'figure' === $block['type'] ) {
-				++$total_words;
-			} else {
-				$words        = preg_split( '/\s+/', wp_strip_all_tags( $block['content'] ) );
-				$total_words += count( $words );
-			}
-		}
-
-		// return empty if within limit
-		if ( $total_words <= $words_limit ) {
-			return '';
-		}
-
-		// get excerpt
-		$excerpt = '';
-		$count   = 0;
-
-		foreach ( $blocks as $block ) {
-			if ( $count >= $words_limit ) {
-				break;
-			}
-
-			if ( 'figure' === $block['type'] ) {
-				if ( $count + 1 <= $words_limit ) {
-					$excerpt .= $block['content'];
-					++$count;
-				}
-			} else {
-				$text  = wp_strip_all_tags( $block['content'] );
-				$words = preg_split( '/\s+/', $text );
-
-				$remaining = $words_limit - $count;
-				if ( count( $words ) <= $remaining ) {
-					$excerpt .= $block['content'] . '<br>';
-					$count   += count( $words );
-				} else {
-					$excerpt .= esc_html( implode( ' ', array_slice( $words, 0, $remaining ) ) );
-					break;
-				}
-			}
-		}
-
-		return $excerpt;
+		return $string;
 	}
 
 	private function upload_images( $_post_images, $post_id ) {

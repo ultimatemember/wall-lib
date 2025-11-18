@@ -334,13 +334,13 @@ class Posts {
 	}
 
 	/**
-	 * Add hashtags
+	 * Add hashtags to activity wall post based on post or comment ID.
 	 *
-	 * @param int $post_id
+	 * @param int    $post_id
 	 * @param string $content
-	 * @param bool $append
+	 * @param bool   $append
 	 */
-	public function hashtagit( $post_id, $content, $append = false ) {
+	public function hashtagit( $post_id, $content, $append = false, $comment_id = null ) {
 		// hashtag must have space or start line before and space or end line after. Hashtag can contain digits, letters, underscore. Not space or dash "-".
 		preg_match_all( '/(^|\s)#([\p{Pc}\p{N}\p{L}\p{Mn}]+)/um', $content, $matches, PREG_SET_ORDER, 0 );
 
@@ -351,6 +351,82 @@ class Posts {
 					$terms[] = $match[2];
 				}
 			}
+		}
+
+		$terms = array_unique( $terms );
+		if ( $comment_id ) {
+			$old_own_terms = get_comment_meta( $comment_id, '_um_activity_hashtags', true );
+			$old_own_terms = ! empty( $old_own_terms ) && is_array( $old_own_terms ) ? $old_own_terms : array();
+			$diff          = array_diff( $old_own_terms, $terms );
+
+			if ( ! empty( $old_own_terms ) && ! empty( $diff ) ) {
+				$remove_terms = array();
+				foreach ( $diff as $maybe_remove_term ) {
+					$term_comments = get_comments(
+						array(
+							'post_id'         => $post_id,
+							'status'          => 'approve',
+							'comment__not_in' => array( $comment_id ),
+							'meta_query'      => array(
+								array(
+									'key'     => '_um_activity_hashtags',
+									'value'   => '"' . $maybe_remove_term . '"',
+									'compare' => 'LIKE',
+								),
+							),
+							'number'          => 1,
+							'fields'          => 'ids',
+						)
+					);
+					if ( empty( $term_comments ) ) {
+						$post_terms = get_post_meta( $post_id, '_um_activity_hashtags', true );
+						$post_terms = ! empty( $post_terms ) && is_array( $post_terms ) ? $post_terms : array();
+						if ( empty( $post_terms ) || ! in_array( $maybe_remove_term, $post_terms, true ) ) {
+							$remove_terms[] = $maybe_remove_term;
+						}
+					}
+				}
+				if ( ! empty( $remove_terms ) ) {
+					wp_remove_object_terms( $post_id, $remove_terms, 'um_hashtag' );
+				}
+			}
+
+			update_comment_meta( $comment_id, '_um_activity_hashtags', $terms );
+		} else {
+			$old_own_terms = get_post_meta( $post_id, '_um_activity_hashtags', true );
+			$old_own_terms = ! empty( $old_own_terms ) && is_array( $old_own_terms ) ? $old_own_terms : array();
+			$diff          = array_diff( $old_own_terms, $terms );
+
+			// Find own unique terms that was removed from the post after edit.
+			if ( ! empty( $old_own_terms ) && ! empty( $diff ) ) {
+				$remove_terms = array();
+				foreach ( $diff as $maybe_remove_term ) {
+					$term_comments = get_comments(
+						array(
+							'post_id'    => $post_id,
+							'status'     => 'approve',
+							'meta_query' => array(
+								array(
+									'key'     => '_um_activity_hashtags',
+									'value'   => '"' . $maybe_remove_term . '"',
+									'compare' => 'LIKE',
+								),
+							),
+							'number'     => 1,
+							'fields'     => 'ids',
+						)
+					);
+					if ( empty( $term_comments ) ) {
+						$remove_terms[] = $maybe_remove_term;
+					}
+				}
+
+				if ( ! empty( $remove_terms ) ) {
+					wp_remove_object_terms( $post_id, $remove_terms, 'um_hashtag' );
+				}
+			}
+
+			update_post_meta( $post_id, '_um_activity_hashtags', $terms );
 		}
 
 		wp_set_post_terms( $post_id, $terms, 'um_hashtag', $append );

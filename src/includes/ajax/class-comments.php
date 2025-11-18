@@ -223,7 +223,7 @@ class Comments {
 
 	/**
 	 * Post comment.
-	 *
+	 * @todo check post/update comments
 	 */
 	public function post_comment() {
 		// phpcs:disable WordPress.Security.NonceVerification
@@ -298,7 +298,8 @@ class Comments {
 
 		um_fetch_user( get_current_user_id() );
 
-		$time = current_time( 'mysql' );
+		$time     = current_time( 'mysql' );
+		$time_gmt = current_time( 'mysql', true );
 
 		$orig_content    = wp_kses(
 			trim( sanitize_textarea_field( $_POST['comment'] ) ),
@@ -307,8 +308,158 @@ class Comments {
 			)
 		);
 		$comment_content = apply_filters( $this->wall->prefix . 'wall_comment_content_new', $orig_content, $post_id );
-		// apply hashtag
-		$this->wall->common()->posts()->hashtagit( $post_id, $comment_content, true );
+		$comment_content = $this->prepare_comment_content( $comment_content );
+
+		if ( ! empty( $_POST['commentid'] ) ) {
+			$commentid = absint( $_POST['commentid'] );
+
+			$old_data               = get_comment( $commentid );
+			$old_data->comment_meta = get_comment_meta( $commentid );
+
+			$data = array(
+				'comment_ID'      => $commentid,
+				'comment_content' => wp_slash( $comment_content ),
+			);
+
+			$data = apply_filters( $this->wall->prefix . 'update_comment_args', $data, $old_data );
+
+			$result = wp_update_comment( $data );
+			if ( 1 === $result ) {
+				// Apply hashtags for the post
+				$this->wall->ajax()->posts()->hashtagit( $post_id, $orig_content, true, $commentid );
+
+				$linkified = $this->wall->ajax()->posts()->linkify_hashtags_in_content( $comment_content );
+				if ( $comment_content !== $linkified ) {
+					$data = array(
+						'comment_ID'      => $commentid,
+						'comment_content' => wp_slash( $linkified ),
+					);
+					wp_update_comment( $data );
+				}
+
+				$output['comment_content'] = nl2br( $linkified );
+
+				if ( ! empty( $old_data->comment_parent ) ) {
+					do_action( $this->wall->prefix . 'after_wall_comment_reply_updated', $commentid, $old_data );
+				} else {
+					do_action( $this->wall->prefix . 'after_wall_comment_updated', $commentid, $old_data );
+				}
+			}
+		} else {
+			$data = array(
+				'comment_post_ID'      => $post_id,
+				'comment_author'       => um_user( 'display_name' ),
+				'comment_author_email' => um_user( 'user_email' ),
+				'comment_author_url'   => um_user_profile_url(),
+				'comment_content'      => wp_slash( $comment_content ),
+				'user_id'              => get_current_user_id(),
+				'comment_approved'     => 1,
+				'comment_author_IP'    => um_user_ip(),
+				'comment_type'         => 'um-social-activity',
+			);
+
+			if ( ! empty( $_POST['reply_to'] ) ) {
+				$comment_parent = absint( $_POST['reply_to'] );
+			}
+
+			$data['comment_parent']   = $comment_parent;
+			$data['comment_date']     = $time;
+			$data['comment_date_gmt'] = $time_gmt;
+
+			$data = apply_filters( $this->wall->prefix . 'insert_comment_args', $data );
+
+			$commentid = wp_insert_comment( $data );
+
+			if ( $commentid ) {
+				// Apply hashtags for the post
+				$this->wall->common()->posts()->hashtagit( $post_id, $orig_content, true, $commentid );
+
+				$linkified = $this->wall->ajax()->posts()->linkify_hashtags_in_content( $comment_content );
+				if ( $comment_content !== $linkified ) {
+					$data = array(
+						'comment_ID'      => $commentid,
+						'comment_content' => wp_slash( $linkified ),
+					);
+					wp_update_comment( $data );
+				}
+
+				$output['comment_content'] = nl2br( $linkified );
+
+				if ( $comment_parent ) {
+					do_action( $this->wall->prefix . 'after_wall_comment_reply_published', $commentid );
+				} else {
+					do_action( $this->wall->prefix . 'after_wall_comment_published', $commentid );
+				}
+
+				$comment_count = get_post_meta( $post_id, '_comments', true );
+				update_post_meta( $post_id, '_comments', $comment_count + 1 );
+			}
+
+		}
+
+		if ( empty( $commentid ) ) {
+			$output['error'] = __( 'Something went wrong with comment store', $this->wall->textdomain ); // phpcs:ignore WordPress.WP.I18n
+		} else {
+			update_comment_meta( $commentid, 'orig_content', wp_slash( $orig_content ) );
+			update_comment_meta( $commentid, '_um_comment_version', $this->wall->plugin_version );
+
+//			$likes = get_comment_meta( $commentid, '_likes', true );
+
+			$post_link = $this->wall->common()->posts()->get_permalink( $post_id );
+			$comment   = get_comment( $commentid );
+			$comments  = array( $comment );
+			$comm_num  = apply_filters( $this->wall->prefix . 'wall_comments_loadmore_number', 10 );
+
+			if ( $comment_parent ) {
+				$t_args   = array(
+					'commentc'         => $comments[0],
+					'post_id'          => $post_id,
+					'post_link'        => $post_link,
+					'um_activity_wall' => $this->wall,
+					'comm_num'         => $comm_num,
+				);
+				$template = apply_filters( $this->wall->prefix . 'wall_comment_reply_template', 'comment-reply.php' );
+			} else {
+				$t_args   = array(
+					'comments'         => $comments,
+					'post_id'          => $post_id,
+					'post_link'        => $post_link,
+					'um_activity_wall' => $this->wall,
+					'comm_num'         => $comm_num,
+					'order_comment'    => UM()->options()->get( 'activity_order_comment' ),
+				);
+				$template = apply_filters( $this->wall->prefix . 'wall_comment_template', 'comment.php' );
+			}
+
+			$output = UM()->get_template( $template, $this->wall->plugin_basename, $t_args );
+
+			$status = wp_kses(
+				UM()->frontend()::layouts()::alert(
+					esc_html__( 'Submission error', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
+					array(
+						'type'       => 'success',
+						'underline'  => false,
+						'supporting' => esc_html__( 'Comment posted successfully.', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
+					)
+				),
+				UM()->get_allowed_html( 'templates' )
+			);
+			// phpcs:enable WordPress.Security.NonceVerification
+			wp_send_json_success(
+				array(
+					'content' => UM()->ajax()->esc_html_spaces( $output ),
+					'status'  => $status,
+				)
+			);
+		}
+
+
+
+
+
+
+
+
 
 		$comment_content = $this->wall->common()->posts()->hashtag_links( $comment_content );
 		$comment_content = apply_filters( $this->wall->prefix . 'wall_insert_post_content_filter', $comment_content, get_current_user_id(), absint( $post_id ), 'new' );
@@ -491,13 +642,126 @@ class Comments {
 
 		um_fetch_user( get_current_user_id() );
 
+		$comment_parent = 0;
+		if ( ! empty( $_POST['reply_to'] ) ) {
+			$comment_parent = absint( $_POST['reply_to'] );
+		}
+
+		$time     = current_time( 'mysql' );
+		$time_gmt = current_time( 'mysql', true );
+
 		$orig_content    = wp_kses(
 			trim( sanitize_textarea_field( $_POST['comment'] ) ),
 			array(
 				'br' => array(),
 			)
 		);
-		$comment_content = apply_filters( $this->wall->prefix . 'wall_comment_content_new', $orig_content, $post_id );
+		$comment_content = apply_filters( $this->wall->prefix . 'wall_comment_content_edit', $orig_content, $post_id );
+
+		$old_data               = get_comment( $commentid );
+		$old_data->comment_meta = get_comment_meta( $commentid );
+
+		$data = array(
+			'comment_ID'      => $commentid,
+			'comment_content' => wp_slash( $comment_content ),
+		);
+
+		$data = apply_filters( $this->wall->prefix . 'update_comment_args', $data, $old_data );
+
+		$result = wp_update_comment( $data );
+		if ( 1 === $result ) {
+			// Apply hashtags for the post
+			$this->wall->ajax()->posts()->hashtagit( $post_id, $orig_content, true, $commentid );
+
+			$linkified = $this->wall->ajax()->posts()->linkify_hashtags_in_content( $comment_content );
+			if ( $comment_content !== $linkified ) {
+				$data = array(
+					'comment_ID'      => $commentid,
+					'comment_content' => wp_slash( $linkified ),
+				);
+				wp_update_comment( $data );
+			}
+
+			$output['comment_content'] = nl2br( $linkified );
+
+			if ( ! empty( $old_data->comment_parent ) ) {
+				do_action( $this->wall->prefix . 'after_wall_comment_reply_updated', $commentid, $old_data );
+			} else {
+				do_action( $this->wall->prefix . 'after_wall_comment_updated', $commentid, $old_data );
+			}
+		}
+
+		if ( empty( $commentid ) ) {
+			$error = esc_html__( 'You can\'t edit this comment.', $this->wall->textdomain ); // phpcs:ignore WordPress.WP.I18n
+			wp_send_json_error(
+				wp_kses(
+					UM()->frontend()::layouts()::alert(
+						esc_html__( 'Something went wrong with comment store', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
+						array(
+							'type'       => 'error',
+							'underline'  => false,
+							'supporting' => $error,
+						)
+					),
+					UM()->get_allowed_html( 'templates' )
+				)
+			);
+		} else {
+			update_comment_meta( $commentid, 'orig_content', wp_slash( $orig_content ) );
+			update_comment_meta( $commentid, '_um_comment_version', $this->wall->plugin_version );
+
+			//			$likes = get_comment_meta( $commentid, '_likes', true );
+
+			$post_link = $this->wall->common()->posts()->get_permalink( $post_id );
+			$comment   = get_comment( $commentid );
+			$comments  = array( $comment );
+			$comm_num  = apply_filters( $this->wall->prefix . 'wall_comments_loadmore_number', 10 );
+
+			if ( $comment_parent ) {
+				$t_args   = array(
+					'commentc'         => $comments[0],
+					'post_id'          => $post_id,
+					'post_link'        => $post_link,
+					'um_activity_wall' => $this->wall,
+					'comm_num'         => $comm_num,
+				);
+				$template = apply_filters( $this->wall->prefix . 'wall_comment_reply_template', 'comment-reply.php' );
+			} else {
+				$t_args   = array(
+					'comments'         => $comments,
+					'post_id'          => $post_id,
+					'post_link'        => $post_link,
+					'um_activity_wall' => $this->wall,
+					'comm_num'         => $comm_num,
+					'order_comment'    => UM()->options()->get( 'activity_order_comment' ),
+				);
+				$template = apply_filters( $this->wall->prefix . 'wall_comment_template', 'comment.php' );
+			}
+
+			$output = UM()->get_template( $template, $this->wall->plugin_basename, $t_args );
+
+			$status = wp_kses(
+				UM()->frontend()::layouts()::alert(
+					esc_html__( 'Submission error', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
+					array(
+						'type'       => 'success',
+						'underline'  => false,
+						'supporting' => esc_html__( 'Comment posted successfully.', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
+					)
+				),
+				UM()->get_allowed_html( 'templates' )
+			);
+			// phpcs:enable WordPress.Security.NonceVerification
+			wp_send_json_success(
+				array(
+					'content' => UM()->ajax()->esc_html_spaces( $output ),
+					'status'  => $status,
+				)
+			);
+		}
+
+
+
 
 		// apply hashtag
 		$this->wall->common()->posts()->hashtagit( $post_id, $comment_content, true );
@@ -697,5 +961,45 @@ class Comments {
 		}
 
 		wp_send_json_success();
+	}
+
+	/**
+	 * Prepare comment content before saving
+	 *
+	 * @param string $comment_content Comment content
+	 *
+	 * @return string converted content
+	 */
+	public function prepare_comment_content( $comment_content ) {
+		$comment_content = $this->linkify_content( $comment_content );
+		$comment_content = convert_smilies( $comment_content ); // WordPress native converts text equivalent of smilies to images.
+		$comment_content = UM()->shortcodes()->emotize( $comment_content, false ); // UM legacy emoji convert from the predefined list of emoji.
+		$comment_content = wp_staticize_emoji( $comment_content ); // WordPress native converts emoji to a static img element.
+
+		return $comment_content;
+	}
+
+	/**
+	 * Linkifying the string.
+	 *
+	 * @param string $raw_text
+	 *
+	 * @return string
+	 */
+	public function linkify_content( $raw_text ) {
+		/**
+		 * The pattern #(?<!href=")(https?://[^\s]+)# uses a negative lookbehind (?<!href=")
+		 * to assert that what immediately precedes the URL is not the string 'href="'.
+		 * This will prevent URLs that are within href attributes from matching.
+		 */
+		$linked_text = preg_replace_callback(
+			'#(?<!href=")(https?://[^\s]+)#',
+			function ( $m ) {
+				return '<a target="_blank" rel="nofollow" class="um-link" href="' . esc_url( $m[0] ) . '">' . esc_html( $m[0] ) . '</a>';
+			},
+			$raw_text
+		);
+
+		return $linked_text;
 	}
 }
