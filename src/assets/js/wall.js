@@ -657,7 +657,7 @@ jQuery( document ).ready(function () {
 				post_id: postid,
 				comment: comment,
 				reply_to: reply_to,
-				comment_id: comment_id,
+				commentid: comment_id,
 				nonce: nonce
 			},
 			success: function( response ) {
@@ -725,6 +725,7 @@ jQuery( document ).ready(function () {
 				nonce: nonce
 			},
 			success: function( response ) {
+				console.log(response)
 				loader.umHide();
 				btn.parents('.um-wall-comment-edit').umToggle();
 
@@ -748,7 +749,8 @@ jQuery( document ).ready(function () {
 		if ( wrap.find('.um-wall-original-comment-info .um-wall-reply-form').length === 0 ) {
 			let comment_id = wrap.attr('data-comment_id');
 			let reply_form = btn.parents('.um-wall-comments').find('.um-wall-reply-form-wrap .um-wall-reply-form').clone();
-			let reply_to = wrap.find('.um-avatar').attr('data-user_id');
+			// let reply_to = wrap.find('.um-avatar').attr('data-user_id');
+			let reply_to = wrap.attr('data-comment_id');
 
 			reply_form.find('.um-wall-comment-post').attr('data-comment_id', comment_id).attr('data-reply_to', reply_to);
 			wrap.find('.um-wall-original-comment-info').append(reply_form);
