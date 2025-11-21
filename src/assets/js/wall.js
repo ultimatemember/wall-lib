@@ -171,6 +171,12 @@ jQuery( document ).ready(function () {
 				////// NEW
 				form.find('.um-wall-right .um-ajax-spinner-svg').hide();
 				form.find('.um-wall-toggle-uploader').prop('disabled',false);
+
+				if ( ! jQuery('.um-wall-uploader-section.um-toggle-block .um-toggle-block-inner').hasClass('um-toggle-block-collapsed') ) {
+					jQuery('.um-wall-uploader-section.um-toggle-block').toggleClass('um-toggle-block-collapsed');
+					jQuery('.um-wall-uploader-section.um-toggle-block .um-toggle-block-inner').toggleClass('um-visible');
+				}
+
 			},
 			error: function(data) {
 				form.find('.um-wall-right .um-ajax-spinner-svg').hide();
