@@ -374,16 +374,6 @@ class Comments {
 //		update_comment_meta( $comment_id, '_hidden_from', $users );
 //	}
 //
-	/***
-	 ***    @get comment content
-	 ***/
-	public function commentcontent( $content ) {
-		$content = convert_smilies( $content );
-		$content = $this->wall->common()->posts()->make_links_clickable( $content );
-		$content = $this->wall->common()->posts()->hashtag_links( $content );
-
-		return $content;
-	}
 
 	/**
 	 *

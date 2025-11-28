@@ -105,9 +105,7 @@ class Posts {
 
 		$t_args = apply_filters( $this->wall->prefix . 'wall_template_args', $t_args, $args, $query );
 
-		add_filter( 'safe_style_css', array( $this->wall->common()->posts(), 'add_extra_safe_style_css' ) );
 		$output = UM()->get_template( 'v3/posts-loop.php', $this->wall->plugin_basename, $t_args );
-		remove_filter( 'safe_style_css', array( $this->wall->common()->posts(), 'add_extra_safe_style_css' ) );
 
 		wp_send_json_success( $output );
 	}
@@ -332,7 +330,7 @@ class Posts {
 		$args    = apply_filters( $this->wall->prefix . 'insert_post_args', $args );
 		$post_id = wp_insert_post( $args );
 		if ( empty( $post_id ) || is_wp_error( $post_id ) ) {
-			wp_send_json_error( __( 'Something went wrong with post store.', 'um-activity' ) );
+			wp_send_json_error( __( 'Something went wrong with post store.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
 		} else {
 			if ( '' !== $orig_content ) {
 				// Apply hashtags for the post.
@@ -383,7 +381,7 @@ class Posts {
 		$post_id = wp_update_post( $args );
 
 		if ( empty( $post_id ) || is_wp_error( $post_id ) ) {
-			wp_send_json_error( __( 'Something went wrong with post store.', 'um-activity' ) );
+			wp_send_json_error( __( 'Something went wrong with post store.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
 		} else {
 			if ( $old_data->post_meta['_original_content'] !== $orig_content ) {
 				$this->wall->common()->posts()->hashtagit( $post_id, $orig_content ); // Update hashtags for the post.
@@ -425,12 +423,9 @@ class Posts {
 	 *
 	 * @return string converted content
 	 */
-	private function prepare_post_content( $safe_content ) {
+	public function prepare_post_content( $safe_content ) {
 		$converted_content = $this->handle_links( $safe_content ); // generate wp blocks with a figure tags
-		$converted_content = $this->linkify_hashtags_in_content( $converted_content ); // create meta cards for links
-		$converted_content = convert_smilies( $converted_content ); // WordPress native converts text equivalent of smilies to images.
 		$converted_content = UM()->shortcodes()->emotize( $converted_content, false ); // UM legacy emoji convert from the predefined list of emoji.
-		$converted_content = wp_staticize_emoji( $converted_content ); // WordPress native converts emoji to a static img element.
 
 		return $converted_content;
 	}
@@ -452,9 +447,23 @@ class Posts {
 		$site_host = wp_parse_url( home_url(), PHP_URL_HOST );
 		$wp_embed  = _wp_oembed_get_object();
 
+		$attributes = apply_filters(
+			$this->wall->prefix . 'make_links_clickable_attrs',
+			array(
+				'target' => '_blank',
+				'class'  => 'um-link',
+				'rel'    => 'noopener nofollow ugc',
+			)
+		);
+
+		$attribute_string = '';
+		foreach ( $attributes as $key => $value ) {
+			$attribute_string .= esc_html( $key ) . '="' . esc_attr( $value ) . '" ';
+		}
+
 		$processed_text = preg_replace_callback(
-			'#(?<!href=")(https?://[^\s]+)#',
-			function ( $m ) use ( $site_host, $wp_embed ) {
+			'#(?<!href=")(?<!src=")(https?://[^\s]+)#',
+			function ( $m ) use ( $site_host, $wp_embed, $attribute_string ) {
 				$url = esc_url_raw( $m[0] );
 
 				if ( $wp_embed && is_object( $wp_embed ) ) {
@@ -480,12 +489,23 @@ class Posts {
 								)
 							);
 
-							$esc_url           = esc_url( $m[0] );
-							$esc_type          = esc_attr( $type );
-							$esc_provider_slug = esc_attr( $provider_slug );
+							$figure_classes = array(
+								'um-activity-oembed',
+								'is-type-' . $type,
+								'is-provider-' . $provider_slug,
+							);
+							$inner_classes  = array(
+								'um-activity-oembed__wrapper',
+								'is-type-' . $type,
+							);
+
+							$esc_url        = esc_url( $m[0] );
+							$figure_classes = esc_attr( implode( ' ', $figure_classes ) );
+							$inner_classes  = esc_attr( implode( ' ', $inner_classes ) );
+							// don't change this line, otherwise oembed doesn't work =).
 							return <<<BLOCK
-							<!-- wp:embed {$block_json} --><figure class="um-active-oembed is-type-{$esc_type} is-provider-{$esc_provider_slug}">
-								<div class="um-active-oembed__wrappe is-type-{$esc_type}">
+							<!-- wp:embed {$block_json} --><figure class="{$figure_classes}">
+								<div class="{$inner_classes}">
 									{$esc_url}
 								</div>
 							</figure><!-- /wp:embed -->
@@ -496,13 +516,13 @@ class Posts {
 
 				// Fetch the link preview card for the raw URL.
 				$meta_card = $this->generate_link_preview_card( $url );
-				if ( false !== $meta_card  ) {
+				if ( false !== $meta_card ) {
 					// If the meta card was successfully generated, return it.
 					return $meta_card;
 				}
 
 				// Otherwise, just make a link clickable if there isn't oembed or preview meta card object based on it.
-				return '<a target="_blank" rel="noopener nofollow ugc" class="um-link" href="' . esc_url( $m[0] ) . '">' . esc_html( $m[0] ) . '</a>';
+				return '<a ' . $attribute_string . ' href="' . esc_url( $m[0] ) . '">' . esc_html( $m[0] ) . '</a>';
 			},
 			$raw_text
 		);
@@ -549,8 +569,11 @@ class Posts {
 			return false;
 		}
 
-		$title       = $desc = $img = '';
-		$image_width = $image_height = null;
+		$title        = '';
+		$desc         = '';
+		$img          = '';
+		$image_width  = null;
+		$image_height = null;
 
 		// Extract meta tags
 		$metas = $doc->getElementsByTagName( 'meta' );
@@ -558,9 +581,9 @@ class Posts {
 			if ( ! $meta instanceof \DOMElement ) {
 				continue;
 			}
-			$prop = strtolower( (string) $meta->getAttribute( 'property' ) );
-			$name = strtolower( (string) $meta->getAttribute( 'name' ) );
-			$val  = trim( (string) $meta->getAttribute( 'content' ) );
+			$prop = strtolower( $meta->getAttribute( 'property' ) );
+			$name = strtolower( $meta->getAttribute( 'name' ) );
+			$val  = trim( $meta->getAttribute( 'content' ) );
 			if ( '' === $val ) {
 				continue;
 			}
@@ -606,10 +629,6 @@ class Posts {
 		$domain = parse_url( $url, PHP_URL_HOST );
 		$domain = $domain ? strtoupper( preg_replace( '~^www\.~i', '', $domain ) ) : '';
 
-		$title_esc   = $title ? esc_html( $title ) : esc_html__( 'Untitled', 'um-activity' );
-		$desc_html   = $desc   ? '<div class="um-meta-desc">' . esc_html( mb_substr( $desc, 0, 240 ) ) . '</div>' : '';
-		$domain_html = $domain ? '<div class="um-meta-domain">' . esc_html( $domain ) . '</div>' : '';
-
 		if ( $img ) {
 			if ( $image_width && $image_width <= 400 ) {
 				$img_tag    = '<div class="um-meta-thumb um-meta-thumb-profile"><img src="' . esc_url( $img ) . '" alt="" class="um-activity-featured-img" /></div>';
@@ -623,12 +642,27 @@ class Posts {
 			$link_class = '';
 		}
 
-		$url_attr        = esc_url( $url );
-		$link_class_attr = esc_attr( $link_class );
-
-		return <<<HTML
-		<figure class="um-meta-preview"><a href="{$url_attr}" class="{$link_class_attr}" target="_blank">{$img_tag}<div><span class="um-meta-text"><span class="um-meta-title">{$title_esc}</span>{$desc_html}{$domain_html}</span></div></a></figure>
-		HTML;
+		ob_start();
+		?>
+		<figure class="um-meta-preview">
+			<a href="<?php echo esc_url( $url ); ?>" class="<?php echo esc_attr( $link_class ); ?>" target="_blank">
+				<?php echo wp_kses( $img_tag, UM()->get_allowed_html( 'templates' ) ); ?>
+				<div class="um-meta-text">
+					<span class="um-meta-title">
+						<?php echo $title ? esc_html( $title ) : esc_html__( 'Untitled', $this->wall->textdomain ); // phpcs:ignore WordPress.WP.I18n ?>
+					</span>
+					<?php if ( ! empty( $desc ) ) { ?>
+						<span class="um-meta-desc"><?php echo esc_html( mb_substr( $desc, 0, 240 ) ); ?></span>
+					<?php } ?>
+					<?php if ( ! empty( $domain ) ) { ?>
+						<span class="um-meta-domain"><?php echo esc_html( $domain ); ?></span>
+					<?php } ?>
+				</div>
+			</a>
+		</figure>
+		<?php
+		$content = ob_get_clean();
+		return str_replace( array( "\r", "\n", "\t" ), '', $content );
 	}
 
 	/**
@@ -713,7 +747,7 @@ class Posts {
 				}
 
 				if ( $term && ! is_wp_error( $term ) ) {
-					$link = um_get_core_page( 'activity' ) . '?hashtag=' . $term->slug;
+					$link = add_query_arg( 'hashtag', $term->slug, um_get_core_page( 'activity' ) );
 					if ( $link ) {
 						return '<a class="um-hashtag um-link" href="' . esc_url( $link ) . '">#' . $tag_name . '</a>';
 					}
@@ -723,6 +757,61 @@ class Posts {
 			},
 			$content
 		);
+	}
+
+	/**
+	 * @param string $content Content string
+	 * @param string $context Content entity post||comment
+	 * @param int    $id      Entity ID.
+	 *
+	 * @return string
+	 */
+	public function maybe_linkify_mentions( $content, $context, $id ) {
+		if ( ! UM()->options()->get( 'activity_friends_mention' ) && ! UM()->options()->get( 'activity_followers_mention' ) ) {
+			return $content;
+		}
+
+		if ( empty( $content ) ) {
+			return $content;
+		}
+
+		$mentioned = array();
+		if ( 'post' === $context ) {
+			$mentioned = get_post_meta( $id, '_mentioned', true );
+		} elseif ( 'comment' === $context ) {
+			$mentioned = get_comment_meta( $id, '_mentioned', true );
+		}
+
+		if ( empty( $mentioned ) ) {
+			return $content;
+		}
+
+		$user_names = array();
+		foreach ( $mentioned as $user_id1 ) {
+			um_fetch_user( $user_id1 );
+			$display_name = um_user( 'display_name' );
+			if ( empty( $display_name ) ) {
+				continue;
+			}
+			$user_names[ $user_id1 ] = $display_name;
+		}
+
+		uasort(
+			$user_names,
+			static function ( $a, $b ) {
+				return strlen( $b ) - strlen( $a );
+			}
+		);
+
+		foreach ( $user_names as $user_id1 => $name ) {
+			preg_match( '/(^|\s)(@' . $name . ')($|\s)/um', $content, $matches );
+
+			if ( ! empty( $matches[2] ) ) {
+				$content = preg_replace( '/(^|\s)@(' . $name . ')($|\s)/um', '$1<a href="' . esc_url( um_user_profile_url( $user_id1 ) ) . '" class="um-link">$2</a>$3', $content, -1, $replacements );
+			}
+		}
+
+		return $content;
 	}
 
 	/**
@@ -1073,11 +1162,13 @@ class Posts {
 
 		// phpcs:enable WordPress.Security.NonceVerification
 		$content_raw = get_post_field( 'post_content', $post_id );
-		$content     = do_blocks( $content_raw );
-		$content     = wpautop( $content );
-		$content     = do_shortcode( $content );
-		global $wp_embed;
-		$content = $wp_embed->autoembed( $content );
+		$content     = apply_filters( 'the_content', $content_raw );
+		// $content     = nl2br( $content ); // Important: for some reason is needed here, maybe because AJAX.
+		preg_match_all( '/<figure[^>]*>(.*?)<\/figure>/s', $content, $matches );
+		if ( ! empty( $matches[0] ) ) {
+			// Don't need `nl2br` here for content,
+			$content = nl2br( $content );
+		}
 
 		wp_send_json_success( array( 'content' => $content ) );
 	}

@@ -129,6 +129,20 @@
             position: relative
             p
               display: none
+            .#{$prefix}meta-text
+              +flex( column, flex-start, start, nowrap )
+              text-decoration: underline
+              margin: $spacing-md 0 0 0
+              gap: 5px
+              padding: 0 $spacing-lg $spacing-md $spacing-lg
+              &:hover
+                text-decoration: none
+              .#{$prefix}meta-domain
+                color: $gray-400
+                +typography( text, xs, regular )
+          figure
+            br
+              display: none
           .twitter-tweet
             width: 100% !important
           iframe

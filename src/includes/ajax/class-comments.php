@@ -353,9 +353,9 @@ class Comments {
 			$output['comment_content'] = nl2br( $linkified );
 
 			if ( $comment_parent ) {
-				do_action( $this->wall->prefix . 'after_wall_comment_reply_published', $commentid );
+				do_action( $this->wall->prefix . 'after_wall_comment_reply_published', $commentid, $comment_parent, $post_id, get_current_user_id() );
 			} else {
-				do_action( $this->wall->prefix . 'after_wall_comment_published', $commentid );
+				do_action( $this->wall->prefix . 'after_wall_comment_published', $commentid, $comment_parent, $post_id, get_current_user_id() );
 			}
 
 			$comment_count = get_post_meta( $post_id, '_comments', true );
@@ -720,9 +720,7 @@ class Comments {
 	 */
 	public function prepare_comment_content( $comment_content ) {
 		$comment_content = $this->linkify_content( $comment_content );
-		$comment_content = convert_smilies( $comment_content ); // WordPress native converts text equivalent of smilies to images.
 		$comment_content = UM()->shortcodes()->emotize( $comment_content, false ); // UM legacy emoji convert from the predefined list of emoji.
-		$comment_content = wp_staticize_emoji( $comment_content ); // WordPress native converts emoji to a static img element.
 
 		return $comment_content;
 	}
@@ -735,15 +733,29 @@ class Comments {
 	 * @return string
 	 */
 	public function linkify_content( $raw_text ) {
+		$attributes = apply_filters(
+			'um_activity_make_links_clickable_attrs',
+			array(
+				'target' => '_blank',
+				'class'  => 'um-link',
+				'rel'    => 'noopener nofollow ugc',
+			)
+		);
+
+		$attribute_string = '';
+		foreach ( $attributes as $key => $value ) {
+			$attribute_string .= esc_html( $key ) . '="' . esc_attr( $value ) . '" ';
+		}
+
 		/**
 		 * The pattern #(?<!href=")(https?://[^\s]+)# uses a negative lookbehind (?<!href=")
 		 * to assert that what immediately precedes the URL is not the string 'href="'.
 		 * This will prevent URLs that are within href attributes from matching.
 		 */
 		$linked_text = preg_replace_callback(
-			'#(?<!href=")(https?://[^\s]+)#',
-			function ( $m ) {
-				return '<a target="_blank" rel="nofollow" class="um-link" href="' . esc_url( $m[0] ) . '">' . esc_html( $m[0] ) . '</a>';
+			'#(?<!href=")(?<!src=")(https?://[^\s]+)#',
+			function ( $m ) use ( $attribute_string ) {
+				return '<a ' . $attribute_string . ' href="' . esc_url( $m[0] ) . '">' . esc_html( $m[0] ) . '</a>';
 			},
 			$raw_text
 		);

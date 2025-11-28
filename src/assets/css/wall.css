@@ -200,6 +200,29 @@
 .um .um-wall-widget .um-wall-body .um-wall-bodyinner .um-wall-bodyinner-txt .um-meta-preview p {
   display: none;
 }
+.um .um-wall-widget .um-wall-body .um-wall-bodyinner .um-wall-bodyinner-txt .um-meta-preview .um-meta-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: start;
+  flex-wrap: nowrap;
+  text-decoration: underline;
+  margin: 8px 0 0 0;
+  gap: 5px;
+  padding: 0 12px 8px 12px;
+}
+.um .um-wall-widget .um-wall-body .um-wall-bodyinner .um-wall-bodyinner-txt .um-meta-preview .um-meta-text:hover {
+  text-decoration: none;
+}
+.um .um-wall-widget .um-wall-body .um-wall-bodyinner .um-wall-bodyinner-txt .um-meta-preview .um-meta-text .um-meta-domain {
+  color: var(--um-gray-400, #98a2b3);
+  font-size: var(--um-text-font-size-xs, 12px);
+  line-height: var(--um-text-line-height-xs, 18px);
+  font-weight: var(--um-text-font-weight-regular, 400);
+}
+.um .um-wall-widget .um-wall-body .um-wall-bodyinner .um-wall-bodyinner-txt figure br {
+  display: none;
+}
 .um .um-wall-widget .um-wall-body .um-wall-bodyinner .um-wall-bodyinner-txt .twitter-tweet {
   width: 100% !important;
 }
