@@ -45,7 +45,7 @@ class Comments {
 	public function get_comment_likes() {
 		// phpcs:disable WordPress.Security.NonceVerification
 		if ( empty( $_POST['comment_id'] ) || ! $this->wall->common()->comments()->exists( absint( $_POST['comment_id'] ) ) ) {
-			wp_send_json_error( __( 'Wrong 1comment ID.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
+			wp_send_json_error( __( 'Wrong comment ID.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
 		}
 
 		$comment_id = absint( $_POST['comment_id'] );

@@ -52,7 +52,12 @@ class Posts {
 				'class' => true,
 			);
 
-			$allowed_html['strong']['onclick'] = true;
+			$allowed_html['strong']['onclick']      = true;
+			$allowed_html['div']['contenteditable'] = true;
+
+			$allowed_html['u'] = true;
+			$allowed_html['i'] = true;
+			$allowed_html['b'] = true;
 		}
 
 		return $allowed_html;
@@ -410,170 +415,6 @@ class Posts {
 	}
 
 	/**
-	 * Convert hashtags
-	 *
-	 * @param $content
-	 *
-	 * @return mixed
-	 */
-	public function hashtag_links( $content ) {
-		// hashtag must have space or start line before and space or end line after. Hashtag can contain digits, letters, underscore. Not space or dash "-".
-		$content = preg_replace_callback( '/(^|\s)(#([\p{Pc}\p{N}\p{L}\p{Mn}]+))/um', array( $this, 'hashtag_replace_links_cb' ), $content );
-		return $content;
-	}
-
-
-	/**
-	 * @param array $matches
-	 *
-	 * @return string
-	 */
-	public function hashtag_replace_links_cb( $matches ) {
-		$url = apply_filters( $this->wall->prefix . 'um_wall_get_core_page', '' );
-		return $matches[1] . '<a href="' . add_query_arg( 'hashtag', $matches[3], $url ) . '" class="um-link um-link-secondary">' . $matches[2] . '</a>';
-	}
-
-	/**
-	 * Make links clickable
-	 *
-	 * @param $content
-	 *
-	 * @return mixed|null|string|string[]
-	 */
-	public function make_links_clickable( $content ) {
-		$shortcode  = apply_filters( $this->wall->prefix . 'wall_iframe_shortcode_links_clickable', '' );
-		$has_iframe = preg_match( '/<iframe.*src=\"(.*)\".*><\/iframe>/isU', $content, $matches );
-
-		if ( $has_iframe ) {
-			$content = preg_replace( '/<iframe.*?\/iframe>/i', $shortcode, $content );
-		}
-
-		$attributes = apply_filters(
-			$this->wall->prefix . 'wall_make_links_clickable_attrs',
-			array(
-				'target' => '_blank',
-				'class'  => 'um-link',
-			)
-		);
-
-		$attribute_string = '';
-
-		foreach ( $attributes as $key => $value ) {
-			$attribute_string .= esc_html( $key ) . '="' . esc_attr( $value ) . '" ';
-		}
-
-		$content = preg_replace( '/(<a\b[^><]*)>/i', '$1 ' . trim( $attribute_string ) . '>', make_clickable( $content ) );
-
-		if ( $has_iframe && isset( $matches[0] ) ) {
-			$content = str_replace( $shortcode, $matches[0], $content );
-		}
-
-		return $content;
-	}
-
-	/**
-	 * Get a summarized content length
-	 *
-	 * @param int $post_id
-	 *
-	 * @return string
-	 */
-	public function get_content( $post_id = 0 ) {
-		if ( empty( $post_id ) ) {
-			$loop_post_id = get_the_ID();
-			if ( empty( $loop_post_id ) ) {
-				return '';
-			}
-
-			$post_id = $loop_post_id;
-		}
-
-		$post = get_post( $post_id );
-		if ( empty( $post ) ) {
-			return '';
-		}
-		$content = $post->post_content;
-
-		$has_oembed  = get_post_meta( $post_id, '_oembed', true );
-		$shared_link = get_post_meta( $post_id, '_shared_link', true );
-		$video_url   = get_post_meta( $post_id, '_video_url', true );
-
-		if ( $has_oembed ) {
-			$content = str_replace( $has_oembed, '', $content );
-		}
-		if ( $shared_link ) {
-			$content = str_replace( $shared_link, '', $content );
-		}
-		if ( $video_url ) {
-			$content = str_replace( $video_url, '', $content );
-		}
-
-		$content = trim( $content );
-		if ( '' === $content ) {
-			return '';
-		}
-
-		if ( 'status' === $this->get_action_type( $post_id ) ) {
-			$content = $this->shorten_string( $content );
-		}
-		$content = $this->make_links_clickable( $content );
-		$content = $this->hashtag_links( $content );
-
-		// strip avatars
-		if ( preg_match( '/\<img src=\"([^\"]+)\" class="(gr)?avatar/', $content, $matches ) ) {
-			$src   = $matches[1];
-			$found = @getimagesize( $src );
-			if ( ! $found ) {
-				$content = str_replace( $src, um_get_default_avatar_uri(), $content );
-			}
-		}
-
-		$content = $this->remove_vc_from_excerpt( $content );
-
-		if ( $has_oembed ) {
-			$content .= $has_oembed;
-		}
-
-		$author_id = $this->get_author( $post_id );
-		if ( $author_id ) {
-			$author_data = get_userdata( $author_id );
-
-			if ( ! empty( $author_data ) ) {
-				$search = array(
-					'{author_name}',
-					'{author_profile}',
-				);
-
-				$replace = array(
-					$author_data->display_name,
-					um_user_profile_url( $author_id ),
-				);
-
-				$content = nl2br( str_replace( $search, $replace, $content ) );
-			}
-		}
-
-		// Replace emojis codes
-		$content = convert_smilies( $content ); // WordPress native converts text equivalent of smilies to images.
-		$content = UM()->shortcodes()->emotize( $content ); // UM legacy emoji convert from the predefined list of emoji.
-		$content = wp_staticize_emoji( $content ); // WordPress native converts emoji to a static img element.
-
-		// Add related image if no image
-		if ( ! strpos( $content, '<span class="post-image">' ) ) {
-			$related_id = get_post_meta( $post_id, '_related_id', true );
-			if ( ! empty( $related_id ) ) {
-				$post_image_url = $this->get_post_image_url( $related_id );
-				if ( $post_image_url ) {
-					$post_image = '<span class="post-image"><img src="' . esc_url( $post_image_url ) . '" alt="' . esc_attr( basename( $post_image_url ) ) . '" title="#' . esc_attr( get_the_title( $related_id ) ) . '" class="um-wall-featured-img" /></span>';
-					$content    = str_replace( '<span class="post-title">', $post_image . '<span class="post-title">', $content );
-				}
-			}
-		}
-
-		return apply_filters( $this->wall->prefix . 'post_content', $content, $post );
-	}
-
-	/**
 	 * Get post image URL - thumbnail, first image, first cover
 	 *
 	 * @param int|array|null|WP_Post $post Optional. Post ID or WP_Post object.
@@ -626,236 +467,9 @@ class Posts {
 	}
 
 	/**
-	 * @shorten any string based on word count
-	 **/
-	public function shorten_string( $string ) {
-		$retval        = $string;
-		$wordsreturned = UM()->options()->get( $this->wall->prefix . 'post_truncate' );
-		if ( ! $wordsreturned ) {
-			return $string;
-		}
-		$array = explode( ' ', $string );
-		if ( count( $array ) <= $wordsreturned ) {
-			$retval = $string;
-		} else {
-			$res    = array_splice( $array, $wordsreturned );
-			$retval = implode( ' ', $array ) . ' <span class="um-wall-seemore">(<a href="" class="um-link">' . esc_html__( 'See more', $this->wall->textdomain ) . '</a>)</span> <span class="um-wall-hiddentext">' . implode( ' ', $res ) . '</span>'; // phpcs:ignore WordPress.WP.I18n
-		}
-
-		return $retval;
-	}
-
-	/**
-	 * Removes Visual Composer's shortcodes
-	 *
-	 * @param  string $excerpt
-	 *
-	 * @return string
-	 */
-	public function remove_vc_from_excerpt( $excerpt ) {
-		$patterns     = '/\[[\/]?vc_[^\]]*\]|[[\/]?nectar_[^\]]*\]|[[\/]?cspm_[^\]]*\]/';
-		$replacements = '';
-
-		return preg_replace( $patterns, $replacements, $excerpt );
-	}
-
-	/**
-	 * Get content link.
-	 * @param $content
-	 *
-	 * @return mixed|null
-	 */
-	public function get_content_link( $content ) {
-		$arr_urls = wp_extract_urls( $content );
-		if ( ! empty( $arr_urls ) ) {
-			foreach ( $arr_urls as $key => $url ) {
-				if ( ! strstr( $url, 'vimeo' ) && ! strstr( $url, 'youtube' ) && ! strstr( $url, 'youtu.be' ) ) {
-					$url = apply_filters( $this->wall->prefix . 'content_link', $url, $content );
-					return $url;
-				}
-			}
-		}
-
-		return null;
-	}
-
-	public function ssss() {
-		return 'ssss';
-	}
-
-	/**
-	 * Check if URL is oEmbed supported
-	 *
-	 * @param $url
-	 *
-	 * @return bool|false|string
-	 */
-	public function is_oembed( $url ) {
-		if ( empty( $url ) ) {
-			return false;
-		}
-
-		$providers = array(
-			'mixcloud.com'   => array( 'height' => 200 ),
-			'soundcloud.com' => array( 'height' => 200 ),
-			'instagram.com'  => array(
-				'height' => 500,
-				'width'  => 500,
-			),
-			'twitter.com'    => array(
-				'height' => 500,
-				'width'  => 700,
-			),
-			't.co'           => array(
-				'height' => 500,
-				'width'  => 700,
-			),
-		);
-
-		$providers = apply_filters( $this->wall->prefix . 'oembed_providers', $providers );
-		foreach ( $providers as $provider => $size ) {
-			if ( false !== strpos( $url, $provider ) ) {
-				return wp_oembed_get( $url, $size );
-			}
-		}
-
-		return false;
-	}
-
-	/**
-	 * Set url meta
-	 *
-	 * @param $url
-	 * @param $post_id
-	 *
-	 * @return string
-	 */
-	public function set_url_meta( $url, $post_id ) {
-		$request = wp_remote_get( $url );
-
-		// Try to get remote page using request with headers if simple request fails
-		if ( ! is_array( $request ) || empty( $request['response'] ) || empty( $request['response']['code'] ) || 200 !== $request['response']['code'] ) {
-			$user_agent = empty( $_SERVER['HTTP_USER_AGENT'] ) ? 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36' : $_SERVER['HTTP_USER_AGENT'];
-
-			$request = wp_remote_get(
-				$url,
-				array(
-					'headers' => array(
-						'accept'                    => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-						'accept-encoding'           => 'gzip, deflate, br',
-						'accept-language'           => 'en-US,en;q=0.5',
-						'cache-control'             => 'max-age=0',
-						'upgrade-insecure-requests' => 1,
-						'user-agent'                => $user_agent,
-					),
-				)
-			);
-		}
-
-		$response = wp_remote_retrieve_body( $request );
-
-		$html   = new DOMDocument();
-		$source = mb_convert_encoding( $response, 'HTML-ENTITIES', 'UTF-8' );
-		if ( empty( $source ) ) {
-			return '';
-		}
-
-		@$html->loadHTML( $source );
-		$tags = null;
-
-		$title         = $html->getElementsByTagName( 'title' );
-		$tags['title'] = $title->item( 0 )->nodeValue;
-
-		foreach ( $html->getElementsByTagName( 'meta' ) as $meta ) {
-			if ( 'og:image' === $meta->getAttribute( 'property' ) ) {
-				$tags['image'] = trim( str_replace( '\\', '/', $meta->getAttribute( 'content' ) ) );
-				$src           = $tags['image'];
-				$data          = $this->is_image( $src );
-				if ( is_array( $data ) ) {
-					$tags['image']        = $src;
-					$tags['image_width']  = $data[0];
-					$tags['image_height'] = $data[1];
-				}
-			}
-			if ( 'og:image:width' === $meta->getAttribute( 'property' ) ) {
-				$tags['image_width'] = trim( $meta->getAttribute( 'content' ) );
-			}
-			if ( 'og:image:height' === $meta->getAttribute( 'property' ) ) {
-				$tags['image_height'] = trim( $meta->getAttribute( 'content' ) );
-			}
-			if ( 'description' === $meta->getAttribute( 'name' ) ) {
-				$tags['description'] = trim( str_replace( '\\', '/', $meta->getAttribute( 'content' ) ) );
-			}
-		}
-
-		if ( ! isset( $tags['image'] ) ) {
-			foreach ( $html->getElementsByTagName( 'img' ) as $img ) {
-				$src = esc_url( $img->getAttribute( 'src' ) );
-				if ( false !== strpos( $src, '\\' ) ) {
-					$src = str_replace( '\\', '/', $src );
-				}
-				if ( 0 === strpos( $src, '//' ) ) {
-					$src = 'http:' . $src;
-				}
-				$tags['image'] = $src;
-				$data          = $this->is_image( $src );
-				if ( is_array( $data ) ) {
-					$tags['image_width']  = $data[0];
-					$tags['image_height'] = $data[1];
-					break;
-				}
-			}
-		}
-
-		/* Display the meta now */
-
-		if ( isset( $tags['image_width'] ) && $tags['image_width'] <= 400 ) {
-			$content = '<span class="post-meta" style="position:relative;min-height: ' . ( absint( $tags['image_height'] / 2 ) - 10 ) . 'px;padding-left:' . $tags['image_width'] / 2 . 'px;"><a href="{post_url}" target="_blank">{post_image} {post_title} {post_excerpt} {post_domain}</a></span>';
-		} else {
-			$content = '<span class="post-meta"><a href="{post_url}" target="_blank">{post_image} {post_title} {post_excerpt} {post_domain}</a></span>';
-		}
-
-		if ( isset( $tags['description'] ) ) {
-			if ( isset( $tags['image_width'] ) && 400 >= $tags['image_width'] ) {
-				$content = str_replace( '{post_excerpt}', '', $content );
-			} else {
-				$content = str_replace( '{post_excerpt}', '<span class="post-excerpt">' . $tags['description'] . '</span>', $content );
-			}
-		} else {
-			$content = str_replace( '{post_excerpt}', '', $content );
-		}
-
-		if ( isset( $tags['title'] ) ) {
-			$content = str_replace( '{post_title}', '<span class="post-title">' . mb_convert_encoding( $tags['title'], 'HTML-ENTITIES', 'UTF-8' ) . '</span>', $content );
-		} else {
-			$content = str_replace( '{post_title}', '<span class="post-title">' . esc_html__( 'Untitled', $this->wall->textdomain ) . '</span>', $content ); // phpcs:ignore WordPress.WP.I18n
-		}
-
-		if ( isset( $tags['image'] ) ) {
-			if ( isset( $tags['image_width'] ) && 400 >= $tags['image_width'] ) {
-				$content = str_replace( '{post_image}', '<span class="post-image" style="position:absolute;left:0;top:0;width:' . $tags['image_width'] / 2 . 'px;"><img src="' . $tags['image'] . '" alt="" title="" class="um-activity-featured-img" /></span>', $content );
-			} else {
-				$content = str_replace( '{post_image}', '<span class="post-image"><img src="' . $tags['image'] . '" alt="" title="" class="um-activity-featured-img" /></span>', $content );
-			}
-		} else {
-			$content = str_replace( '{post_image}', '', $content );
-		}
-
-		$parse = wp_parse_url( $url );
-
-		$content = str_replace( '{post_url}', $url, $content );
-		$content = str_replace( '{post_domain}', '<span class="post-domain">' . strtoupper( $parse['host'] ) . '</span>', $content );
-
-		update_post_meta( $post_id, '_shared_link', trim( $content ) );
-
-		return trim( $content );
-	}
-
-	/**
 	 * @Checks if image is valid
 	 */
 	public function is_image( $url ) {
-
 		$allow_types = array(
 			'jpeg' => 'image/jpeg',
 		);
@@ -1017,5 +631,91 @@ class Posts {
 			'result'      => $query_obj->get_posts(),
 			'total_posts' => $query_obj->found_posts,
 		);
+	}
+
+	/**
+	 * Change #hashtags in the text to links to the hashtag archive page
+	 *
+	 * @param string $content original text
+	 *
+	 * @return string new text with links
+	 */
+	public function linkify_hashtags_in_content( $content ) {
+		return preg_replace_callback(
+			'/(?<!\w)#([\p{Pc}\p{N}\p{L}\p{Mn}]+)/um',
+			function ( $m ) {
+				$tag_name = $m[1];
+
+				$term = get_term_by( 'name', $tag_name, 'um_hashtag' );
+				if ( ! $term || is_wp_error( $term ) ) {
+					$term = get_term_by( 'slug', sanitize_title( $tag_name ), 'um_hashtag' );
+				}
+
+				if ( $term && ! is_wp_error( $term ) ) {
+					$link = add_query_arg( 'hashtag', $term->slug, um_get_core_page( 'activity' ) );
+					if ( $link ) {
+						return '<a class="um-hashtag um-link" href="' . esc_url( $link ) . '">#' . $tag_name . '</a>';
+					}
+				}
+
+				return '#' . $tag_name;
+			},
+			$content
+		);
+	}
+
+	/**
+	 * @param string $content Content string
+	 * @param string $context Content entity post||comment
+	 * @param int    $id      Entity ID.
+	 *
+	 * @return string
+	 */
+	public function maybe_linkify_mentions( $content, $context, $id ) {
+		if ( ! UM()->options()->get( 'activity_friends_mention' ) && ! UM()->options()->get( 'activity_followers_mention' ) ) {
+			return $content;
+		}
+
+		if ( empty( $content ) ) {
+			return $content;
+		}
+
+		$mentioned = array();
+		if ( 'post' === $context ) {
+			$mentioned = get_post_meta( $id, '_mentioned', true );
+		} elseif ( 'comment' === $context ) {
+			$mentioned = get_comment_meta( $id, '_mentioned', true );
+		}
+
+		if ( empty( $mentioned ) ) {
+			return $content;
+		}
+
+		$user_names = array();
+		foreach ( $mentioned as $user_id1 ) {
+			um_fetch_user( $user_id1 );
+			$display_name = um_user( 'display_name' );
+			if ( empty( $display_name ) ) {
+				continue;
+			}
+			$user_names[ $user_id1 ] = $display_name;
+		}
+
+		uasort(
+			$user_names,
+			static function ( $a, $b ) {
+				return strlen( $b ) - strlen( $a );
+			}
+		);
+
+		foreach ( $user_names as $user_id1 => $name ) {
+			preg_match( '/(^|\s)(@' . preg_quote( $name, '/' ) . ')($|\s)/um', $content, $matches );
+
+			if ( ! empty( $matches[2] ) ) {
+				$content = preg_replace( '/(?<=^|\s)@' . preg_quote( $name, '/' ) . '(?=$|\s)/um', '<a href="' . esc_url( um_user_profile_url( $user_id1 ) ) . '" class="um-link">' . esc_html( $name ) . '</a>', $content );
+			}
+		}
+
+		return $content;
 	}
 }

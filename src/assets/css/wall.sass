@@ -72,6 +72,44 @@
             color: $gray-600
     .#{$prefix}wall-edit-post
       padding: 0
+    .#{$prefix}wall-textarea-elem
+      min-height: $spacing-7xl
+      +border-box
+      background: $um-white
+      box-shadow: $shadow-xs
+      padding: $spacing-md $spacing-lg
+      margin: 0
+      color: $gray-900
+      +typography( text, md, regular )
+      &:not(.wp-editor-area)
+        border-radius: $radius-md
+        border: 1px solid $gray-300
+        &:focus,
+        &:focus-visible
+          border: 1px solid $primary-300
+          box-shadow: $ring-brand-shadow-xs
+          background: $um-white
+          outline: none
+      &.#{$prefix}error
+        border-color: $error-300
+        &:not(.wp-editor-area)
+          &:focus,
+          &:focus-visible
+            box-shadow: $ring-error-shadow-xs
+      &:empty
+        &:before
+          content: attr(data-placeholder)
+          color: #999
+          pointer-events: none
+    .#{$prefix}wall-editor-toolbar
+      +flex( row, start, stretch, nowrap )
+      gap: $spacing-md
+      button
+        &.active
+          background: $button-bg-hover
+    .um-wall-textarea
+      visibility: hidden
+      display: none
   .#{$prefix}wall-commentl
     &.#{$prefix}wall-comment-area
       display: grid
@@ -394,3 +432,32 @@
     max-width: 100%
     height: auto
     max-height: 100% !important
+
+// mentions
+#um-mention-autocomplete
+  position: absolute
+  z-index: 99999
+  background: #fff
+  border: 1px solid #ccc
+  border-radius: 6px
+  display: none
+  min-width: 180px
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15)
+  font-size: 14px
+  .um-mention-item
+    display: flex
+    align-items: center
+    padding: 6px 10px
+    cursor: pointer
+    &:hover
+      background: #f6f6f6
+    img
+      border-radius: 50%
+      margin-right: 8px
+      width: 28px
+      height: 28px
+    .name
+      font-weight: 600
+      margin-right: 6px
+    .username
+      opacity: 0.6

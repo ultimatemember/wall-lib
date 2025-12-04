@@ -24,6 +24,7 @@ class Init {
 	public function includes() {
 		$this->posts();
 		$this->comments();
+		$this->mentions();
 	}
 
 	/**
@@ -44,5 +45,15 @@ class Init {
 			UM()->classes['WallLib\ajax\comments'] = new Comments( $this->wall );
 		}
 		return UM()->classes['WallLib\ajax\comments'];
+	}
+
+	/**
+	 * @return Mentions
+	 */
+	public function mentions() {
+		if ( empty( UM()->classes['WallLib\ajax\mentions'] ) ) {
+			UM()->classes['WallLib\ajax\mentions'] = new Mentions( $this->wall );
+		}
+		return UM()->classes['WallLib\ajax\mentions'];
 	}
 }

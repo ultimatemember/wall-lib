@@ -1,11 +1,11 @@
-
-function um_check_textarea_length( textarea ) {
-	let form = textarea.parents( 'form' );
-	if ( textarea.val().trim().length > 0 ) {
-		um_enable_post_submit( form );
+function um_check_textarea_length( editor ) {
+	let form = editor.parents('form');
+	let text = editor.text().trim();
+	if (text.length > 0) {
+		um_enable_post_submit(form);
 	} else {
-		if ( form.find( '.um-uploader-file.um-upload-completed' ).length === 0 ) {
-			um_disable_post_submit( form );
+		if (form.find('.um-uploader-file.um-upload-completed').length === 0) {
+			um_disable_post_submit(form);
 		}
 	}
 }
@@ -45,8 +45,8 @@ jQuery( document ).ready(function () {
 		um_wall_ajax_request();
 	}
 
-	/* Detect change in textarea content */
-	jQuery( document.body ).on( 'input onpropertychange', '.um-wall-textarea-elem', function() {
+	/* Detect change in editor content */
+	jQuery( document.body ).on( 'input keyup paste', '.um-wall-textarea-elem', function() {
 		um_check_textarea_length( jQuery( this ) );
 	});
 
@@ -62,8 +62,11 @@ jQuery( document ).ready(function () {
 
 	/* Post publish */
 	jQuery( document.body ).on( 'submit', '.um-wall-publish', function(e) {
+		console.log(jQuery(this))
 		e.preventDefault();
 		let form = jQuery(this);
+		let post_content = form.find('.um-wall-textarea-elem').html();
+		form.find('.um-wall-textarea').val(post_content);
 
 		let formdata = UM.common.form.vanillaSerialize( form );
 		if ( 'undefined' === typeof( formdata ) ) {
@@ -175,6 +178,8 @@ jQuery( document ).ready(function () {
 				if ( jQuery('.um-wall-uploader-section.um-toggle-block .um-toggle-block-inner').hasClass('um-visible') && jQuery('.um-wall-uploader-section.um-toggle-block').hasClass('um-toggle-block-collapsed') ) {
 					jQuery('.um-wall-uploader-section.um-toggle-block .um-toggle-block-inner').toggleClass('um-visible');
 				}
+
+				form.find('.um-wall-textarea-elem').html('');
 			},
 			error: function(data) {
 				form.find('.um-wall-right .um-ajax-spinner-svg').hide();
@@ -334,6 +339,7 @@ jQuery( document ).ready(function () {
 		widget.find('.um-wall-body').umShow();
 		widget.find('.um-wall-comments').umShow();
 		widget.find('.um-wall-comment-form').umShow();
+		widget.find('.um-post-actions-toggle').umShow();
 	});
 
 	/* Edit Post */
@@ -363,14 +369,14 @@ jQuery( document ).ready(function () {
 					nonce: nonce
 				},
 				success: function( data ) {
+					console.log(data)
 					loader.umHide();
 					widget.find('.um-wall-body').umHide();
 					widget.find('.um-wall-comments').umHide();
 					widget.find('.um-wall-comment-form').umHide();
 					widget.find('.um-wall-body').before(data);
-					let height = widget.find('.um-wall-textarea-elem')[0].scrollHeight;
-					widget.find('.um-wall-textarea-elem').height(height);
 					UM.frontend.uploader.init()
+					widget.find('.um-post-actions-toggle').umHide();
 				},
 				error: function(data) {
 					console.log(data);
@@ -924,6 +930,59 @@ jQuery( document ).ready(function () {
 			}
 		);
 	});
+
+	// Text editor with the contenteditable attribute
+	let activeEditor = null;
+
+	jQuery(document).on('focus', '.um-wall-textarea-elem', function () {
+		activeEditor = this;
+	});
+	jQuery(document).on('mousedown', '.um-wall-textarea-elem', function () {
+		activeEditor = this;
+	});
+	jQuery(document).on('mousedown', '.um-wall-editor-toolbar button', function (e) {
+		e.preventDefault();
+	});
+
+	jQuery(document).on('click', '.um-wall-editor-toolbar button', function (e) {
+		e.preventDefault();
+
+		jQuery(this).toggleClass('active');
+
+		if (!activeEditor) return;
+
+		activeEditor.focus();
+
+		let cmd = jQuery(this).data('cmd');
+		let action = jQuery(this).data('action');
+
+		switch (cmd || action) {
+
+			case 'bold':
+				document.execCommand('bold');
+				break;
+
+			case 'italic':
+				document.execCommand('italic');
+				break;
+
+			case 'underline':
+				document.execCommand('underline');
+				break;
+
+			case 'ul':
+				document.execCommand('insertUnorderedList');
+				break;
+
+			case 'ol':
+				document.execCommand('insertOrderedList');
+				break;
+
+			case 'clear':
+				document.execCommand('removeFormat');
+				break;
+		}
+	});
 });
 
 // AJAX wall request on scroll
@@ -995,7 +1054,10 @@ function um_wall_ajax_request() {
 			}
 		});
 	}
+
+
 }
+
 
 function um_clean_photo_fields( form ) {
 	form.find('.um-wall-preview').hide();
@@ -1008,51 +1070,238 @@ function um_post_placeholder( obj ) {
 	obj.attr( 'placeholder', obj.attr( 'data-ph' ) );
 }
 
-// function UM_wall_autocomplete_start() {
-// 	var textareas = jQuery( 'textarea.um-wall-textarea-elem,textarea.um-wall-comment-textarea' );
-//
-// 	if ( textareas.length === 0 ) {
-// 		return;
-// 	}
-//
-// 	textareas.each( function() {
-// 		var el = jQuery(this);
-//
-// 		if (typeof jQuery.ui === 'undefined') {
-// 			return false;
-// 		}
-//
-// 		var el_autocomplete = el.autocomplete({
-// 			minLength: 1,
-// 			source: function( request, response ) {
-//
-// 				if ( um_extractLast( request.term ).charAt(0) === '@' ) {
-//
-// 					jQuery.getJSON( wp.ajax.settings.url + '?action=um_activity_get_user_suggestions&term=' + um_extractLast( request.term )  + '&nonce=' + um_scripts.nonce, function( data ) {
-// 						response( data );
-// 					});
-//
-// 				}
-//
-// 			},
-// 			select: function( event, ui ) {
-// 				ui.item.name = ui.item.name.replace( '<strong>', '' );
-// 				ui.item.name = ui.item.name.replace( '</strong>', '' );
-//
-// 				var terms = um_extract_string( this.value );
-// 				terms.pop();
-// 				terms.push( '@' + ui.item.username );
-// 				terms.push( "" );
-// 				this.value = jQuery.trim( terms.join(" ") );
-// 				return false;
-// 			}
-// 		});
-//
-// 		if ( typeof el_autocomplete.data("ui-autocomplete") !== 'undefined' ) {
-// 			el_autocomplete.data("ui-autocomplete")._renderItem = function( ul, item ) {
-// 				return jQuery("<li />").data("item.autocomplete", item).append(item.photo + item.name + '<span>@' + item.username + '</span>').appendTo(ul);
-// 			}
-// 		}
-//
-// 	});
-// }
+// mentions
+jQuery(document).ready(function () {
+
+	let activeEditor = null;
+	let mentionTimer = null;
+	let savedRange = null;
+
+	// set active editor
+	jQuery(document).on('focus mousedown', '.um-wall-textarea-elem', function () {
+		activeEditor = this;
+	});
+
+	// detect @mention
+	jQuery(document).on('keyup', '.um-wall-textarea-elem', function (e) {
+
+		activeEditor = this;
+
+		// save range
+		let sel = window.getSelection();
+		if (sel.rangeCount) {
+			savedRange = sel.getRangeAt(0).cloneRange();
+		}
+
+		let word  = getCurrentWord(this);
+		let nonce = jQuery(this).attr('data-nonce');
+
+		if ( word && word.startsWith('@') && word.length > 1 ) {
+			let term = word.substring(1);
+			startMentionSearch(term, nonce, this);
+		} else {
+			hideMentionBox();
+		}
+	});
+
+	function startMentionSearch(term, nonce, editor) {
+		clearTimeout(mentionTimer);
+		mentionTimer = setTimeout(function(){
+			wp.ajax.send('um_activity_get_user_suggestions', {
+				data: {
+					term: term,
+					nonce: nonce
+				},
+				success: function(response){
+					console.log(response)
+					if (response) {
+						showMentionBox(response, editor);
+					} else {
+						hideMentionBox();
+					}
+				},
+				error: function(){
+					hideMentionBox();
+				}
+			});
+		}, 200);
+	}
+
+	// Show mention box
+	function showMentionBox(users, editor){
+		let box = jQuery('#um-mention-autocomplete');
+		box.empty();
+
+		if (!users.length) {
+			hideMentionBox();
+			return;
+		}
+		users.forEach(function(u){
+
+			let item = jQuery('<div class="um-mention-item"></div>');
+			item.html(
+				u.photo +
+				'<span class="name">' + u.name + '</span>' +
+				'<span class="username">@' + u.username + '</span>'
+			);
+
+			item.data('user', u);
+			box.append(item);
+		});
+
+		let pos = getCaretWordPosition(editor);
+
+		box.css({
+			left: pos.left,
+			top:  pos.top
+		}).show();
+	}
+
+	function hideMentionBox(){
+		jQuery('#um-mention-autocomplete').hide();
+	}
+
+	// Check mention item click
+	jQuery(document).on('click', '.um-mention-item', function(e){
+
+		e.preventDefault();
+		e.stopPropagation();
+
+		let user = jQuery(this).data('user');
+
+		if (!savedRange) return;
+
+		// Возвращаем фокус в редактор
+		activeEditor.focus();
+
+		// Восстанавливаем курсор
+		let sel = window.getSelection();
+		sel.removeAllRanges();
+		sel.addRange(savedRange);
+
+		// Вставляем упоминание
+		insertMention(activeEditor, '@' + user.username + ' ');
+
+		hideMentionBox();
+	});
+
+	// add mention text
+	function insertMention(editor, text) {
+		let sel = window.getSelection();
+		if (!sel.rangeCount) return;
+
+		let caretRange = sel.getRangeAt(0);
+
+		let caretOffset = getCaretOffset(editor);
+		let fullText = editor.innerText;
+
+		let beforeChar = fullText.charAt(caretOffset - 1);
+
+		if (beforeChar && beforeChar !== ' ' && beforeChar !== '\n') {
+			text = ' ' + text;
+		}
+
+		let before = fullText.slice(0, caretOffset);
+		let word = before.split(/\s/).pop();
+
+		let startOffset = caretOffset - word.length;
+
+		let rangeToReplace = document.createRange();
+
+		let startInfo = getTextNodeAtPosition(editor, startOffset);
+		let endInfo   = getTextNodeAtPosition(editor, caretOffset);
+
+		rangeToReplace.setStart(startInfo.node, startInfo.offset);
+		rangeToReplace.setEnd(endInfo.node, endInfo.offset);
+
+		rangeToReplace.deleteContents();
+
+		document.execCommand('insertText', false, text);
+	}
+
+	function getTextNodeAtPosition(root, index) {
+
+		let treeWalker = document.createTreeWalker(
+			root,
+			NodeFilter.SHOW_TEXT,
+			{
+				acceptNode: function(node) {
+					if (node.nodeType === Node.TEXT_NODE) return NodeFilter.FILTER_ACCEPT;
+					return NodeFilter.FILTER_REJECT;
+				}
+			}
+		);
+
+		let currentNode = null;
+
+		while (treeWalker.nextNode()) {
+			let node = treeWalker.currentNode;
+			if (index <= node.length) {
+				return { node: node, offset: index };
+			}
+			index -= node.length;
+		}
+
+		// fallback
+		return {
+			node: root,
+			offset: root.childNodes.length
+		};
+	}
+
+	// get current word
+	function getCurrentWord(editor){
+
+		let text = editor.innerText;
+		let caret = getCaretOffset(editor);
+
+		let before = text.slice(0, caret);
+		return before.split(/\s/).pop();
+	}
+
+	// position of caret in text
+	function getCaretOffset(el){
+
+		let sel = window.getSelection();
+		if (!sel.rangeCount) return 0;
+
+		let range = sel.getRangeAt(0);
+		let preRange = range.cloneRange();
+
+		preRange.selectNodeContents(el);
+		preRange.setEnd(range.endContainer, range.endOffset);
+
+		return preRange.toString().length;
+	}
+
+	// caret position on screen
+	function getCaretWordPosition(editor){
+
+		let sel = window.getSelection();
+		let range = sel.getRangeAt(0).cloneRange();
+
+		range.collapse(true);
+
+		let rect = range.getClientRects()[0];
+
+		if (!rect) {
+			let offset = jQuery(editor).offset();
+			return {
+				left: offset.left,
+				top:  offset.top
+			};
+		}
+
+		return {
+			left: rect.left + window.scrollX,
+			top:  rect.bottom + window.scrollY + 2
+		};
+	}
+
+	// close mention box on outside click
+	jQuery(document).on('mousedown', function(e){
+		if ( !jQuery(e.target).closest('#um-mention-autocomplete').length && !jQuery(e.target).closest('.um-mention-item').length ) {
+			hideMentionBox();
+		}
+	});
+});

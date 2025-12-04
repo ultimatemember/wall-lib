@@ -184,7 +184,9 @@ class Posts {
 			'allowed_html'    => $this->wall->common()->posts()->get_allowed_html(),
 		);
 
+		add_filter( 'um_late_escaping_allowed_tags', array( $this->wall->common()->posts(), 'add_extra_kses_allowed_tags' ), 10, 2 );
 		$output = UM()->get_template( 'v3/edit-post.php', $this->wall->plugin_basename, $t_args );
+		add_filter( 'um_late_escaping_allowed_tags', array( $this->wall->common()->posts(), 'add_extra_kses_allowed_tags' ), 10, 2 );
 
 		wp_send_json_success( $output );
 	}
@@ -726,92 +728,6 @@ class Posts {
 		$path = '/' . implode( '/', $parts );
 
 		return "{$scheme}://{$host}{$port}{$path}";
-	}
-
-	/**
-	 * Change #hashtags in the text to links to the hashtag archive page
-	 *
-	 * @param string $content original text
-	 *
-	 * @return string new text with links
-	 */
-	public function linkify_hashtags_in_content( $content ) {
-		return preg_replace_callback(
-			'/(?<!\w)#([\p{Pc}\p{N}\p{L}\p{Mn}]+)/um',
-			function ( $m ) {
-				$tag_name = $m[1];
-
-				$term = get_term_by( 'name', $tag_name, 'um_hashtag' );
-				if ( ! $term || is_wp_error( $term ) ) {
-					$term = get_term_by( 'slug', sanitize_title( $tag_name ), 'um_hashtag' );
-				}
-
-				if ( $term && ! is_wp_error( $term ) ) {
-					$link = add_query_arg( 'hashtag', $term->slug, um_get_core_page( 'activity' ) );
-					if ( $link ) {
-						return '<a class="um-hashtag um-link" href="' . esc_url( $link ) . '">#' . $tag_name . '</a>';
-					}
-				}
-
-				return '#' . $tag_name;
-			},
-			$content
-		);
-	}
-
-	/**
-	 * @param string $content Content string
-	 * @param string $context Content entity post||comment
-	 * @param int    $id      Entity ID.
-	 *
-	 * @return string
-	 */
-	public function maybe_linkify_mentions( $content, $context, $id ) {
-		if ( ! UM()->options()->get( 'activity_friends_mention' ) && ! UM()->options()->get( 'activity_followers_mention' ) ) {
-			return $content;
-		}
-
-		if ( empty( $content ) ) {
-			return $content;
-		}
-
-		$mentioned = array();
-		if ( 'post' === $context ) {
-			$mentioned = get_post_meta( $id, '_mentioned', true );
-		} elseif ( 'comment' === $context ) {
-			$mentioned = get_comment_meta( $id, '_mentioned', true );
-		}
-
-		if ( empty( $mentioned ) ) {
-			return $content;
-		}
-
-		$user_names = array();
-		foreach ( $mentioned as $user_id1 ) {
-			um_fetch_user( $user_id1 );
-			$display_name = um_user( 'display_name' );
-			if ( empty( $display_name ) ) {
-				continue;
-			}
-			$user_names[ $user_id1 ] = $display_name;
-		}
-
-		uasort(
-			$user_names,
-			static function ( $a, $b ) {
-				return strlen( $b ) - strlen( $a );
-			}
-		);
-
-		foreach ( $user_names as $user_id1 => $name ) {
-			preg_match( '/(^|\s)(@' . $name . ')($|\s)/um', $content, $matches );
-
-			if ( ! empty( $matches[2] ) ) {
-				$content = preg_replace( '/(^|\s)@(' . $name . ')($|\s)/um', '$1<a href="' . esc_url( um_user_profile_url( $user_id1 ) ) . '" class="um-link">$2</a>$3', $content, -1, $replacements );
-			}
-		}
-
-		return $content;
 	}
 
 	/**
