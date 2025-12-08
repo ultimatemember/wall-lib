@@ -207,7 +207,9 @@ class Posts {
 			check_ajax_referer( 'um-wall-post-edit' . $post_id, 'nonce' );
 		}
 
-		$_post_content = wp_kses_post( wp_unslash( trim( $_POST['_post_content'] ) ) );
+		$_post_content = str_replace( '&nbsp;', ' ', $_POST['_post_content'] );
+		$_post_content = rtrim( $_post_content );
+		$_post_content = wp_kses_post( wp_unslash( trim( $_post_content ) ) );
 		$_post_content = ! empty( $_post_content ) ? $_post_content : '';
 
 		$_post_images = array();
