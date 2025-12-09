@@ -400,8 +400,9 @@
   align-items: start;
   flex-wrap: nowrap;
 }
-.um .um-wall-widget .um-wall-comments .um-wall-comments-loop > .um-wall-loader {
+.um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-loader {
   margin: 0 auto;
+  display: block;
 }
 .um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap {
   width: 100%;

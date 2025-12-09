@@ -405,7 +405,7 @@ class Comments {
 
 			$status = wp_kses(
 				UM()->frontend()::layouts()::alert(
-					esc_html__( 'Submission error', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
+					esc_html__( 'Submission success', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
 					array(
 						'type'       => 'success',
 						'underline'  => false,
@@ -525,7 +525,7 @@ class Comments {
 			// Apply hashtags for the post
 			$this->wall->common()->posts()->hashtagit( $post_id, $orig_content, true );
 
-			$linkified = $this->wall->ajax()->posts()->linkify_hashtags_in_content( $comment_content );
+			$linkified = $this->wall->common()->posts()->linkify_hashtags_in_content( $comment_content );
 			if ( $comment_content !== $linkified ) {
 				$data = array(
 					'comment_ID'      => $commentid,
@@ -533,6 +533,8 @@ class Comments {
 				);
 				wp_update_comment( $data );
 			}
+
+			$comment_content = nl2br( $linkified );
 
 			if ( ! empty( $old_data->comment_parent ) ) {
 				do_action( $this->wall->prefix . 'after_wall_comment_reply_updated', $commentid, $old_data );
