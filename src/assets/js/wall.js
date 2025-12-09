@@ -1072,31 +1072,172 @@ function um_post_placeholder( obj ) {
 
 // mentions
 jQuery(document).ready(function () {
-
 	let activeEditor = null;
 	let mentionTimer = null;
 	let savedRange = null;
 
-	// set active editor
-	jQuery(document).on('focus mousedown', '.um-wall-textarea-elem', function () {
+	// selectors for both editors
+	const editorSelector = '.um-wall-textarea-elem, .um-wall-comment-textarea';
+
+	//--------------------------------------------------------------------
+	// UNIVERSAL HELPERS
+	//--------------------------------------------------------------------
+	function isTextarea(el) {
+		return el.tagName === 'TEXTAREA';
+	}
+
+	function getEditorText(el) {
+		return isTextarea(el) ? el.value : el.innerText;
+	}
+
+	// caret for textarea
+	function getCaretOffsetTextarea(el) {
+		return el.selectionStart;
+	}
+
+	// caret for contenteditable
+	function getCaretOffsetDiv(el) {
+		let sel = window.getSelection();
+		if (!sel.rangeCount) return 0;
+
+		let range = sel.getRangeAt(0);
+		let preRange = range.cloneRange();
+		preRange.selectNodeContents(el);
+		preRange.setEnd(range.endContainer, range.endOffset);
+
+		return preRange.toString().length;
+	}
+
+	function getCaretOffset(el) {
+		return isTextarea(el)
+			? getCaretOffsetTextarea(el)
+			: getCaretOffsetDiv(el);
+	}
+
+	function getCurrentWord(editor) {
+		let text = getEditorText(editor);
+		let caret = getCaretOffset(editor);
+
+		let before = text.slice(0, caret);
+		return before.split(/\s/).pop();
+	}
+
+	//--------------------------------------------------------------------
+	// REPLACE WORD — textarea
+	//--------------------------------------------------------------------
+	function replaceWordInTextarea(el, word, replacement) {
+		const caret = el.selectionStart;
+		const start = caret - word.length;
+		const end   = caret;
+
+		el.value =
+			el.value.substring(0, start) +
+			replacement +
+			el.value.substring(end);
+
+		const newPos = start + replacement.length;
+		el.selectionStart = el.selectionEnd = newPos;
+	}
+
+	//--------------------------------------------------------------------
+	// REPLACE WORD — contenteditable
+	//--------------------------------------------------------------------
+	function getTextNodeAtPosition(root, index) {
+		let treeWalker = document.createTreeWalker(
+			root,
+			NodeFilter.SHOW_TEXT,
+			{
+				acceptNode: node => (
+					node.nodeType === Node.TEXT_NODE
+						? NodeFilter.FILTER_ACCEPT
+						: NodeFilter.FILTER_REJECT
+				)
+			}
+		);
+
+		while (treeWalker.nextNode()) {
+			let node = treeWalker.currentNode;
+			if (index <= node.length) {
+				return { node: node, offset: index };
+			}
+			index -= node.length;
+		}
+
+		return {
+			node: root,
+			offset: root.childNodes.length
+		};
+	}
+
+	function replaceWordInDiv(el, word, replacement) {
+		let caretOffset = getCaretOffsetDiv(el);
+		let fullText   = el.innerText;
+		let startOffset = caretOffset - word.length;
+
+		let sel = window.getSelection();
+		let range = document.createRange();
+
+		let startInfo = getTextNodeAtPosition(el, startOffset);
+		let endInfo   = getTextNodeAtPosition(el, caretOffset);
+
+		range.setStart(startInfo.node, startInfo.offset);
+		range.setEnd(endInfo.node, endInfo.offset);
+		range.deleteContents();
+
+		document.execCommand('insertText', false, replacement);
+	}
+
+	//--------------------------------------------------------------------
+	// UNIVERSAL insertMention()
+	//--------------------------------------------------------------------
+	function insertMention(editor, mention) {
+		let word = getCurrentWord(editor);
+
+		// ensure space before if needed
+		let text = getEditorText(editor);
+		let caret = getCaretOffset(editor);
+		let beforeChar = text.charAt(caret - 1);
+
+		if (beforeChar && beforeChar !== ' ' && beforeChar !== "\n") {
+			mention = ' ' + mention;
+		}
+
+		if (isTextarea(editor)) {
+			replaceWordInTextarea(editor, word, mention);
+		} else {
+			replaceWordInDiv(editor, word, mention);
+		}
+	}
+
+	//--------------------------------------------------------------------
+	// detect active editor
+	//--------------------------------------------------------------------
+	jQuery(document).on('focus mousedown', editorSelector, function () {
 		activeEditor = this;
 	});
 
-	// detect @mention
-	jQuery(document).on('keyup', '.um-wall-textarea-elem', function (e) {
-
+	//--------------------------------------------------------------------
+	// detect "@" typing
+	//--------------------------------------------------------------------
+	jQuery(document).on('keyup', editorSelector, function (e) {
 		activeEditor = this;
 
-		// save range
-		let sel = window.getSelection();
-		if (sel.rangeCount) {
-			savedRange = sel.getRangeAt(0).cloneRange();
+		// save range for contenteditable
+		if (!isTextarea(this)) {
+			let sel = window.getSelection();
+			if (sel.rangeCount) {
+				savedRange = sel.getRangeAt(0).cloneRange();
+			}
+		} else {
+			savedRange = {
+				textareaPos: this.selectionStart
+			};
 		}
 
-		let word  = getCurrentWord(this);
+		let word = getCurrentWord(this);
 		let nonce = jQuery(this).attr('data-nonce');
 
-		if ( word && word.startsWith('@') && word.length > 1 ) {
+		if (word && word.startsWith('@') && word.length > 1) {
 			let term = word.substring(1);
 			startMentionSearch(term, nonce, this);
 		} else {
@@ -1104,30 +1245,28 @@ jQuery(document).ready(function () {
 		}
 	});
 
+	//--------------------------------------------------------------------
+	// AJAX search
+	//--------------------------------------------------------------------
 	function startMentionSearch(term, nonce, editor) {
 		clearTimeout(mentionTimer);
 		mentionTimer = setTimeout(function(){
 			wp.ajax.send('um_activity_get_user_suggestions', {
-				data: {
-					term: term,
-					nonce: nonce
-				},
+				data: { term: term, nonce: nonce },
 				success: function(response){
-					console.log(response)
-					if (response) {
-						showMentionBox(response, editor);
-					} else {
-						hideMentionBox();
-					}
+					if (response) showMentionBox(response, editor);
+					else hideMentionBox();
 				},
 				error: function(){
 					hideMentionBox();
 				}
 			});
-		}, 200);
+		}, 220);
 	}
 
-	// Show mention box
+	//--------------------------------------------------------------------
+	// Show suggestion box
+	//--------------------------------------------------------------------
 	function showMentionBox(users, editor){
 		let box = jQuery('#um-mention-autocomplete');
 		box.empty();
@@ -1136,15 +1275,14 @@ jQuery(document).ready(function () {
 			hideMentionBox();
 			return;
 		}
-		users.forEach(function(u){
 
+		users.forEach(function(u){
 			let item = jQuery('<div class="um-mention-item"></div>');
 			item.html(
 				u.photo +
 				'<span class="name">' + u.name + '</span>' +
 				'<span class="username">@' + u.username + '</span>'
 			);
-
 			item.data('user', u);
 			box.append(item);
 		});
@@ -1161,125 +1299,23 @@ jQuery(document).ready(function () {
 		jQuery('#um-mention-autocomplete').hide();
 	}
 
-	// Check mention item click
-	jQuery(document).on('click', '.um-mention-item', function(e){
-
-		e.preventDefault();
-		e.stopPropagation();
-
-		let user = jQuery(this).data('user');
-
-		if (!savedRange) return;
-
-		// Возвращаем фокус в редактор
-		activeEditor.focus();
-
-		// Восстанавливаем курсор
-		let sel = window.getSelection();
-		sel.removeAllRanges();
-		sel.addRange(savedRange);
-
-		// Вставляем упоминание
-		insertMention(activeEditor, '@' + user.username + ' ');
-
-		hideMentionBox();
-	});
-
-	// add mention text
-	function insertMention(editor, text) {
-		let sel = window.getSelection();
-		if (!sel.rangeCount) return;
-
-		let caretRange = sel.getRangeAt(0);
-
-		let caretOffset = getCaretOffset(editor);
-		let fullText = editor.innerText;
-
-		let beforeChar = fullText.charAt(caretOffset - 1);
-
-		if (beforeChar && beforeChar !== ' ' && beforeChar !== '\n') {
-			text = ' ' + text;
-		}
-
-		let before = fullText.slice(0, caretOffset);
-		let word = before.split(/\s/).pop();
-
-		let startOffset = caretOffset - word.length;
-
-		let rangeToReplace = document.createRange();
-
-		let startInfo = getTextNodeAtPosition(editor, startOffset);
-		let endInfo   = getTextNodeAtPosition(editor, caretOffset);
-
-		rangeToReplace.setStart(startInfo.node, startInfo.offset);
-		rangeToReplace.setEnd(endInfo.node, endInfo.offset);
-
-		rangeToReplace.deleteContents();
-
-		document.execCommand('insertText', false, text);
-	}
-
-	function getTextNodeAtPosition(root, index) {
-
-		let treeWalker = document.createTreeWalker(
-			root,
-			NodeFilter.SHOW_TEXT,
-			{
-				acceptNode: function(node) {
-					if (node.nodeType === Node.TEXT_NODE) return NodeFilter.FILTER_ACCEPT;
-					return NodeFilter.FILTER_REJECT;
-				}
-			}
-		);
-
-		let currentNode = null;
-
-		while (treeWalker.nextNode()) {
-			let node = treeWalker.currentNode;
-			if (index <= node.length) {
-				return { node: node, offset: index };
-			}
-			index -= node.length;
-		}
-
-		// fallback
-		return {
-			node: root,
-			offset: root.childNodes.length
-		};
-	}
-
-	// get current word
-	function getCurrentWord(editor){
-
-		let text = editor.innerText;
-		let caret = getCaretOffset(editor);
-
-		let before = text.slice(0, caret);
-		return before.split(/\s/).pop();
-	}
-
-	// position of caret in text
-	function getCaretOffset(el){
-
-		let sel = window.getSelection();
-		if (!sel.rangeCount) return 0;
-
-		let range = sel.getRangeAt(0);
-		let preRange = range.cloneRange();
-
-		preRange.selectNodeContents(el);
-		preRange.setEnd(range.endContainer, range.endOffset);
-
-		return preRange.toString().length;
-	}
-
-	// caret position on screen
+	//--------------------------------------------------------------------
+	// caret box position
+	//--------------------------------------------------------------------
 	function getCaretWordPosition(editor){
 
+		if (isTextarea(editor)) {
+			let offset = jQuery(editor).offset();
+			let height = jQuery(editor).outerHeight();
+			return {
+				left: offset.left + 20,
+				top: offset.top + 25
+			};
+		}
+
+		// contenteditable
 		let sel = window.getSelection();
 		let range = sel.getRangeAt(0).cloneRange();
-
 		range.collapse(true);
 
 		let rect = range.getClientRects()[0];
@@ -1288,19 +1324,49 @@ jQuery(document).ready(function () {
 			let offset = jQuery(editor).offset();
 			return {
 				left: offset.left,
-				top:  offset.top
+				top: offset.top
 			};
 		}
 
 		return {
 			left: rect.left + window.scrollX,
-			top:  rect.bottom + window.scrollY + 2
+			top: rect.bottom + window.scrollY + 3
 		};
 	}
 
-	// close mention box on outside click
+	//--------------------------------------------------------------------
+	// click on mention item
+	//--------------------------------------------------------------------
+	jQuery(document).on('click', '.um-mention-item', function(e){
+		e.preventDefault();
+		e.stopPropagation();
+
+		let user = jQuery(this).data('user');
+
+		activeEditor.focus();
+
+		if (!isTextarea(activeEditor)) {
+			if (savedRange) {
+				let sel = window.getSelection();
+				sel.removeAllRanges();
+				sel.addRange(savedRange);
+			}
+		} else {
+			activeEditor.selectionStart = activeEditor.selectionEnd = savedRange.textareaPos;
+		}
+
+		insertMention(activeEditor, '@' + user.username + ' ');
+
+		hideMentionBox();
+	});
+
+	//--------------------------------------------------------------------
+	// Close box on outside click
+	//--------------------------------------------------------------------
 	jQuery(document).on('mousedown', function(e){
-		if ( !jQuery(e.target).closest('#um-mention-autocomplete').length && !jQuery(e.target).closest('.um-mention-item').length ) {
+		if (!jQuery(e.target).closest('#um-mention-autocomplete').length &&
+			!jQuery(e.target).closest('.um-mention-item').length)
+		{
 			hideMentionBox();
 		}
 	});

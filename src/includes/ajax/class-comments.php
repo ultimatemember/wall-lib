@@ -336,12 +336,24 @@ class Comments {
 		$commentid = wp_insert_comment( $data );
 
 		if ( empty( $commentid ) ) {
-			$output['error'] = __( 'Something went wrong with comment store', $this->wall->textdomain ); // phpcs:ignore WordPress.WP.I18n
+			wp_send_json_error(
+				wp_kses(
+					UM()->frontend()::layouts()::alert(
+						esc_html__( 'Something went wrong with comment store', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
+						array(
+							'type'       => 'error',
+							'underline'  => false,
+							'supporting' => $error,
+						)
+					),
+					UM()->get_allowed_html( 'templates' )
+				)
+			);
 		} else {
 			// Apply hashtags for the post
-			$this->wall->common()->posts()->hashtagit( $post_id, $orig_content, true, $commentid );
+			$this->wall->common()->posts()->hashtagit( $post_id, $orig_content, true );
 
-			$linkified = $this->wall->ajax()->posts()->linkify_hashtags_in_content( $comment_content );
+			$linkified = $this->wall->common()->posts()->linkify_hashtags_in_content( $comment_content );
 			if ( $comment_content !== $linkified ) {
 				$data = array(
 					'comment_ID'      => $commentid,
@@ -511,7 +523,7 @@ class Comments {
 		$result = wp_update_comment( $data );
 		if ( 1 === $result ) {
 			// Apply hashtags for the post
-			$this->wall->common()->posts()->hashtagit( $post_id, $orig_content, true, $commentid );
+			$this->wall->common()->posts()->hashtagit( $post_id, $orig_content, true );
 
 			$linkified = $this->wall->ajax()->posts()->linkify_hashtags_in_content( $comment_content );
 			if ( $comment_content !== $linkified ) {
