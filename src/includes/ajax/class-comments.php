@@ -748,7 +748,7 @@ class Comments {
 	 */
 	public function linkify_content( $raw_text ) {
 		$attributes = apply_filters(
-			'um_activity_make_links_clickable_attrs',
+			$this->wall->prefix . 'make_links_clickable_attrs',
 			array(
 				'target' => '_blank',
 				'class'  => 'um-link',

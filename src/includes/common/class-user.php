@@ -321,6 +321,6 @@ class User {
 			$res = 0;
 		}
 
-		return apply_filters( 'um_activity_can_post_on_wall', $res );
+		return apply_filters( $this->wall->prefix . 'can_post_on_wall', $res );
 	}
 }

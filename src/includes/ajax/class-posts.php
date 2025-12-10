@@ -361,7 +361,7 @@ class Posts {
 			$this->upload_images( $_post_images, $post_id );
 		}
 
-		do_action( $this->wall->prefix . 'after_wall_post_published', $post_id, get_current_user_id(), $wall_id );
+		do_action( $this->wall->prefix . 'after_wall_post_published', $post_id, $wall_id );
 
 		update_post_meta( $post_id, '_um_post_version', $this->wall->plugin_version );
 

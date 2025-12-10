@@ -39,7 +39,7 @@ class Mentions {
 		$current_user = get_current_user_id();
 
 		$term = sanitize_text_field( $_POST['term'] ); // phpcs:ignore WordPress.Security.NonceVerification
-		$data = apply_filters( 'um_activity_ajax_get_user_suggestions', array(), $term );
+		$data = apply_filters( $this->wall->prefix . 'ajax_get_user_suggestions', array(), $term );
 		$data = array_filter(
 			$data,
 			function ( $v ) use ( $current_user ) {
