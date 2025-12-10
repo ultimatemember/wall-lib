@@ -138,28 +138,11 @@ jQuery( document ).ready(function () {
 						wall = jQuery( document.body ).find('.um-wall');
 					}
 
-					// if ( wall.length ) {
-					// 	if ( jQuery('.um-wall-bigtext').length ) {
-					// 		var content = data.content;
-					// 		var hashtag = jQuery('.um-wall-bigtext').text();
-					// 		if ( content.indexOf( '>' + hashtag + '<' ) >= 0 ) {
-					// 			wall.prepend( widget_template( template_data ) );
-					// 		}
-					// 	} else {
-					// 		wall.prepend( widget_template( template_data ) );
-					// 	}
-					//
-					//
-					// 	wall.find( '.unready' ).removeClass( 'unready um-activity-clone' ).fadeIn();
-					// }
-
 					wall.prepend(data);
 
 					form.find('textarea').val('').height('auto');
 					um_clean_photo_fields( form );
 					um_post_placeholder( form.find( 'textarea' ) );
-
-					// UM_wall_autocomplete_start();
 				} else {
 					let post_id = form.find('input[name="_post_id"]').val()
 					jQuery('#postid-' + post_id ).replaceWith(data);
@@ -202,88 +185,6 @@ jQuery( document ).ready(function () {
 				console.log( data );
 			}
 		});
-
-		// jQuery.ajax({
-		// 	url: wp.ajax.settings.url,
-		// 	type: 'post',
-		// 	dataType: 'json',
-		// 	data: formdata,
-		// 	success: function( data ) {
-		//
-		// 		var widget_template;
-		// 		var template_data;
-		//
-		// 		if ( form.find('input[name="_post_id"]').val() === '0' ) {
-		// 			var wall = form.parents('.um').find('.um-wall-wall');
-		//
-		// 			/* for shortcode [ultimatemember_activity_form] */
-		// 			if ( wall.length < 1 ) {
-		// 				wall = jQuery( document.body ).find('.um-wall-wall');
-		// 			}
-		//
-		// 			widget_template = wp.template( 'um-activity-widget' );
-		// 			template_data = {
-		// 				'content'       : data.content,
-		// 				'img_src'       : ( 'undefined' !== typeof data.photo_orig_base ) ? data.photo_orig_base : '',
-		// 				'img_src_url'   : ( 'undefined' !== typeof data.photo_orig_url ) ? data.photo_orig_url : '',
-		// 				'modal'         : ( 'undefined' !== typeof data.photo ) ? data.photo : '',
-		// 				/*'img_src'       : form.find('input[name="_post_img"]').val(),
-		// 				'img_src_url'   : form.find('input[name="_post_img_url"]').val(),*/
-		// 				'wall_id'       : form.find('input[name="_wall_id"]').val() || 0,
-		// 				'user_id'       : data.user_id,
-		// 				'post_id'       : data.postid,
-		// 				'post_url'      : data.permalink,
-		// 				'photo'         : ( form.find('input[name="_post_img"]').val().trim().length > 0 ),
-		// 				'video'         : data.video || data.has_text_video,
-		// 				'video_content' : data.video,
-		// 				'oembed'        : data.has_oembed,
-		// 				'link'          : data.link
-		// 			};
-		//
-		// 			if ( jQuery('.um-wall-bigtext').length ) {
-		// 				var content = data.content;
-		// 				var hashtag = jQuery('.um-wall-bigtext').text();
-		// 				if ( content.indexOf( '>' + hashtag + '<' ) >= 0 ) {
-		// 					wall.prepend( widget_template( template_data ) );
-		// 				}
-		// 			} else {
-		// 				wall.prepend( widget_template( template_data ) );
-		// 			}
-		//
-		//
-		// 			wall.find( '.unready' ).removeClass( 'unready um-activity-clone' ).fadeIn();
-		//
-		// 			form.find('textarea').val('').height('auto');
-		// 			um_clean_photo_fields( form );
-		// 			um_post_placeholder( form.find( 'textarea' ) );
-		//
-		// 			UM_wall_autocomplete_start();
-		// 		} else {
-		// 			form.parents('.um-wall-widget').removeClass( 'editing' );
-		//
-		// 			widget_template = wp.template( 'um-activity-post' );
-		// 			template_data = {
-		// 				'content'       : data.content,
-		// 				'img_src'       : data.photo_orig_base,
-		// 				'img_src_url'   : data.photo_orig_url,
-		// 				'modal'         : data.photo,
-		// 				/*'img_src'       : form.find('input[name="_post_img"]').val(),
-		// 				'img_src_url'   : form.find('input[name="_post_img_url"]').val(),*/
-		// 				'wall_id'       : form.find('input[name="_wall_id"]').val() || 0,
-		// 				'user_id'       : data.user_id,
-		// 				'post_id'       : data.postid,
-		// 				'post_url'      : data.permalink,
-		// 				'photo'         : ( form.find('input[name="_post_img"]').val().trim().length > 0 ),
-		// 				'video'         : data.video || data.has_text_video,
-		// 				'video_content' : data.video,
-		// 				'oembed'        : data.has_oembed,
-		// 				'link'          : data.link
-		// 			};
-		//
-		// 			form.parents('.um-wall-body').html( widget_template( template_data ) );
-		// 		}
-		// 	}
-		// });
 	});
 
 	/* Trash post */
