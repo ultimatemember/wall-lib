@@ -207,10 +207,14 @@ class Posts {
 			check_ajax_referer( 'um-wall-post-edit' . $post_id, 'nonce' );
 		}
 
-		$_post_content = str_replace( '&nbsp;', ' ', $_POST['_post_content'] );
-		$_post_content = rtrim( $_post_content );
-		$_post_content = wp_kses_post( wp_unslash( trim( $_post_content ) ) );
-		$_post_content = ! empty( $_post_content ) ? $_post_content : '';
+		$_post_content = str_replace( '&nbsp;', ' ', $_POST['_post_content'] ); // replace &nbsp; to space
+		$_post_content = preg_replace( '/<\/div>\s*<div[^>]*>/', "\n", $_post_content ); // replace div to new line
+		$_post_content = preg_replace( '/<\/?div[^>]*>/i', '', $_post_content ); // remove other div tags
+		$_post_content = strip_tags( $_post_content, '<b><i><u><ol><ul><li>' ); // allow only these tags
+		$_post_content = preg_replace( "/\n+/", "\n", $_post_content ); // remove multiple new lines
+		$_post_content = rtrim( $_post_content ); // remove trailing new lines
+		$_post_content = wp_kses_post( wp_unslash( trim( $_post_content ) ) ); // sanitize content
+		$_post_content = ! empty( $_post_content ) ? $_post_content : ''; // make sure it's string
 
 		$_post_images = array();
 		if ( ! empty( $_POST['activity_post_photo'] ) ) {
@@ -376,7 +380,7 @@ class Posts {
 		$old_data            = get_post( $post_id );
 		$old_data->post_meta = get_post_meta( $post_id );
 
-		// Compare new changed content with the saved original content.
+		// Compare new changed content with the saved original content. Used `$old_data->post_meta['_original_content'][0]` because cannot get all `post_meta` via get_post_meta( $post_id ) with $single marker.
 		if ( $old_data->post_meta['_original_content'] !== $orig_content ) {
 			$args['meta_input']['_original_content'] = wp_slash( $orig_content );
 		}
@@ -1073,20 +1077,20 @@ class Posts {
 		if ( empty( $_POST['post_id'] ) ) {
 			wp_send_json_error( __( 'Wrong post ID.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
 		}
-
 		$post_id = absint( $_POST['post_id'] );
 		// phpcs:enable WordPress.Security.NonceVerification
-		check_ajax_referer( 'um_wall_see_more' . $post_id, 'nonce' );
 
-		// phpcs:enable WordPress.Security.NonceVerification
+		check_ajax_referer( $this->wall->prefix . 'get_full_post_' . $post_id, 'nonce' );
+
 		$content_raw = get_post_field( 'post_content', $post_id );
-		$content     = apply_filters( 'the_content', $content_raw );
-		// $content     = nl2br( $content ); // Important: for some reason is needed here, maybe because AJAX.
-		preg_match_all( '/<figure[^>]*>(.*?)<\/figure>/s', $content, $matches );
-		if ( ! empty( $matches[0] ) ) {
-			// Don't need `nl2br` here for content,
-			$content = nl2br( $content );
-		}
+
+		$content = apply_filters( 'the_content', $content_raw );
+		$content = $this->wall->common()->posts()->linkify_hashtags_in_content( $content );
+		$content = $this->wall->common()->posts()->maybe_linkify_mentions( $content, 'post', $post_id );
+		$content = nl2br( $content );
+
+		add_filter( 'the_content', 'prepend_attachment' );
+		add_filter( 'the_content', 'wpautop' );
 
 		wp_send_json_success( array( 'content' => $content ) );
 	}
