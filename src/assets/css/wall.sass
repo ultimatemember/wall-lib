@@ -16,8 +16,8 @@
   .#{$prefix}wall
     +flex( column, flex-start, start, nowrap )
     row-gap: $spacing-lg
-    .#{$prefix}wall-posts-loader
-      margin: 0 auto
+  .#{$prefix}wall-posts-loader
+    margin: 0 auto
   .#{$prefix}box
     &.#{$prefix}wall-new-post,
     &.#{$prefix}wall-edit-post,
@@ -211,7 +211,7 @@
             column-gap: $spacing-sm
         .#{$prefix}wall-like-wrap
           +flex( row, flex-start, center, nowrap )
-          column-gap: $spacing-xl
+          column-gap: $spacing-sm
           height: $spacing-4xl
           .#{$prefix}wall-post-like
             position: relative
@@ -312,10 +312,14 @@
             a
               text-decoration: none
             .#{$prefix}small-data
-              row-gap: 0
               width: calc(100% - 80px)
               .#{$prefix}user-display-name
                 line-height: 1
+                +typography( text, sm, semibold )
+              .#{$prefix}supporting-text
+                +typography( text, xs, regular )
+                a
+                  +typography( text, xs, regular )
             textarea
               width: 100%
             .#{$prefix}wall-editc

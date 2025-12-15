@@ -1,5 +1,6 @@
 <?php
 //namespace WallLib\common;
+//namespace Dev\UM_Groups\WallLib\common;
 namespace Dev\UM_Activity\WallLib\common;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -111,6 +112,27 @@ class Uploader {
 		$preview_url    = $edit_value_row['preview_url'];
 		$image_filename = $edit_value_row['filename'];
 
+		$meta = wp_get_attachment_metadata( $photo_id );
+		$size = '';
+		if ( is_array( $meta ) && ! empty( $meta['filesize'] ) ) {
+			$bytes = absint( $meta['filesize'] );
+
+			if ( $bytes <= 0 ) {
+				$size = '0 kb';
+			} else {
+				$kb = $bytes / 1024;
+
+				// KB — до целого
+				if ( $kb < 1024 ) {
+					$size = round( $kb ) . ' kb';
+				} else {
+					// MB — до 1 знака
+					$mb   = $kb / 1024;
+					$size = number_format_i18n( $mb, 1 ) . ' mb';
+				}
+			}
+		}
+
 		ob_start();
 		?>
 		<div class="um-uploader-file" id="wall-photo-<?php echo esc_attr( $photo_id ); ?>">
@@ -121,34 +143,35 @@ class Uploader {
 						<img src="<?php echo esc_url( $preview_url ); ?>" alt="<?php echo esc_attr( $image_filename ); ?>" />
 					</div>
 					<div class="um-uploader-file-data-header">
-						<div class="um-uploader-file-data-header-info">
-							<div class="um-uploader-file-name"></div>
-							<?php
-							$button_content = UM()->frontend()::layouts()::svg( 'trash' );
-							echo wp_kses(
-								UM()->frontend()::layouts()::button(
-									'',
-									array(
-										'type'          => 'button',
-										'design'        => 'link-gray',
-										'size'          => 's',
-										'icon_position' => 'content',
-										'icon'          => $button_content,
-										'title'         => __( 'Delete photo', 'um-user-photos' ),
-										'classes'       => array( 'um-wall-delete-photo' ),
-										'data'          => array(
-											'id'           => $photo_id,
-											'nonce'        => wp_create_nonce( 'um_wall_delete_photo' . $photo_id ),
-											'confirmation' => __( 'Are you sure you want to delete this photo?', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
-											'error'        => __( 'Something went wrong', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
-										),
-									)
-								),
-								UM()->get_allowed_html( 'templates' )
-							);
-							?>
-						</div>
+
+						<div class="um-uploader-file-name"><?php echo esc_attr( $image_filename ); ?></div>
+						<?php
+						$button_content = UM()->frontend()::layouts()::svg( 'trash' );
+						echo wp_kses(
+							UM()->frontend()::layouts()::button(
+								'',
+								array(
+									'type'          => 'button',
+									'design'        => 'link-gray',
+									'size'          => 's',
+									'icon_position' => 'content',
+									'icon'          => $button_content,
+									'title'         => __( 'Delete photo', 'um-user-photos' ),
+									'classes'       => array( 'um-wall-delete-photo', 'um-uploader-file-remove' ),
+									'data'          => array(
+										'id'           => $photo_id,
+										'nonce'        => wp_create_nonce( 'um_wall_delete_photo' . $photo_id ),
+										'confirmation' => __( 'Are you sure you want to delete this photo?', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
+										'error'        => __( 'Something went wrong', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
+									),
+								)
+							),
+							UM()->get_allowed_html( 'templates' )
+						);
+						?>
+
 					</div>
+					<div class="um-supporting-text"><?php echo esc_html( $size ); ?></div>
 				</div>
 			</div>
 		</div>

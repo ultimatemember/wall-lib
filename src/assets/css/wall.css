@@ -12,7 +12,7 @@
   flex-wrap: nowrap;
   row-gap: 12px;
 }
-.um .um-wall .um-wall-posts-loader {
+.um .um-wall-posts-loader {
   margin: 0 auto;
 }
 .um .um-box.um-wall-new-post, .um .um-box.um-wall-edit-post,
@@ -324,7 +324,7 @@
   justify-content: flex-start;
   align-items: center;
   flex-wrap: nowrap;
-  column-gap: 16px;
+  column-gap: 6px;
   height: 32px;
 }
 .um .um-wall-widget .um-wall-body .um-wall-actions .um-wall-like-wrap .um-wall-post-like {
@@ -469,11 +469,23 @@
   text-decoration: none;
 }
 .um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-commentl .um-small-data {
-  row-gap: 0;
   width: calc(100% - 80px);
 }
 .um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-commentl .um-small-data .um-user-display-name {
   line-height: 1;
+  font-size: var(--um-text-font-size-sm, 14px);
+  line-height: var(--um-text-line-height-sm, 20px);
+  font-weight: var(--um-text-font-weight-semibold, 600);
+}
+.um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-commentl .um-small-data .um-supporting-text {
+  font-size: var(--um-text-font-size-xs, 12px);
+  line-height: var(--um-text-line-height-xs, 18px);
+  font-weight: var(--um-text-font-weight-regular, 400);
+}
+.um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-commentl .um-small-data .um-supporting-text a {
+  font-size: var(--um-text-font-size-xs, 12px);
+  line-height: var(--um-text-line-height-xs, 18px);
+  font-weight: var(--um-text-font-weight-regular, 400);
 }
 .um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-commentl textarea {
   width: 100%;

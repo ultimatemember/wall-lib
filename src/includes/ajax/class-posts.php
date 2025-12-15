@@ -1,5 +1,6 @@
 <?php
 //namespace WallLib\ajax;
+//namespace Dev\UM_Groups\WallLib\ajax;
 namespace Dev\UM_Activity\WallLib\ajax;
 
 use WP_Filesystem_Base;
@@ -101,6 +102,7 @@ class Posts {
 			'um_activity_wall' => $this->wall,
 			'comm_num'         => $comm_num,
 			'order_comment'    => $order_comment,
+			'profile_id'       => $user_id,
 		);
 
 		$t_args = apply_filters( $this->wall->prefix . 'wall_template_args', $t_args, $args, $query );

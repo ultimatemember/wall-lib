@@ -1,5 +1,6 @@
 <?php
 //namespace WallLib\common;
+//namespace Dev\UM_Groups\WallLib\common;
 namespace Dev\UM_Activity\WallLib\common;
 use DOMDocument;
 
@@ -52,8 +53,7 @@ class Posts {
 				'class' => true,
 			);
 
-			$allowed_html['strong']['onclick']      = true;
-			$allowed_html['div']['contenteditable'] = true;
+			$allowed_html['strong']['onclick'] = true;
 
 			$allowed_html['u'] = true;
 			$allowed_html['i'] = true;
