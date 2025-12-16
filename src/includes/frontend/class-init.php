@@ -1,7 +1,7 @@
 <?php
-//namespace WallLib\frontend;
+namespace WallLib\frontend;
+//namespace Dev\UM_Activity\WallLib\frontend;
 //namespace Dev\UM_Groups\WallLib\frontend;
-namespace Dev\UM_Activity\WallLib\frontend;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
