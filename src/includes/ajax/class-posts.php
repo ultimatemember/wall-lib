@@ -1,7 +1,5 @@
 <?php
 namespace WallLib\ajax;
-//namespace Dev\UM_Activity\WallLib\ajax;
-//namespace Dev\UM_Groups\WallLib\ajax;
 
 use WP_Filesystem_Base;
 
@@ -24,8 +22,11 @@ class Posts {
 	public function __construct( $wall ) {
 		$this->wall = $wall;
 
-		add_action( 'wp_ajax_um_wall_load_posts', array( $this, 'ajax_load_wall' ) );
-		add_action( 'wp_ajax_nopriv_um_wall_load_posts', array( $this, 'ajax_load_wall' ) );
+//		add_action( 'wp_ajax_um_wall_load_posts', array( $this, 'ajax_load_wall' ) );
+//		add_action( 'wp_ajax_nopriv_um_wall_load_posts', array( $this, 'ajax_load_wall' ) );
+
+		add_action( 'wp_ajax_' . $this->wall->prefix . 'wall_load_posts', array( $this, 'ajax_load_wall' ) );
+		add_action( 'wp_ajax_nopriv_' . $this->wall->prefix . 'wall_load_posts', array( $this, 'ajax_load_wall' ) );
 
 		add_action( 'wp_ajax_um_wall_publish', array( $this, 'wall_publish' ) );
 		add_action( 'wp_ajax_um_get_wall_post', array( $this, 'ajax_get_wall_post' ) );
@@ -45,6 +46,7 @@ class Posts {
 	 * Load wall posts
 	 */
 	public function ajax_load_wall() {
+		echo 1; exit();
 		check_ajax_referer( 'um_activity_wall', 'nonce' );
 
 		$user_id = empty( $_POST['user_id'] ) ? 0 : absint( $_POST['user_id'] );

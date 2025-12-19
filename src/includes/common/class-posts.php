@@ -1,7 +1,5 @@
 <?php
 namespace WallLib\common;
-//namespace Dev\UM_Activity\WallLib\common;
-//namespace Dev\UM_Groups\WallLib\common;
 use DOMDocument;
 
 if ( ! defined( 'ABSPATH' ) ) {

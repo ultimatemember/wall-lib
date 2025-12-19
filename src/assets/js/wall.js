@@ -891,9 +891,13 @@ jQuery( window ).on( 'scroll', function() {
 });
 
 function um_wall_ajax_request() {
-	let wall = jQuery('.um-wall');
-	if ( wall.length > 0 && Loadwall_ajax === false ) {
+	let wall = wp.hooks.applyFilters(
+		'um_wall_selector',
+		''
+	);
 
+	wall = jQuery(wall);
+	if ( wall.length > 0 && Loadwall_ajax === false ) {
 		let $activity_end = wall.find( '.um-wall-end' );
 		if ( $activity_end.length ) {
 			return;
@@ -904,20 +908,27 @@ function um_wall_ajax_request() {
 		let offset = wall.attr('data-offset');
 		let nonce = wall.attr('data-nonce');
 		let loader = wall.parents('.um-activity').find('.um-wall-posts-loader');
-		let action = wall.attr('data-action') + '_wall_load_posts';
+		let action = wp.hooks.applyFilters(
+			'um_wall_action',
+			'um_wall_load_posts'
+		);
 		loader.umShow();
 
-		wp.ajax.send( 'um_wall_load_posts', {
-			data: {
-				offset: offset,
-				user_id:  wall.data('user_id'),
-				user_wall: wall.data( 'user_wall' ),
-				hashtag: wall.data('hashtag'),
-				core_page: wall.data('core_page'),
-				post_id: wall.data('post_id'),
-				show_pending: wall.data('show_pending'),
-				nonce: nonce
-			},
+		let ajaxData =  {
+			offset: offset,
+			user_id:  wall.data('user_id'),
+			user_wall: wall.data( 'user_wall' ),
+			hashtag: wall.data('hashtag'),
+			core_page: wall.data('core_page'),
+			post_id: wall.data('post_id'),
+			show_pending: wall.data('show_pending'),
+			nonce: nonce
+		};
+		// let action = 'um_wall_load_posts';
+		console.log(action)
+		console.log(ajaxData)
+		wp.ajax.send( action, {
+			data: ajaxData,
 			success: function( data ) {
 				loader.umHide();
 				let loadedPosts = jQuery(data).filter('.um-wall-widget');
