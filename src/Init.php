@@ -58,6 +58,10 @@ class Init {
 	 */
 	public $classes = array();
 
+	/**
+	 * @var mixed|string
+	 */
+	public $post_type = '';
 
 	/**
 	 * namespace
