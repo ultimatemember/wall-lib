@@ -13,6 +13,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Init {
 
+	private $wall;
+
+	public function __construct( $wall ) {
+		$this->wall = $wall;
 	}
 	/**
 	 * Create classes' instances where __construct isn't empty for hooks init
