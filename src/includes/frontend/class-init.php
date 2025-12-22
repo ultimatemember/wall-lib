@@ -1,5 +1,6 @@
 <?php
 namespace WallLib\frontend;
+//namespace UM_Activity\WallLib\frontend;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -12,7 +13,6 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Init {
 
-	public function __construct() {
 	}
 	/**
 	 * Create classes' instances where __construct isn't empty for hooks init
@@ -25,9 +25,9 @@ class Init {
 	 * @return Enqueue
 	 */
 	public function enqueue() {
-		if ( empty( UM()->classes['WallLib\frontend\enqueue'] ) ) {
-			UM()->classes['WallLib\frontend\enqueue'] = new Enqueue();
+		if ( empty( UM()->classes[ $this->wall->prefix . 'WallLib\frontend\enqueue' ] ) ) {
+			UM()->classes[ $this->wall->prefix . 'WallLib\frontend\enqueue' ] = new Enqueue( $this->wall );
 		}
-		return UM()->classes['WallLib\frontend\enqueue'];
+		return UM()->classes[ $this->wall->prefix . 'WallLib\frontend\enqueue' ];
 	}
 }

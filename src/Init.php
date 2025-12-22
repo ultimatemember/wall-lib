@@ -1,5 +1,6 @@
 <?php
 namespace WallLib;
+//namespace UM_Activity\WallLib;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -167,10 +168,10 @@ class Init {
 	 * @return frontend\Init
 	 */
 	public function frontend() {
-		if ( empty( UM()->classes['WallLib\frontend\Init'] ) ) {
-			UM()->classes['WallLib\frontend\Init'] = new frontend\Init( $this );
+		if ( empty( UM()->classes[ $this->prefix . 'WallLib\frontend\Init' ] ) ) {
+			UM()->classes[ $this->prefix . 'WallLib\frontend\Init' ] = new frontend\Init( $this );
 		}
-		return UM()->classes['WallLib\frontend\Init'];
+		return UM()->classes[ $this->prefix . 'WallLib\frontend\Init' ];
 	}
 
 	/**
@@ -178,10 +179,10 @@ class Init {
 	 * @return ajax\Init
 	 */
 	public function ajax() {
-		if ( empty( UM()->classes['WallLib\ajax\Init'] ) ) {
-			UM()->classes['WallLib\ajax\Init'] = new ajax\Init( $this );
+		if ( empty( UM()->classes[ $this->prefix . 'WallLib\ajax\Init' ] ) ) {
+			UM()->classes[ $this->prefix . 'WallLib\ajax\Init' ] = new ajax\Init( $this );
 		}
-		return UM()->classes['WallLib\ajax\Init'];
+		return UM()->classes[ $this->prefix . 'WallLib\ajax\Init' ];
 	}
 
 	/**
@@ -189,10 +190,10 @@ class Init {
 	 * @return common\Init
 	 */
 	public function common() {
-		if ( empty( UM()->classes['WallLib\common\Init'] ) ) {
-			UM()->classes['WallLib\common\Init'] = new common\Init( $this );
+		if ( empty( UM()->classes[ $this->prefix . 'WallLib\common\Init' ] ) ) {
+			UM()->classes[ $this->prefix . 'WallLib\common\Init' ] = new common\Init( $this );
 		}
-		return UM()->classes['WallLib\common\Init'];
+		return UM()->classes[ $this->prefix . 'WallLib\common\Init' ];
 	}
 
 	public function get_plugin_info() {

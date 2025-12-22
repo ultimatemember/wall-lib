@@ -1,5 +1,6 @@
 <?php
 namespace WallLib\common;
+//namespace UM_Activity\WallLib\common;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;

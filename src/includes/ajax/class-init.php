@@ -1,5 +1,6 @@
 <?php
 namespace WallLib\ajax;
+//namespace UM_Activity\WallLib\ajax;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -30,29 +31,29 @@ class Init {
 	 * @return Posts
 	 */
 	public function posts() {
-		if ( empty( UM()->classes['WallLib\ajax\posts'] ) ) {
-			UM()->classes['WallLib\ajax\posts'] = new Posts( $this->wall );
+		if ( empty( UM()->classes[ $this->wall->prefix . 'WallLib\ajax\posts' ] ) ) {
+			UM()->classes[ $this->wall->prefix . 'WallLib\ajax\posts' ] = new Posts( $this->wall );
 		}
-		return UM()->classes['WallLib\ajax\posts'];
+		return UM()->classes[ $this->wall->prefix . 'WallLib\ajax\posts' ];
 	}
 
 	/**
 	 * @return Comments
 	 */
 	public function comments() {
-		if ( empty( UM()->classes['WallLib\ajax\comments'] ) ) {
-			UM()->classes['WallLib\ajax\comments'] = new Comments( $this->wall );
+		if ( empty( UM()->classes[ $this->wall->prefix . 'WallLib\ajax\comments' ] ) ) {
+			UM()->classes[ $this->wall->prefix . 'WallLib\ajax\comments' ] = new Comments( $this->wall );
 		}
-		return UM()->classes['WallLib\ajax\comments'];
+		return UM()->classes[ $this->wall->prefix . 'WallLib\ajax\comments' ];
 	}
 
 	/**
 	 * @return Mentions
 	 */
 	public function mentions() {
-		if ( empty( UM()->classes['WallLib\ajax\mentions'] ) ) {
-			UM()->classes['WallLib\ajax\mentions'] = new Mentions( $this->wall );
+		if ( empty( UM()->classes[ $this->wall->prefix . 'WallLib\ajax\mentions' ] ) ) {
+			UM()->classes[ $this->wall->prefix . 'WallLib\ajax\mentions' ] = new Mentions( $this->wall );
 		}
-		return UM()->classes['WallLib\ajax\mentions'];
+		return UM()->classes[ $this->wall->prefix . 'WallLib\ajax\mentions' ];
 	}
 }

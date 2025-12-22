@@ -1,5 +1,6 @@
 <?php
 namespace WallLib\common;
+//namespace UM_Activity\WallLib\common;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -32,49 +33,49 @@ class Init {
 	 * @return User
 	 */
 	public function user() {
-		if ( empty( UM()->classes['WallLib\common\user'] ) ) {
-			UM()->classes['WallLib\common\user'] = new User( $this->wall );
+		if ( empty( UM()->classes[ $this->wall->prefix . 'WallLib\common\user' ] ) ) {
+			UM()->classes[ $this->wall->prefix . 'WallLib\common\user' ] = new User( $this->wall );
 		}
-		return UM()->classes['WallLib\common\user'];
+		return UM()->classes[ $this->wall->prefix . 'WallLib\common\user' ];
 	}
 
 	/**
 	 * @return Posts
 	 */
 	public function posts() {
-		if ( empty( UM()->classes['WallLib\common\posts'] ) ) {
-			UM()->classes['WallLib\common\posts'] = new Posts( $this->wall );
+		if ( empty( UM()->classes[ $this->wall->prefix . 'WallLib\common\posts' ] ) ) {
+			UM()->classes[ $this->wall->prefix . 'WallLib\common\posts' ] = new Posts( $this->wall );
 		}
-		return UM()->classes['WallLib\common\posts'];
+		return UM()->classes[ $this->wall->prefix . 'WallLib\common\posts' ];
 	}
 
 	/**
 	 * @return Comments
 	 */
 	public function comments() {
-		if ( empty( UM()->classes['WallLib\common\comments'] ) ) {
-			UM()->classes['WallLib\common\comments'] = new Comments( $this->wall );
+		if ( empty( UM()->classes[ $this->wall->prefix . 'WallLib\common\comments' ] ) ) {
+			UM()->classes[ $this->wall->prefix . 'WallLib\common\comments' ] = new Comments( $this->wall );
 		}
-		return UM()->classes['WallLib\common\comments'];
+		return UM()->classes[ $this->wall->prefix . 'WallLib\common\comments' ];
 	}
 
 	/**
 	 * @return Uploader
 	 */
 	public function uploader() {
-		if ( empty( UM()->classes['WallLib\common\uploader'] ) ) {
-			UM()->classes['WallLib\common\uploader'] = new Uploader( $this->wall );
+		if ( empty( UM()->classes[ $this->wall->prefix . 'WallLib\common\uploader' ] ) ) {
+			UM()->classes[ $this->wall->prefix . 'WallLib\common\uploader' ] = new Uploader( $this->wall );
 		}
-		return UM()->classes['WallLib\common\uploader'];
+		return UM()->classes[ $this->wall->prefix . 'WallLib\common\uploader' ];
 	}
 
 	/**
 	 * @return Rewrite
 	 */
 	public function rewrite() {
-		if ( empty( UM()->classes['WallLib\common\rewrite'] ) ) {
-			UM()->classes['WallLib\common\rewrite'] = new Rewrite( $this->wall );
+		if ( empty( UM()->classes[ $this->wall->prefix . 'WallLib\common\rewrite' ] ) ) {
+			UM()->classes[ $this->wall->prefix . 'WallLib\common\rewrite' ] = new Rewrite( $this->wall );
 		}
-		return UM()->classes['WallLib\common\rewrite'];
+		return UM()->classes[ $this->wall->prefix . 'WallLib\common\rewrite' ];
 	}
 }

@@ -1,5 +1,6 @@
 <?php
 namespace WallLib\ajax;
+//namespace UM_Activity\WallLib\ajax;
 
 use WP_Filesystem_Base;
 
@@ -46,7 +47,6 @@ class Posts {
 	 * Load wall posts
 	 */
 	public function ajax_load_wall() {
-		echo 1; exit();
 		check_ajax_referer( 'um_activity_wall', 'nonce' );
 
 		$user_id = empty( $_POST['user_id'] ) ? 0 : absint( $_POST['user_id'] );

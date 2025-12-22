@@ -1,5 +1,6 @@
 <?php
 namespace WallLib\ajax;
+//namespace UM_Activity\WallLib\ajax;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
