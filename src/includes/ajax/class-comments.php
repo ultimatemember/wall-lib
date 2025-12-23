@@ -21,22 +21,22 @@ class Comments {
 	public function __construct( $wall ) {
 		$this->wall = $wall;
 
-		add_action( 'wp_ajax_um_wall_get_comment_likes', array( $this, 'get_comment_likes' ) );
-		add_action( 'wp_ajax_nopriv_um_wall_get_comment_likes', array( $this, 'get_comment_likes' ) );
+		add_action( 'wp_ajax_' . $this->wall->prefix . 'wall_get_comment_likes', array( $this, 'get_comment_likes' ) );
+		add_action( 'wp_ajax_nopriv_' . $this->wall->prefix . 'wall_get_comment_likes', array( $this, 'get_comment_likes' ) );
 
-		add_action( 'wp_ajax_um_wall_like_comment', array( $this, 'like_comment' ) );
-		add_action( 'wp_ajax_um_wall_unlike_comment', array( $this, 'unlike_comment' ) );
+		add_action( 'wp_ajax_' . $this->wall->prefix . 'wall_like_comment', array( $this, 'like_comment' ) );
+		add_action( 'wp_ajax_' . $this->wall->prefix . 'wall_unlike_comment', array( $this, 'unlike_comment' ) );
 
-		add_action( 'wp_ajax_um_wall_post_comment', array( $this, 'post_comment' ) );
-		add_action( 'wp_ajax_um_wall_edit_comment', array( $this, 'edit_comment' ) );
+		add_action( 'wp_ajax_' . $this->wall->prefix . 'wall_post_comment', array( $this, 'post_comment' ) );
+		add_action( 'wp_ajax_' . $this->wall->prefix . 'wall_edit_comment', array( $this, 'edit_comment' ) );
 
-		add_action( 'wp_ajax_um_wall_load_more_comments', array( $this, 'load_more_comments' ) );
-		add_action( 'wp_ajax_nopriv_um_wall_load_more_comments', array( $this, 'load_more_comments' ) );
+		add_action( 'wp_ajax_' . $this->wall->prefix . 'wall_load_more_comments', array( $this, 'load_more_comments' ) );
+		add_action( 'wp_ajax_nopriv_' . $this->wall->prefix . 'wall_load_more_comments', array( $this, 'load_more_comments' ) );
 
-		add_action( 'wp_ajax_um_wall_load_more_replies', array( $this, 'load_more_replies' ) );
-		add_action( 'wp_ajax_nopriv_um_wall_load_more_replies', array( $this, 'load_more_replies' ) );
+		add_action( 'wp_ajax_' . $this->wall->prefix . 'wall_load_more_replies', array( $this, 'load_more_replies' ) );
+		add_action( 'wp_ajax_nopriv_' . $this->wall->prefix . 'wall_load_more_replies', array( $this, 'load_more_replies' ) );
 
-		add_action( 'wp_ajax_um_wall_remove_comment', array( $this, 'remove_comment' ) );
+		add_action( 'wp_ajax_' . $this->wall->prefix . 'wall_remove_comment', array( $this, 'remove_comment' ) );
 	}
 
 	/***

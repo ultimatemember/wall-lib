@@ -23,7 +23,7 @@ class Mentions {
 	public function __construct( $wall ) {
 		$this->wall = $wall;
 
-		add_action( 'wp_ajax_um_activity_get_user_suggestions', array( $this, 'get_user_suggestions' ) );
+		add_action( 'wp_ajax_' . $this->wall->prefix . 'get_user_suggestions', array( $this, 'get_user_suggestions' ) );
 	}
 
 	/**

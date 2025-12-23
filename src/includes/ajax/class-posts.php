@@ -23,24 +23,21 @@ class Posts {
 	public function __construct( $wall ) {
 		$this->wall = $wall;
 
-//		add_action( 'wp_ajax_um_wall_load_posts', array( $this, 'ajax_load_wall' ) );
-//		add_action( 'wp_ajax_nopriv_um_wall_load_posts', array( $this, 'ajax_load_wall' ) );
-
 		add_action( 'wp_ajax_' . $this->wall->prefix . 'wall_load_posts', array( $this, 'ajax_load_wall' ) );
 		add_action( 'wp_ajax_nopriv_' . $this->wall->prefix . 'wall_load_posts', array( $this, 'ajax_load_wall' ) );
 
-		add_action( 'wp_ajax_um_wall_publish', array( $this, 'wall_publish' ) );
-		add_action( 'wp_ajax_um_get_wall_post', array( $this, 'ajax_get_wall_post' ) );
+		add_action( 'wp_ajax_' . $this->wall->prefix . 'wall_publish', array( $this, 'wall_publish' ) );
+		add_action( 'wp_ajax_' . $this->wall->prefix . 'get_wall_post', array( $this, 'ajax_get_wall_post' ) );
 
-		add_action( 'wp_ajax_um_wall_like_post', array( $this, 'like_post' ) );
-		add_action( 'wp_ajax_um_wall_unlike_post', array( $this, 'unlike_post' ) );
+		add_action( 'wp_ajax_' . $this->wall->prefix . 'wall_like_post', array( $this, 'like_post' ) );
+		add_action( 'wp_ajax_' . $this->wall->prefix . 'wall_unlike_post', array( $this, 'unlike_post' ) );
 
-		add_action( 'wp_ajax_um_wall_get_post_likes', array( $this, 'get_post_likes' ) );
-		add_action( 'wp_ajax_nopriv_um_wall_get_post_likes', array( $this, 'get_post_likes' ) );
+		add_action( 'wp_ajax_' . $this->wall->prefix . 'wall_get_post_likes', array( $this, 'get_post_likes' ) );
+		add_action( 'wp_ajax_nopriv_' . $this->wall->prefix . 'wall_get_post_likes', array( $this, 'get_post_likes' ) );
 
-		add_action( 'wp_ajax_um_wall_remove_post', array( $this, 'remove_post' ) );
+		add_action( 'wp_ajax_' . $this->wall->prefix . 'wall_remove_post', array( $this, 'remove_post' ) );
 
-		add_action( 'wp_ajax_um_wall_get_full_post', array( $this, 'get_full_post' ) );
+		add_action( 'wp_ajax_' . $this->wall->prefix . 'wall_get_full_post', array( $this, 'get_full_post' ) );
 	}
 
 	/**
