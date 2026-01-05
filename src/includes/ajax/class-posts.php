@@ -44,44 +44,13 @@ class Posts {
 	 * Load wall posts
 	 */
 	public function ajax_load_wall() {
-		check_ajax_referer( 'um_activity_wall', 'nonce' );
+		do_action( $this->wall->prefix . 'before_wall_load_posts' );
 
+		// phpcs:ignore WordPress.Security.NonceVerification
 		$user_id = empty( $_POST['user_id'] ) ? 0 : absint( $_POST['user_id'] );
 
-		$can_view = $this->wall->common()->user()->can_view_wall( $user_id );
+		$data = apply_filters( $this->wall->prefix . 'wall_load_posts_data', array() );
 
-		if ( true !== $can_view ) {
-			wp_send_json_error( array( 'message' => __( 'You can\'t view wall', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
-		}
-
-		// phpcs:disable WordPress.Security.NonceVerification
-		$hashtag_id = '';
-		if ( ! empty( $_POST['hashtag'] ) ) {
-			$hashtag    = str_replace( '#', '', sanitize_text_field( $_POST['hashtag'] ) );
-			$term       = get_term_by( 'name', $hashtag, 'um_hashtag' );
-			$hashtag_id = isset( $term->term_id ) ? $term->term_id : '';
-		}
-
-		$data = array(
-			'hashtag_id' => $hashtag_id,
-			'user_wall'  => false,
-			'offset'     => empty( $_POST['offset'] ) ? 0 : absint( $_POST['offset'] ),
-		);
-
-		if ( ! empty( $_POST['user_wall'] ) ) {
-			$data['user_wall'] = true;
-			$data['user_id']   = empty( $_POST['user_id'] ) ? 0 : absint( $_POST['user_id'] );
-		}
-		if ( isset( $_POST['post_id'] ) && ! empty( $_POST['post_id'] ) && is_numeric( $_POST['post_id'] ) ) {
-			$data['post_id'] = absint( $_POST['post_id'] );
-		}
-		if ( isset( $_POST['core_page'] ) && ! empty( $_POST['core_page'] ) ) {
-			$data['core_page'] = sanitize_key( $_POST['core_page'] );
-		}
-		if ( isset( $_POST['show_pending'] ) && ! empty( $_POST['show_pending'] ) ) {
-			$data['show_pending'] = sanitize_key( $_POST['show_pending'] );
-		}
-		// phpcs:enable WordPress.Security.NonceVerification
 		$comm_num      = apply_filters( $this->wall->prefix . 'wall_comments_loadmore_number', 10 );
 		$order_comment = apply_filters( $this->wall->prefix . 'wall_comments_loadmore_order', 10 );
 
@@ -91,22 +60,27 @@ class Posts {
 			'post_status' => 'publish',
 			'meta_query'  => array(),
 		);
-
 		$args = apply_filters( $this->wall->prefix . 'wall_posts_args', $args, $data );
 
 		$query = new \WP_Query( $args );
 
+		if ( 0 === absint( $query->found_posts ) ) {
+			return;
+		}
+
 		$t_args = array(
-			'wall_posts'       => $query->get_posts(),
+			'wall_posts'       => $query->posts,
 			'um_activity_wall' => $this->wall,
 			'comm_num'         => $comm_num,
 			'order_comment'    => $order_comment,
 			'profile_id'       => $user_id,
+			'allowed_html'     => $this->wall->common()->posts()->get_allowed_html(),
 		);
 
-		$t_args = apply_filters( $this->wall->prefix . 'wall_template_args', $t_args, $args, $query );
+		$t_args        = apply_filters( $this->wall->prefix . 'wall_template_args', $t_args, $args, $query, $data );
+		$template_name = apply_filters( $this->wall->prefix . 'wall_posts_template', 'v3/posts-loop.php' );
 
-		$output = UM()->get_template( 'v3/posts-loop.php', $this->wall->plugin_basename, $t_args );
+		$output = UM()->get_template( $template_name, $this->wall->plugin_basename, $t_args );
 
 		wp_send_json_success( $output );
 	}
