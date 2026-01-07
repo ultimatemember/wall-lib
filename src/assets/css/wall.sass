@@ -10,6 +10,9 @@
 @import "../../../../../../../ultimate-member/assets/css/typography"
 
 .um
+  .#{$prefix}wall-empty
+    text-align: center
+    width: 100%
   .#{$prefix}wall-bigtext
     text-align: center
     +typography(text,lg,semibold)
@@ -330,7 +333,7 @@
               +flex( row, flex-start, start, nowrap )
             .#{$prefix}wall-comment-meta
               +flex( row, flex-start, center, nowrap )
-              column-gap: $spacing-xl
+              column-gap: $spacing-sm
             &:hover
               .#{$prefix}wall-editc
                 opacity: 1

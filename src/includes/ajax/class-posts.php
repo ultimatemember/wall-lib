@@ -65,7 +65,7 @@ class Posts {
 		$query = new \WP_Query( $args );
 
 		if ( 0 === absint( $query->found_posts ) ) {
-			return;
+			wp_send_json_success( array( 'empty' => '<div class="um-wall-empty">' . __( 'There are no posts', $this->wall->textdomain ) . '</div>' ) ); // phpcs:ignore WordPress.WP.I18n
 		}
 
 		$t_args = array(
@@ -177,9 +177,9 @@ class Posts {
 		$post_id = absint( $_POST['_post_id'] );
 
 		if ( 0 === $post_id ) {
-			check_ajax_referer( 'um-wall-post-publish', 'nonce' );
+			check_ajax_referer( $this->wall->prefix . 'wall_post_publish', 'nonce' );
 		} else {
-			check_ajax_referer( 'um-wall-post-edit' . $post_id, 'nonce' );
+			check_ajax_referer( $this->wall->prefix . 'wall_post_edit' . $post_id, 'nonce' );
 		}
 
 		$_post_content = str_replace( '&nbsp;', ' ', $_POST['_post_content'] ); // replace &nbsp; to space
@@ -192,8 +192,9 @@ class Posts {
 		$_post_content = ! empty( $_post_content ) ? $_post_content : ''; // make sure it's string
 
 		$_post_images = array();
-		if ( ! empty( $_POST['activity_post_photo'] ) ) {
-			foreach ( $_POST['activity_post_photo'] as $post_photo ) {
+		$_photo_key   = apply_filters( $this->wall->prefix . 'photo_post_key', '' );
+		if ( ! empty( $_POST[ $_photo_key ] ) ) {
+			foreach ( $_POST[ $_photo_key ] as $post_photo ) {
 				if ( ! array_key_exists( 'hash', $post_photo ) ) {
 					continue;
 				}
