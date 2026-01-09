@@ -44,6 +44,13 @@ class Init {
 	public $prefix;
 
 	/**
+	 * Plugin prefix
+	 *
+	 * @param string
+	 */
+	public $plugin_prefix;
+
+	/**
 	 * Plugin text domain
 	 *
 	 * @param string
@@ -83,6 +90,7 @@ class Init {
 		$this->plugin_version  = $data['plugin_version'];
 		$this->plugin_path     = $data['plugin_path'];
 		$this->prefix          = $data['prefix'];
+		$this->plugin_prefix   = $data['plugin_prefix'];
 		$this->plugin_basename = $data['plugin_basename'];
 		$this->textdomain      = $data['textdomain'];
 		$this->post_type       = $data['post_type'];

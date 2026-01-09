@@ -103,6 +103,8 @@ class Comments {
 			wp_send_json_error( __( 'You are not authorized to like this comment.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
 		}
 
+		do_action( $this->wall->prefix . 'before_wall_comment_liked', $comment_id, get_current_user_id() );
+
 		$liked = get_comment_meta( $comment_id, '_liked', true );
 		if ( is_array( $liked ) && in_array( get_current_user_id(), $liked, true ) ) {
 			wp_send_json_error( __( 'You already liked this comment', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
@@ -134,6 +136,8 @@ class Comments {
 			++$likes;
 			update_comment_meta( $comment_id, '_likes', $likes );
 		}
+
+		do_action( $this->wall->prefix . 'after_wall_comment_liked', $comment_id, get_current_user_id() );
 
 		$content = UM()->frontend()::layouts()::avatars_list(
 			$liked,
@@ -177,6 +181,8 @@ class Comments {
 			wp_send_json_error( __( 'You are not authorized to unlike this comment.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
 		}
 
+		do_action( $this->wall->prefix . 'before_wall_comment_unliked', $comment_id, get_current_user_id() );
+
 		$liked = get_comment_meta( $comment_id, '_liked', true );
 		if ( empty( $liked ) || ! is_array( $liked ) ) {
 			wp_send_json_error( __( 'Invalid comment data', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
@@ -203,6 +209,8 @@ class Comments {
 		--$likes;
 		$likes = 0 < $likes ? $likes : 0;
 		update_comment_meta( $comment_id, '_likes', $likes );
+
+		do_action( $this->wall->prefix . 'after_wall_comment_unliked', $comment_id, get_current_user_id() );
 
 		$content = UM()->frontend()::layouts()::avatars_list(
 			$liked,

@@ -159,8 +159,10 @@ class Posts {
 			'allowed_html'    => $this->wall->common()->posts()->get_allowed_html(),
 		);
 
+		$template_name = apply_filters( $this->wall->prefix . 'wall_edit_posts_template', 'v3/edit-post.php' );
+
 		add_filter( 'um_late_escaping_allowed_tags', array( $this->wall->common()->posts(), 'add_extra_kses_allowed_tags' ), 10, 2 );
-		$output = UM()->get_template( 'v3/edit-post.php', $this->wall->plugin_basename, $t_args );
+		$output = UM()->get_template( $template_name, $this->wall->plugin_basename, $t_args );
 		add_filter( 'um_late_escaping_allowed_tags', array( $this->wall->common()->posts(), 'add_extra_kses_allowed_tags' ), 10, 2 );
 
 		wp_send_json_success( $output );
@@ -331,7 +333,7 @@ class Posts {
 				}
 				$data['post_content'] = wp_slash( $converted_content );
 
-				$data = apply_filters( $this->wall->prefix . 'update_prepared_post_args', $data );
+				$data = apply_filters( $this->wall->prefix . 'insert_prepared_post_args', $data );
 				wp_update_post( $data );
 			}
 		}
@@ -854,6 +856,8 @@ class Posts {
 			wp_send_json_error( array( 'message' => __( 'You are not authorized to like this post.', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
 		}
 
+		do_action( $this->wall->prefix . 'before_wall_post_liked', $post_id, get_current_user_id() );
+
 		$liked = get_post_meta( $post_id, '_liked', true );
 		if ( is_array( $liked ) && in_array( get_current_user_id(), $liked, true ) ) {
 			wp_send_json_error( array( 'message' => __( 'You already liked this post', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
@@ -929,6 +933,8 @@ class Posts {
 			wp_send_json_error( array( 'message' => __( 'You are not authorized to unlike this post.', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
 		}
 
+		do_action( $this->wall->prefix . 'before_wall_post_unliked', $post_id, get_current_user_id() );
+
 		$liked = get_post_meta( $post_id, '_liked', true );
 		if ( empty( $liked ) || ! is_array( $liked ) ) {
 			wp_send_json_error( array( 'message' => __( 'Invalid post data', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
@@ -992,6 +998,8 @@ class Posts {
 		if ( ! $this->wall->common()->user()->can_view_likes( $post_id ) ) {
 			wp_send_json_error( array( 'message' => __( 'You are not authorized to see likes.', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
 		}
+
+		do_action( $this->wall->prefix . 'before_wall_post_likes_loaded', $post_id, get_current_user_id() );
 
 		$likes = get_post_meta( $post_id, '_liked', true );
 		if ( empty( $likes ) ) {
