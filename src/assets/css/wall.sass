@@ -130,7 +130,28 @@
         img
           max-width: 100%
           height: auto
-
+  .#{$prefix}wall-uploader-section
+    .#{$prefix}uploader-filelist
+      display: grid
+      grid-template-rows: auto 1fr
+      grid-template-columns: repeat(3, 1fr)
+      gap: $spacing-md
+      .#{$prefix}uploader-image-file-placeholder
+        border: none
+        border-radius: 0
+        max-width: 180px
+        padding: 0
+        margin: 0
+        &.#{$prefix}upload-completed
+          border: none
+          border-radius: 0
+          padding: 0
+          margin: 0
+        &.#{$prefix}upload-failed
+          border: none
+          border-radius: 0
+          padding: 0
+          margin: 0
 
 // Single wall post
 .um

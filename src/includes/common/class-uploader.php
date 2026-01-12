@@ -121,11 +121,11 @@ class Uploader {
 			} else {
 				$kb = $bytes / 1024;
 
-				// KB — до целого
+				// KB
 				if ( $kb < 1024 ) {
 					$size = round( $kb ) . ' kb';
 				} else {
-					// MB — до 1 знака
+					// MB
 					$mb   = $kb / 1024;
 					$size = number_format_i18n( $mb, 1 ) . ' mb';
 				}

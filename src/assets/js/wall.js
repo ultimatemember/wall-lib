@@ -975,7 +975,13 @@ function um_wall_ajax_request() {
 
 		let offset = wall.attr('data-offset');
 		let nonce = wall.attr('data-nonce');
-		let loader = wall.parents('.um-activity').find('.um-wall-posts-loader');
+
+		let loader = wp.hooks.applyFilters(
+			'um_wall_loader',
+			'',
+			{ wall: wall }
+		);
+
 		let action = wp.hooks.applyFilters(
 			'um_wall_action',
 			'um_wall_load_posts'

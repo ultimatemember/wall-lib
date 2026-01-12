@@ -1,3 +1,7 @@
+.um .um-wall-empty {
+  text-align: center;
+  width: 100%;
+}
 .um .um-wall-bigtext {
   text-align: center;
   font-size: var(--um-text-font-size-lg, 18px);
@@ -190,6 +194,31 @@
 .um .um-wall-uploader-section .um-uploader-filelist .um-uploader-file img {
   max-width: 100%;
   height: auto;
+}
+.um .um-wall-uploader-section .um-uploader-filelist {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.um .um-wall-uploader-section .um-uploader-filelist .um-uploader-image-file-placeholder {
+  border: none;
+  border-radius: 0;
+  max-width: 180px;
+  padding: 0;
+  margin: 0;
+}
+.um .um-wall-uploader-section .um-uploader-filelist .um-uploader-image-file-placeholder.um-upload-completed {
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+}
+.um .um-wall-uploader-section .um-uploader-filelist .um-uploader-image-file-placeholder.um-upload-failed {
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
 }
 
 .um .um-wall-widget {
@@ -507,7 +536,7 @@
   justify-content: flex-start;
   align-items: center;
   flex-wrap: nowrap;
-  column-gap: 16px;
+  column-gap: 6px;
 }
 .um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-commentl:hover .um-wall-editc {
   opacity: 1;

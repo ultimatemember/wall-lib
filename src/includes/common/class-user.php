@@ -62,10 +62,9 @@ class User {
 		$in_users = apply_filters( $this->wall->prefix . 'wall_post_can_view_in_users', $in_users, $post_id );
 
 		if ( ! empty( $in_users ) ) {
-			$in_users[] = get_current_user_id();
-			$in_users   = array_unique( $in_users );
-			$in_users   = array_map( 'absint', $in_users );
-			$author_id  = $this->wall->common()->posts()->get_author( $post_id );
+			$in_users  = array_unique( $in_users );
+			$in_users  = array_map( 'absint', $in_users );
+			$author_id = $this->wall->common()->posts()->get_author( $post_id );
 			if ( ! in_array( $author_id, $in_users, true ) ) {
 				$can_view = false;
 			}
