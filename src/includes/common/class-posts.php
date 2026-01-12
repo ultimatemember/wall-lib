@@ -596,11 +596,12 @@ class Posts {
 	 * @return string
 	 */
 	public function maybe_linkify_mentions( $content, $context, $id ) {
-		if ( ! UM()->options()->get( 'activity_friends_mention' ) && ! UM()->options()->get( 'activity_followers_mention' ) ) {
+		if ( empty( $content ) ) {
 			return $content;
 		}
 
-		if ( empty( $content ) ) {
+		$run = apply_filters( $this->wall->prefix . 'maybe_linkify_mentions_condition', true, $content, $context, $id );
+		if ( true !== $run ) {
 			return $content;
 		}
 
