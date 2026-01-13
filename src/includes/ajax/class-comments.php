@@ -389,16 +389,18 @@ class Comments {
 			$comm_num  = apply_filters( $this->wall->prefix . 'wall_comments_loadmore_number', 10 );
 
 			if ( $comment_parent ) {
-				$t_args   = array(
+				$t_args = array(
 					'commentc'         => $comments[0],
 					'post_id'          => $post_id,
 					'post_link'        => $post_link,
 					'um_activity_wall' => $this->wall,
 					'comm_num'         => $comm_num,
 				);
+
+				$t_args   = apply_filters( $this->wall->prefix . 'wall_comment_reply_template_args', $t_args, $comments, $post_id );
 				$template = apply_filters( $this->wall->prefix . 'wall_comment_reply_template', 'comment-reply.php' );
 			} else {
-				$t_args   = array(
+				$t_args = array(
 					'comments'         => $comments,
 					'post_id'          => $post_id,
 					'post_link'        => $post_link,
@@ -406,6 +408,8 @@ class Comments {
 					'comm_num'         => $comm_num,
 					'order_comment'    => apply_filters( $this->wall->prefix . 'wall_comments_loadmore_order', 'asc' ),
 				);
+
+				$t_args   = apply_filters( $this->wall->prefix . 'wall_comment_template_args', $t_args, $comments, $post_id );
 				$template = apply_filters( $this->wall->prefix . 'wall_comment_template', 'comment.php' );
 			}
 
@@ -616,6 +620,7 @@ class Comments {
 			'order_comment'    => $order,
 		);
 
+		$t_args   = apply_filters( $this->wall->prefix . 'wall_comment_template_args', $t_args, $comments, $post_id );
 		$template = apply_filters( $this->wall->prefix . 'wall_comment_template', 'comment.php' );
 
 		$content = UM()->get_template( $template, $this->wall->plugin_basename, $t_args, false );
@@ -678,6 +683,7 @@ class Comments {
 				'um_activity_wall' => $this->wall,
 			);
 
+			$t_args   = apply_filters( $this->wall->prefix . 'wall_comment_reply_template_args', $t_args, $commentc, $post_id );
 			$template = apply_filters( $this->wall->prefix . 'wall_comment_reply_template', 'comment-reply.php' );
 			$content .= UM()->get_template( $template, $this->wall->plugin_basename, $t_args, false );
 		}
