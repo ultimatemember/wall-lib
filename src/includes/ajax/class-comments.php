@@ -404,7 +404,7 @@ class Comments {
 					'post_link'        => $post_link,
 					'um_activity_wall' => $this->wall,
 					'comm_num'         => $comm_num,
-					'order_comment'    => UM()->options()->get( 'activity_order_comment' ),
+					'order_comment'    => apply_filters( $this->wall->prefix . 'wall_comments_loadmore_order', 'asc' ),
 				);
 				$template = apply_filters( $this->wall->prefix . 'wall_comment_template', 'comment.php' );
 			}
@@ -603,8 +603,6 @@ class Comments {
 		$offset    = absint( $_POST['offset'] );
 		$post_link = $this->wall->common()->posts()->get_permalink( $post_id );
 		// phpcs:enable WordPress.Security.NonceVerification
-		$comm_num      = UM()->options()->get( 'activity_init_comments_count' );
-		$order_comment = UM()->options()->get( 'activity_order_comment' );
 
 		$comments     = $this->wall->common()->comments()->get_comments( $post_id, absint( $number ), $order, $offset );
 		$comments_all = $this->wall->common()->comments()->get_comments_number( $post_id );
@@ -614,8 +612,8 @@ class Comments {
 			'post_id'          => $post_id,
 			'post_link'        => $post_link,
 			'um_activity_wall' => $this->wall,
-			'comm_num'         => $comm_num,
-			'order_comment'    => $order_comment,
+			'comm_num'         => $number,
+			'order_comment'    => $order,
 		);
 
 		$template = apply_filters( $this->wall->prefix . 'wall_comment_template', 'comment.php' );

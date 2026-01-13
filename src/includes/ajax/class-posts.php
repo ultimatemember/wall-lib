@@ -287,6 +287,7 @@ class Posts {
 			'order_comment'    => $order_comment,
 		);
 
+		$t_args        = apply_filters( $this->wall->prefix . 'wall_prepare_response_template_args', $t_args );
 		$template_name = apply_filters( $this->wall->prefix . 'wall_posts_template', 'v3/posts-loop.php' );
 
 		return UM()->ajax()->esc_html_spaces( UM()->get_template( $template_name, $this->wall->plugin_basename, $t_args ) );
@@ -722,7 +723,7 @@ class Posts {
 	 * @return string
 	 */
 	public function shorten_string( $string ) {
-		$words_limit = absint( UM()->options()->get( 'activity_post_truncate' ) );
+		$words_limit = absint( apply_filters( $this->wall->prefix . 'wall_post_excerpt_words_limit', 25 ) );
 		if ( empty( $words_limit ) ) {
 			return $string;
 		}
