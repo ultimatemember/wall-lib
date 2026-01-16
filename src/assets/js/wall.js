@@ -1235,14 +1235,24 @@ jQuery(document).ready(function () {
 			'um_wall_user_suggestions_action',
 			'um_get_user_suggestions'
 		);
+		let data = { term: term, nonce: nonce };
+		data = wp.hooks.applyFilters(
+			'um_wall_user_suggestions_data',
+			data,
+			{ term, nonce, editor }
+		);
 		mentionTimer = setTimeout(function(){
-			wp.ajax.send('um_activity_get_user_suggestions', {
-				data: { term: term, nonce: nonce },
+			wp.ajax.send(action, {
+				data: data,
 				success: function(response){
 					if (response) showMentionBox(response, editor);
 					else hideMentionBox();
 				},
 				error: function(){
+					jQuery(this).um_notice({
+						message: e,
+						type: 'error'
+					});
 					hideMentionBox();
 				}
 			});

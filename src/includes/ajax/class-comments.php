@@ -538,6 +538,7 @@ class Comments {
 			$this->wall->common()->posts()->hashtagit( $post_id, $orig_content, true );
 
 			$linkified = $this->wall->common()->posts()->linkify_hashtags_in_content( $comment_content );
+			$linkified = $this->wall->common()->posts()->maybe_linkify_mentions( $linkified, 'comment', $commentid );
 			if ( $comment_content !== $linkified ) {
 				$data = array(
 					'comment_ID'      => $commentid,

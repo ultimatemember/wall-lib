@@ -32,6 +32,8 @@ class Mentions {
 	public function get_user_suggestions() {
 		check_ajax_referer( 'um_wall_mentions', 'nonce' );
 
+		do_action( $this->wall->prefix . 'ajax_get_user_suggestions_before' );
+
 		// phpcs:ignore WordPress.Security.NonceVerification
 		if ( ! isset( $_POST['term'] ) ) {
 			wp_send_json_error( array( 'message' => __( 'Invalid post name', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n

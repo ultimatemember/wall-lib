@@ -159,6 +159,7 @@ class Posts {
 			'allowed_html'    => $this->wall->common()->posts()->get_allowed_html(),
 		);
 
+		$t_args        = apply_filters( $this->wall->prefix . 'wall_edit_post_template_args', $t_args );
 		$template_name = apply_filters( $this->wall->prefix . 'wall_edit_posts_template', 'v3/edit-post.php' );
 
 		add_filter( 'um_late_escaping_allowed_tags', array( $this->wall->common()->posts(), 'add_extra_kses_allowed_tags' ), 10, 2 );
@@ -364,7 +365,7 @@ class Posts {
 			$args['meta_input']['_original_content'] = wp_slash( $orig_content );
 		}
 
-		$args    = apply_filters( $this->wall->prefix . 'update_post_args', $args );
+		$args    = apply_filters( $this->wall->prefix . 'update_post_args', $args, $old_data );
 		$post_id = wp_update_post( $args );
 
 		if ( empty( $post_id ) || is_wp_error( $post_id ) ) {
