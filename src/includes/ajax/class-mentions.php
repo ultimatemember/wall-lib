@@ -41,7 +41,7 @@ class Mentions {
 		$current_user = get_current_user_id();
 
 		$term = sanitize_text_field( $_POST['term'] ); // phpcs:ignore WordPress.Security.NonceVerification
-		$data = apply_filters( $this->wall->prefix . 'ajax_get_user_suggestions', array(), $term );
+		$data = apply_filters( $this->wall->prefix . 'ajax_get_user_suggestions', array(), $term, $this );
 		$data = array_filter(
 			$data,
 			function ( $v ) use ( $current_user ) {
@@ -66,5 +66,31 @@ class Mentions {
 		);
 		$data = array_values( $data );
 		wp_send_json_success( $data );
+	}
+
+	public function fetch_mentioned_user( $user_id, $term ) {
+		um_fetch_user( $user_id );
+		$display_name = um_user( 'display_name' );
+
+		$start = mb_stripos( $display_name, $term );
+		if ( false === $start ) {
+			return false;
+		}
+		$find_length = mb_strlen( $term );
+
+		$first_sub  = mb_substr( $display_name, 0, $start );
+		$second_sub = mb_substr( $display_name, $start, $find_length );
+		$third_sub  = mb_substr( $display_name, $start + $find_length );
+		$name       = $first_sub . '<strong>' . $second_sub . '</strong>' . $third_sub;
+
+		$users_data             = array();
+		$users_data[ $user_id ] = array(
+			'user_id'  => $user_id,
+			'photo'    => get_avatar( $user_id, 80 ),
+			'name'     => $name,
+			'username' => $display_name,
+		);
+
+		return $users_data;
 	}
 }
