@@ -163,6 +163,14 @@ jQuery( document ).ready(function () {
 				jQuery('.um-wall-empty').remove();
 				let posts_count = jQuery('.count-posts span').html();
 				jQuery('.count-posts span').html( parseInt(posts_count) + 1 )
+
+				let params = new URLSearchParams( window.location.search );
+				if ( params.has( 'action' ) ) {
+					UM.frontend.url.deleteURLSearchParam('action');
+				}
+				if ( params.has( '_wpnonce' ) ) {
+					UM.frontend.url.deleteURLSearchParam('_wpnonce');
+				}
 			},
 			error: function(data) {
 				form.find('.um-wall-right .um-ajax-spinner-svg').hide();
