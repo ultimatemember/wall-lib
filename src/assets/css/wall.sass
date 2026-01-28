@@ -220,10 +220,23 @@
             &:hover
               color: $link-hover-color
       .#{$prefix}wall-bodyinner-photo
-        img
+        grid-template-columns: repeat(4, 1fr)
+        display: grid
+        grid-gap: $spacing-md
+        .um-image-lazyload-wrapper
           max-width: 100%
-          height: auto
-          cursor: pointer
+          background: $gray-200
+          border-radius: $radius-lg
+          img
+            position: relative
+            border-radius: $radius-lg
+            cursor: pointer
+            height: 100%
+            width: 100%
+            aspect-ratio: 1 / 1
+            object-fit: cover
+            object-position: center
+            display: block
       .#{$prefix}wall-actions
         +flex( row, space-between, center, nowrap )
         row-gap: $spacing-xs

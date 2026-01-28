@@ -211,7 +211,7 @@ class Posts {
 						$content .= "<img src=\"{$photo_url}\" title=\"{$title}\" alt=\"\" style=\"width: 100%;\" />";
 					}
 				} else {
-					$content .= "<img src=\"{$photo_url}\" title=\"{$title}\" alt=\"\" />";
+					$content .= "<div class=\"um-image-lazyload-wrapper\"><div class=\"um-skeleton-box\"></div><img src=\"{$photo_url}\" title=\"{$title}\" alt=\"\" /></div>";
 				}
 			}
 		} else {

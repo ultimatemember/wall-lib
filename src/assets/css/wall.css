@@ -322,10 +322,26 @@
 .um .um-wall-widget .um-wall-body .um-wall-bodyinner .um-wall-bodyinner-txt .um-link:hover {
   color: var(--um-primary-800-bg, #53389e);
 }
-.um .um-wall-widget .um-wall-body .um-wall-bodyinner-photo img {
+.um .um-wall-widget .um-wall-body .um-wall-bodyinner-photo {
+  grid-template-columns: repeat(4, 1fr);
+  display: grid;
+  grid-gap: 8px;
+}
+.um .um-wall-widget .um-wall-body .um-wall-bodyinner-photo .um-image-lazyload-wrapper {
   max-width: 100%;
-  height: auto;
+  background: var(--um-gray-200, #eaecf0);
+  border-radius: 10px;
+}
+.um .um-wall-widget .um-wall-body .um-wall-bodyinner-photo .um-image-lazyload-wrapper img {
+  position: relative;
+  border-radius: 10px;
   cursor: pointer;
+  height: 100%;
+  width: 100%;
+  aspect-ratio: 1/1;
+  object-fit: cover;
+  object-position: center;
+  display: block;
 }
 .um .um-wall-widget .um-wall-body .um-wall-actions {
   display: flex;
