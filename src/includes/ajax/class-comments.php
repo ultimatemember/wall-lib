@@ -304,6 +304,8 @@ class Comments {
 			);
 		}
 
+		do_action( $this->wall->prefix . 'before_wall_comment_published', $post_id, get_current_user_id() );
+
 		um_fetch_user( get_current_user_id() );
 
 		$time     = current_time( 'mysql' );
@@ -511,6 +513,8 @@ class Comments {
 				)
 			);
 		}
+
+		do_action( $this->wall->prefix . 'before_wall_comment_updated', $commentid, get_current_user_id() );
 
 		um_fetch_user( get_current_user_id() );
 

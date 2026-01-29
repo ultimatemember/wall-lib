@@ -185,6 +185,8 @@ class Posts {
 			check_ajax_referer( $this->wall->prefix . 'wall_post_edit' . $post_id, 'nonce' );
 		}
 
+		do_action( $this->wall->prefix . 'before_wall_post_publish', $post_id );
+
 		$_post_content = str_replace( '&nbsp;', ' ', $_POST['_post_content'] ); // replace &nbsp; to space
 		$_post_content = preg_replace( '/<\/div>\s*<div[^>]*>/', "\n", $_post_content ); // replace div to new line
 		$_post_content = preg_replace( '/<\/?div[^>]*>/i', '', $_post_content ); // remove other div tags

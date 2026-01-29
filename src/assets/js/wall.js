@@ -171,6 +171,7 @@ jQuery( document ).ready(function () {
 				if ( params.has( '_wpnonce' ) ) {
 					UM.frontend.url.deleteURLSearchParam('_wpnonce');
 				}
+				UM.frontend.image.lazyload.init();
 			},
 			error: function(data) {
 				form.find('.um-wall-right .um-ajax-spinner-svg').hide();
@@ -272,6 +273,7 @@ jQuery( document ).ready(function () {
 			return;
 		}
 
+		widget.find('.um-post-actions-toggle').umHide();
 		loader.umShow();
 
 		let action = wp.hooks.applyFilters(
@@ -295,7 +297,6 @@ jQuery( document ).ready(function () {
 					widget.find('.um-wall-comment-form').umHide();
 					widget.find('.um-wall-body').before(data);
 					UM.frontend.uploader.init()
-					widget.find('.um-post-actions-toggle').umHide();
 				},
 				error: function(data) {
 					console.log(data);
@@ -304,6 +305,7 @@ jQuery( document ).ready(function () {
 					if ( data.message ) {
 						error = data.message;
 					}
+					widget.find('.um-post-actions-toggle').umShow();
 					jQuery(this).um_notice({
 						message: error,
 						type: 'error'
@@ -1036,6 +1038,7 @@ function um_wall_ajax_request() {
 				jQuery( document ).trigger('activity_loaded');
 
 				wp.hooks.doAction( 'um_activity_wall_loaded', wall );
+				UM.frontend.image.lazyload.init();
 			},
 			error: function (e) {
 				wall.html(e.message);
@@ -1043,8 +1046,6 @@ function um_wall_ajax_request() {
 			}
 		});
 	}
-
-
 }
 
 
