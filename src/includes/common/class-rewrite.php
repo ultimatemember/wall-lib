@@ -61,8 +61,7 @@ class Rewrite {
 		);
 		$allowed_image_types = implode( '|', $allowed_image_types );
 
-		// NGINX-config `rewrite ^/um-wall-download/([^/]+)/([^/]+)/([^/]+)/\d{1,10}\.(gif|png|jpeg|jpg|webp)$ /index.php?um_action=um-wall-download&um_post=$1&um_author=$2&um_verify=$3 last;`
-		$new_rules[ 'um-wall-download/([^/]+)/([^/]+)/([^/]+)/(\d+)\.(' . $allowed_image_types . ')$' ] = 'index.php?um_action=um-wall-download&um_post=$matches[1]&um_author=$matches[2]&um_verify=$matches[3]&um_attachment_id=$matches[4]';
+		$new_rules = apply_filters( $this->wall->prefix . 'rewrite_rules', $new_rules, $allowed_image_types );
 
 		return $new_rules + $rules;
 	}
@@ -71,9 +70,7 @@ class Rewrite {
 	 * @return bool
 	 */
 	public function download_routing() {
-		if ( 'um-wall-download' !== get_query_var( 'um_action' ) ) {
-			return false;
-		}
+		do_action( $this->wall->prefix . 'before_download_routing' );
 
 		$post_id = get_query_var( 'um_post' );
 		if ( empty( $post_id ) ) {

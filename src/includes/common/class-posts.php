@@ -278,17 +278,18 @@ class Posts {
 
 		$nonce = wp_create_nonce( $author_id . $post_id . 'um-download-nonce' );
 
+		$action = apply_filters( $this->wall->prefix . 'download_action', '' );
 		if ( UM()->is_permalinks ) {
 			if ( '' !== $iamge_url ) {
-				$url = home_url( "/um-wall-download/{$post_id}/{$author_id}/{$nonce}/{$attachment_id}.{$filetype['ext']}" );
+				$url = home_url( "/{$action}/{$post_id}/{$author_id}/{$nonce}/{$attachment_id}.{$filetype['ext']}" );
 			} else {
-				$url = home_url( "/um-wall-download/{$post_id}/{$author_id}/{$nonce}/{$filetime}.{$filetype['ext']}" );
+				$url = home_url( "/{$action}/{$post_id}/{$author_id}/{$nonce}/{$filetime}.{$filetype['ext']}" );
 			}
 		} else {
 			if ( '' !== $iamge_url ) {
 				$url = add_query_arg(
 					array(
-						'um_action'        => 'um-wall-download',
+						'um_action'        => $action,
 						'um_post'          => $post_id,
 						'um_author'        => $author_id,
 						'um_verify'        => $nonce,
@@ -299,7 +300,7 @@ class Posts {
 			} else {
 				$url = add_query_arg(
 					array(
-						'um_action'   => 'um-wall-download',
+						'um_action'   => $action,
 						'um_post'     => $post_id,
 						'um_author'   => $author_id,
 						'um_verify'   => $nonce,
