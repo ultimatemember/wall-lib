@@ -57,10 +57,11 @@ class Rewrite {
 			'png',
 			'jpeg',
 			'jpg',
+			'webp',
 		);
 		$allowed_image_types = implode( '|', $allowed_image_types );
 
-		// NGINX-config `rewrite ^/um-wall-download/([^/]+)/([^/]+)/([^/]+)/\d{1,10}\.(gif|png|jpeg|jpg)$ /index.php?um_action=um-wall-download&um_post=$1&um_author=$2&um_verify=$3 last;`
+		// NGINX-config `rewrite ^/um-wall-download/([^/]+)/([^/]+)/([^/]+)/\d{1,10}\.(gif|png|jpeg|jpg|webp)$ /index.php?um_action=um-wall-download&um_post=$1&um_author=$2&um_verify=$3 last;`
 		$new_rules[ 'um-wall-download/([^/]+)/([^/]+)/([^/]+)/(\d+)\.(' . $allowed_image_types . ')$' ] = 'index.php?um_action=um-wall-download&um_post=$matches[1]&um_author=$matches[2]&um_verify=$matches[3]&um_attachment_id=$matches[4]';
 
 		return $new_rules + $rules;
