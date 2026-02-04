@@ -182,6 +182,8 @@
       color: $gray-600
       word-wrap: break-word
       .#{$prefix}wall-bodyinner
+        +flex( column, flex-start, stretch, nowrap )
+        row-gap: $spacing-md
         .#{$prefix}wall-bodyinner-txt
           &.loading
             opacity: 0.5
