@@ -1,6 +1,5 @@
 <?php
 namespace WallLib;
-//namespace UM_Activity\WallLib;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -144,16 +143,6 @@ class Init {
 				);
 
 				$full_path = __DIR__ . $slash . 'includes' . $path . '.php';
-			} elseif ( strpos( $class, 'WallLib\\integrations\\' ) !== false ) {
-				$class = implode( '\\', $array );
-				$slash = DIRECTORY_SEPARATOR;
-				$path  = str_replace(
-					array( strtolower( __NAMESPACE__ ), '_', '\\' ),
-					array( '', '-', $slash ),
-					$class
-				);
-
-				$full_path = __DIR__ . $slash . 'includes' . $path . '.php';
 			}
 
 			if ( isset( $full_path ) && file_exists( $full_path ) ) {
@@ -202,14 +191,5 @@ class Init {
 			UM()->classes[ $this->prefix . 'WallLib\common\Init' ] = new common\Init( $this );
 		}
 		return UM()->classes[ $this->prefix . 'WallLib\common\Init' ];
-	}
-
-	public function get_plugin_info() {
-		return array(
-			'name'    => $this->plugin_url,
-			'version' => $this->plugin_version,
-			'path'    => $this->plugin_path,
-			'prefix'  => $this->prefix,
-		);
 	}
 }

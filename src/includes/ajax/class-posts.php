@@ -1,6 +1,5 @@
 <?php
 namespace WallLib\ajax;
-//namespace UM_Activity\WallLib\ajax;
 
 use WP_Filesystem_Base;
 

@@ -1,6 +1,5 @@
 <?php
 namespace WallLib\common;
-//namespace UM_Activity\WallLib\common;
 
 use DOMDocument;
 

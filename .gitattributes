@@ -4,4 +4,5 @@
 .gitignore export-ignore
 composer.lock export-ignore
 package-lock.json export-ignore
+gulpfile.js export-ignore
 /.github/ export-ignore

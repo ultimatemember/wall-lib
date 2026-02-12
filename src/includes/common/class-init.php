@@ -1,6 +1,5 @@
 <?php
 namespace WallLib\common;
-//namespace UM_Activity\WallLib\common;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -13,20 +12,27 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Init {
 
+	/**
+	 * @var
+	 */
 	private $wall;
 
+	/**
+	 * @param $wall
+	 */
 	public function __construct( $wall ) {
 		$this->wall = $wall;
 	}
+
 	/**
 	 * Create classes' instances where __construct isn't empty for hooks init
 	 */
 	public function includes() {
-		$this->user();
-		$this->posts();
 		$this->comments();
-		$this->uploader();
+		$this->posts();
 		$this->rewrite();
+		$this->uploader();
+		$this->user();
 	}
 
 	/**
