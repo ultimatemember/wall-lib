@@ -1,3 +1,31 @@
+// TODO Make structure like `UM.common.{method/param}`. Probably `UM.wall.{method/param}` will be enough.
+/**
+ * if ( typeof ( window.UM ) !== 'object' ) {
+ * 		window.UM = {};
+ * }
+ *
+ * if ( typeof ( UM.wall ) !== 'object' ) {
+ * 		UM.wall = {};
+ * }
+ *
+ * UM.wall = {
+ * 		prop1: val1,
+ * 		form: {
+ * 			checkTextareaLength: function() {},
+ * 			enableSubmit: function() {},
+ * 			disableSubmit: function() {},
+ * 			...,
+ * 			etc.,
+ * 		}
+ * }
+ */
+
+/**
+ * Check the length of the text in a textarea and enable or disable the form submit button accordingly.
+ *
+ * @param {jQuery} editor - The textarea editor element to check the text length for.
+ * @return {void}
+ */
 function um_check_textarea_length( editor ) {
 	let form = editor.parents('form');
 	let text = editor.text().trim();
@@ -93,7 +121,7 @@ jQuery( document ).ready(function () {
 		}
 
 		let $wall;
-		let wallID = parseInt( formdata['_wall_id'] )
+		let wallID = parseInt( formdata['_wall_id'] ); // TODO extends formdata below via JS filter hooks.
 		formdata.wall_exists = 1;
 		if ( 1 === parseInt( formdata['_only_form'] ) ) {
 			// Add new post
@@ -119,6 +147,7 @@ jQuery( document ).ready(function () {
 			data: formdata,
 			success: function (data)  {
 				if ( ! formdata.wall_exists ) {
+					// TODO check uploader handler here.
 					/* for shortcode [ultimatemember_activity_form] */
 					$loader.umHide();
 					$uploadToggle.prop('disabled',false);
@@ -262,7 +291,7 @@ jQuery( document ).ready(function () {
 		let widget = jQuery(this).parents('.um-wall-widget');
 		let post_id = jQuery(this).attr('data-post_id');
 		let nonce = jQuery(this).attr('data-nonce');
-		let wall_id = jQuery('.um-wall-post-form-wrapper input[name="_wall_id"]').val() || 0;
+		let wall_id = jQuery('.um-wall-post-form-wrapper input[name="_wall_id"]').val() || 0; // TODO extends via filter hook in UM Activity extension.
 		let loader = widget.find('.um-wall-post-loader');
 
 		if ( jQuery(this).parents('.um-wall-dialog').length ) {
@@ -286,7 +315,7 @@ jQuery( document ).ready(function () {
 			{
 				data: {
 					post_id: post_id,
-					wall_id: wall_id,
+					wall_id: wall_id, // TODO extends via filter hook in UM Activity extension.
 					nonce: nonce
 				},
 				success: function( data ) {

@@ -2,6 +2,7 @@
 namespace WallLib\common;
 
 use DOMDocument;
+use WP_Post;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -87,7 +88,7 @@ class Posts {
 
 	/**
 	 * Gets post wall ID
-	 *
+	 * TODO move this function from here to UM Activity extension only.
 	 * @param int $post_id
 	 *
 	 * @return int
@@ -439,7 +440,7 @@ class Posts {
 
 	/**
 	 * Strip video URLs as we need to convert them.
-	 *
+	 * TODO Maybe unused and should be removed.
 	 * @param string $content
 	 * @param int    $post_id
 	 */

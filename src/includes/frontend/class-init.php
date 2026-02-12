@@ -21,7 +21,7 @@ class Init {
 	 * Create classes' instances where __construct isn't empty for hooks init
 	 */
 	public function includes() {
-		$this->enqueue()->hooks();
+		$this->enqueue();
 	}
 
 	/**

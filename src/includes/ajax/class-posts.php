@@ -2,6 +2,7 @@
 namespace WallLib\ajax;
 
 use WP_Filesystem_Base;
+use WP_Query;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -61,7 +62,7 @@ class Posts {
 		);
 		$args = apply_filters( $this->wall->prefix . 'wall_posts_args', $args, $data );
 
-		$query = new \WP_Query( $args );
+		$query = new WP_Query( $args );
 
 		if ( 0 === absint( $query->found_posts ) ) {
 			wp_send_json_success( array( 'empty' => '<div class="um-wall-empty">' . __( 'There are no posts', $this->wall->textdomain ) . '</div>' ) ); // phpcs:ignore WordPress.WP.I18n
@@ -93,7 +94,7 @@ class Posts {
 			wp_send_json_error( array( 'message' => __( 'Invalid post ID', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
 		}
 		$post_id = absint( $_POST['post_id'] );
-		$wall_id = absint( $_POST['wall_id'] );
+		$wall_id = absint( $_POST['wall_id'] ); // TODO extends via filter hook in UM Activity extension.
 		// phpcs:enable WordPress.Security.NonceVerification
 
 		check_ajax_referer( 'um_wall_get_post' . $post_id, 'nonce' );
@@ -150,7 +151,7 @@ class Posts {
 
 		$t_args = array(
 			'post_id'         => $post_id,
-			'wall_id'         => $wall_id,
+			'wall_id'         => $wall_id, // TODO extends via filter hook in UM Activity extension.
 			'post'            => $post,
 			'count'           => $count,
 			'uploaded_photos' => $uploaded_photos,
@@ -216,13 +217,13 @@ class Posts {
 
 		$wall_id = 0;
 		if ( ! empty( $_POST['_wall_id'] ) ) {
-			$wall_id = absint( $_POST['_wall_id'] );
+			$wall_id = absint( $_POST['_wall_id'] ); // TODO extends via filter hook in UM Activity extension.
 		}
 
 		um_maybe_unset_time_limit();
 
 		if ( 0 === $post_id ) {
-			$post_id     = $this->handle_post_insert( $_post_content, $_post_images, $wall_id );
+			$post_id     = $this->handle_post_insert( $_post_content, $_post_images, $wall_id ); // TODO avoid using `$wall_id` attribute and extends data in this function via filter hook in UM Activity extension.
 			$wall_exists = ! empty( $_POST['wall_exists'] );
 			if ( ! $wall_exists ) {
 				// When there is only posting form on the page then we don't need return post data. Just a result success or not and post URL.
@@ -245,7 +246,7 @@ class Posts {
 				}
 			}
 
-			$post_id = $this->handle_post_update( $post_id, $_post_content, $_post_images, $wall_id );
+			$post_id = $this->handle_post_update( $post_id, $_post_content, $_post_images, $wall_id ); // TODO avoid using `$wall_id` attribute and extends data in this function via filter hook in UM Activity extension.
 			$output  = $this->prepare_response( $post_id );
 		}
 
@@ -295,7 +296,7 @@ class Posts {
 		return UM()->ajax()->esc_html_spaces( UM()->get_template( $template_name, $this->wall->plugin_basename, $t_args ) );
 	}
 
-	private function handle_post_insert( $_post_content, $_post_images, $wall_id ) {
+	private function handle_post_insert( $_post_content, $_post_images, $wall_id ) { // TODO avoid using `$wall_id` attribute and extends data below via filter hook in UM Activity extension.
 		$current_user_id = get_current_user_id();
 		$orig_content    = apply_filters( $this->wall->prefix . 'new_post', $_post_content );
 
@@ -307,7 +308,7 @@ class Posts {
 			'post_content' => '',
 			'post_excerpt' => '',
 			'meta_input'   => array(
-				'_wall_id'          => $wall_id,
+				'_wall_id'          => $wall_id, // TODO extends via filter hook in UM Activity extension.
 				'_user_id'          => $current_user_id,
 				'_likes'            => 0,
 				'_comments'         => 0,
@@ -346,14 +347,19 @@ class Posts {
 			$this->upload_images( $_post_images, $post_id );
 		}
 
-		do_action( $this->wall->prefix . 'after_wall_post_published', $post_id, $wall_id );
+		/**
+		 * TODO Maybe use instead:
+		 * $args = apply_filters( $this->wall->prefix . 'after_wall_post_published_args', array( $post_id ) );
+		 * do_action_ref_array( $this->wall->prefix . 'after_wall_post_published', $args );
+		 */
+		do_action( $this->wall->prefix . 'after_wall_post_published', $post_id, $wall_id ); // TODO avoid using `$wall_id` attribute and extends data via filter hook in UM Activity extension. Or just remove it if it's not used.
 
 		update_post_meta( $post_id, '_um_post_version', $this->wall->plugin_version );
 
 		return $post_id;
 	}
 
-	private function handle_post_update( $post_id, $_post_content, $_post_images, $wall_id ) {
+	private function handle_post_update( $post_id, $_post_content, $_post_images, $wall_id ) { // TODO avoid using `$wall_id` attribute and extends data below via filter hook in UM Activity extension.
 		// Update post
 		$args = array( 'ID' => $post_id );
 
@@ -398,7 +404,12 @@ class Posts {
 			$this->upload_images( $_post_images, $post_id );
 		}
 
-		do_action( $this->wall->prefix . 'after_wall_post_updated', $post_id, get_current_user_id(), $wall_id );
+		/**
+		 * TODO Maybe use instead:
+		 * $args = apply_filters( $this->wall->prefix . 'after_wall_post_updated_args', array( $post_id, $old_data ) );
+		 * do_action_ref_array( $this->wall->prefix . 'after_wall_post_updated', $args );
+		 */
+		do_action( $this->wall->prefix . 'after_wall_post_updated', $post_id, $wall_id, $old_data ); // TODO avoid using `$wall_id` attribute and extends data via filter hook in UM Activity extension. Or just remove it if it's not used.
 
 		update_post_meta( $post_id, '_um_post_version', $this->wall->plugin_version );
 

@@ -5,8 +5,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-use WP_User_Query;
-
 /**
  * Class Mentions
  *
@@ -33,13 +31,12 @@ class Mentions {
 
 		do_action( $this->wall->prefix . 'ajax_get_user_suggestions_before' );
 
-		// phpcs:ignore WordPress.Security.NonceVerification
 		if ( ! isset( $_POST['term'] ) ) {
 			wp_send_json_error( array( 'message' => __( 'Invalid post name', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
 		}
 		$current_user = get_current_user_id();
 
-		$term = sanitize_text_field( $_POST['term'] ); // phpcs:ignore WordPress.Security.NonceVerification
+		$term = sanitize_text_field( $_POST['term'] );
 		$data = apply_filters( $this->wall->prefix . 'ajax_get_user_suggestions', array(), $term, $this );
 		$data = array_filter(
 			$data,
@@ -48,7 +45,7 @@ class Mentions {
 				if ( empty( $user_ids ) ) {
 					$user_ids = array();
 				}
-				if ( empty ( $v['user_id'] ) ) {
+				if ( empty( $v['user_id'] ) ) {
 					return false;
 				}
 				$user_id = absint( $v['user_id'] );
@@ -67,6 +64,14 @@ class Mentions {
 		wp_send_json_success( $data );
 	}
 
+	/**
+	 * Fetch mentioned user
+	 *
+	 * @param int $user_id The ID of the user being fetched
+	 * @param string $term The search term to match in the user's display name
+	 *
+	 * @return array|bool Array of user data if found, false otherwise
+	 */
 	public function fetch_mentioned_user( $user_id, $term ) {
 		um_fetch_user( $user_id );
 		$display_name = um_user( 'display_name' );

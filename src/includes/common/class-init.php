@@ -36,13 +36,13 @@ class Init {
 	}
 
 	/**
-	 * @return User
+	 * @return Comments
 	 */
-	public function user() {
-		if ( empty( UM()->classes[ $this->wall->prefix . 'WallLib\common\user' ] ) ) {
-			UM()->classes[ $this->wall->prefix . 'WallLib\common\user' ] = new User( $this->wall );
+	public function comments() {
+		if ( empty( UM()->classes[ $this->wall->prefix . 'WallLib\common\comments' ] ) ) {
+			UM()->classes[ $this->wall->prefix . 'WallLib\common\comments' ] = new Comments( $this->wall );
 		}
-		return UM()->classes[ $this->wall->prefix . 'WallLib\common\user' ];
+		return UM()->classes[ $this->wall->prefix . 'WallLib\common\comments' ];
 	}
 
 	/**
@@ -56,13 +56,13 @@ class Init {
 	}
 
 	/**
-	 * @return Comments
+	 * @return Rewrite
 	 */
-	public function comments() {
-		if ( empty( UM()->classes[ $this->wall->prefix . 'WallLib\common\comments' ] ) ) {
-			UM()->classes[ $this->wall->prefix . 'WallLib\common\comments' ] = new Comments( $this->wall );
+	public function rewrite() {
+		if ( empty( UM()->classes[ $this->wall->prefix . 'WallLib\common\rewrite' ] ) ) {
+			UM()->classes[ $this->wall->prefix . 'WallLib\common\rewrite' ] = new Rewrite( $this->wall );
 		}
-		return UM()->classes[ $this->wall->prefix . 'WallLib\common\comments' ];
+		return UM()->classes[ $this->wall->prefix . 'WallLib\common\rewrite' ];
 	}
 
 	/**
@@ -76,12 +76,12 @@ class Init {
 	}
 
 	/**
-	 * @return Rewrite
+	 * @return User
 	 */
-	public function rewrite() {
-		if ( empty( UM()->classes[ $this->wall->prefix . 'WallLib\common\rewrite' ] ) ) {
-			UM()->classes[ $this->wall->prefix . 'WallLib\common\rewrite' ] = new Rewrite( $this->wall );
+	public function user() {
+		if ( empty( UM()->classes[ $this->wall->prefix . 'WallLib\common\user' ] ) ) {
+			UM()->classes[ $this->wall->prefix . 'WallLib\common\user' ] = new User( $this->wall );
 		}
-		return UM()->classes[ $this->wall->prefix . 'WallLib\common\rewrite' ];
+		return UM()->classes[ $this->wall->prefix . 'WallLib\common\user' ];
 	}
 }

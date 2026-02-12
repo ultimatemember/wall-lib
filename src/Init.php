@@ -96,8 +96,6 @@ class Init {
 		$this->classes         = $data['classes'];
 
 		$this->includes();
-
-		add_shortcode( 'ultimatemember_post_type', array( $this, 'ultimatemember_post_type' ) );
 	}
 
 	/**

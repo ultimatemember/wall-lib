@@ -17,23 +17,14 @@ class Init {
 	public function __construct( $wall ) {
 		$this->wall = $wall;
 	}
+
 	/**
 	 * Create classes' instances where __construct isn't empty for hooks init
 	 */
 	public function includes() {
-		$this->posts();
 		$this->comments();
 		$this->mentions();
-	}
-
-	/**
-	 * @return Posts
-	 */
-	public function posts() {
-		if ( empty( UM()->classes[ $this->wall->prefix . 'WallLib\ajax\posts' ] ) ) {
-			UM()->classes[ $this->wall->prefix . 'WallLib\ajax\posts' ] = new Posts( $this->wall );
-		}
-		return UM()->classes[ $this->wall->prefix . 'WallLib\ajax\posts' ];
+		$this->posts();
 	}
 
 	/**
@@ -54,5 +45,15 @@ class Init {
 			UM()->classes[ $this->wall->prefix . 'WallLib\ajax\mentions' ] = new Mentions( $this->wall );
 		}
 		return UM()->classes[ $this->wall->prefix . 'WallLib\ajax\mentions' ];
+	}
+
+	/**
+	 * @return Posts
+	 */
+	public function posts() {
+		if ( empty( UM()->classes[ $this->wall->prefix . 'WallLib\ajax\posts' ] ) ) {
+			UM()->classes[ $this->wall->prefix . 'WallLib\ajax\posts' ] = new Posts( $this->wall );
+		}
+		return UM()->classes[ $this->wall->prefix . 'WallLib\ajax\posts' ];
 	}
 }
