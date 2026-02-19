@@ -90,7 +90,6 @@ jQuery( document ).ready(function () {
 
 	/* Post publish */
 	jQuery( document.body ).on( 'submit', '.um-wall-publish', function(e) {
-		console.log(jQuery(this))
 		e.preventDefault();
 		let form = jQuery(this);
 		let post_content = form.find('.um-wall-textarea-elem').html();
@@ -120,18 +119,14 @@ jQuery( document ).ready(function () {
 			return;
 		}
 
-		let $wall;
-		let wallID = parseInt( formdata['_wall_id'] ); // TODO extends formdata below via JS filter hooks.
-		formdata.wall_exists = 1;
-		if ( 1 === parseInt( formdata['_only_form'] ) ) {
-			// Add new post
-			$wall = jQuery('.um-wall[data-user_wall="' + wallID + '"]');
-
-			if ( ! $wall.length ) {
-				/* for shortcode [ultimatemember_activity_form] */
-				formdata.wall_exists = 0;
+		formdata = wp.hooks.applyFilters(
+			'um_wall_publish_formdata',
+			formdata,
+			{
+				form: form,
+				action: formdata.action
 			}
-		}
+		);
 
 		let $loader = form.find('.um-wall-right .um-ajax-spinner-svg');
 		let $uploadToggle = form.find('.um-wall-toggle-uploader');
@@ -146,17 +141,20 @@ jQuery( document ).ready(function () {
 		wp.ajax.send({
 			data: formdata,
 			success: function (data)  {
-				if ( ! formdata.wall_exists ) {
-					// TODO check uploader handler here.
-					/* for shortcode [ultimatemember_activity_form] */
-					$loader.umHide();
-					$uploadToggle.prop('disabled',false);
+				let handled = wp.hooks.applyFilters(
+					'um_wall_publish_success_handled',
+					false,
+					{
+						data: data,
+						formdata: formdata,
+						form: form,
+						loader: $loader,
+						uploadToggle: $uploadToggle,
+						uploaderObj: uploaderObj
+					}
+				);
 
-					UM.common.form.messageTimeout( form.find('.um-wall-posting-result'), data, 5000 );
-
-					form.find('.um-wall-textarea-elem').val('');
-					form.find('.um-wall-toggle-uploader.um-toggle-button-active').trigger('click');
-					uploaderObj.splice();
+				if ( handled ) {
 					return;
 				}
 
@@ -291,7 +289,6 @@ jQuery( document ).ready(function () {
 		let widget = jQuery(this).parents('.um-wall-widget');
 		let post_id = jQuery(this).attr('data-post_id');
 		let nonce = jQuery(this).attr('data-nonce');
-		let wall_id = jQuery('.um-wall-post-form-wrapper input[name="_wall_id"]').val() || 0; // TODO extends via filter hook in UM Activity extension.
 		let loader = widget.find('.um-wall-post-loader');
 
 		if ( jQuery(this).parents('.um-wall-dialog').length ) {
@@ -310,14 +307,22 @@ jQuery( document ).ready(function () {
 			'um_get_wall_post'
 		);
 
+		let data = { post_id: post_id, nonce: nonce };
+		data = wp.hooks.applyFilters(
+			'um_wall_edit_post_data',
+			data,
+			{
+				action: action,
+				post_id: post_id,
+				nonce: nonce,
+				widget: widget
+			}
+		);
+
 		wp.ajax.send(
 			action,
 			{
-				data: {
-					post_id: post_id,
-					wall_id: wall_id, // TODO extends via filter hook in UM Activity extension.
-					nonce: nonce
-				},
+				data: data,
 				success: function( data ) {
 					console.log(data)
 					loader.umHide();
