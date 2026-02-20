@@ -87,18 +87,6 @@ class Posts {
 	}
 
 	/**
-	 * Gets post wall ID
-	 * TODO move this function from here to UM Activity extension only.
-	 * @param int $post_id
-	 *
-	 * @return int
-	 */
-	public function get_wall( $post_id ) {
-		$wall = absint( get_post_meta( $post_id, '_wall_id', true ) );
-		return ( $wall ) ? $wall : 0;
-	}
-
-	/**
 	 * Gets post author
 	 *
 	 * @param int $post_id
@@ -436,38 +424,6 @@ class Posts {
 		}
 
 		return 0;
-	}
-
-	/**
-	 * Strip video URLs as we need to convert them.
-	 * TODO Maybe unused and should be removed.
-	 * @param string $content
-	 * @param int    $post_id
-	 */
-	public function setup_video( $content, $post_id ) {
-		$urls = wp_extract_urls( $content );
-
-		if ( ! empty( $urls ) ) {
-			foreach ( $urls as $url ) {
-				$oembed        = new \WP_oEmbed();
-				$provider_data = $oembed->get_data( $url );
-				if ( ! empty( $provider_data ) && in_array( $provider_data->provider_name, array( 'YouTube', 'Vimeo' ), true ) ) {
-					$videos[]['url']         = trim( $url );
-					$videos[]['oembed_data'] = wp_json_encode( $provider_data );
-				}
-			}
-		}
-
-		if ( isset( $videos ) ) {
-			$content = str_replace( $videos[0]['url'], '', $content );
-			update_post_meta( $post_id, '_video_url', $videos[0]['url'] );
-			if ( isset( $videos[0]['oembed_data'] ) ) {
-				update_post_meta( $post_id, '_video_oembed_data', $videos[0]['oembed_data'] );
-			}
-		} else {
-			delete_post_meta( $post_id, '_video_url' );
-			delete_post_meta( $post_id, '_video_oembed_data' );
-		}
 	}
 
 	/**
