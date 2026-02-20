@@ -287,12 +287,6 @@ class User {
 	public function can_comment() {
 		$res = true;
 
-		// TODO probably this hook can be merged with the hook `$this->wall->prefix . 'wall_can_post_comment'` below
-		$role_comments_off = apply_filters( $this->wall->prefix . 'wall_role_comments_off', false );
-		if ( $role_comments_off ) {
-			$res = false;
-		}
-
 		if ( ! is_user_logged_in() ) {
 			$res = false;
 		}
@@ -307,14 +301,6 @@ class User {
 	 */
 	public function can_write() {
 		$res = 1;
-		// TODO 'activity_wall_off' is Activity only user capability. Please remove to Activity.
-		if ( um_user( 'activity_wall_off' ) ) {
-			$res = 0;
-		}
-		// TODO 'activity_posts_off' is Activity only user capability. Please remove to Activity.
-		if ( UM()->roles()->um_user_can( 'activity_posts_off' ) ) {
-			$res = 0;
-		}
 
 		if ( ! is_user_logged_in() ) {
 			$res = 0;

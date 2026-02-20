@@ -94,7 +94,6 @@ class Posts {
 			wp_send_json_error( array( 'message' => __( 'Invalid post ID', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
 		}
 		$post_id = absint( $_POST['post_id'] );
-		$wall_id = absint( $_POST['wall_id'] ); // TODO extends via filter hook in UM Activity extension.
 		// phpcs:enable WordPress.Security.NonceVerification
 
 		check_ajax_referer( 'um_wall_get_post' . $post_id, 'nonce' );
@@ -151,7 +150,6 @@ class Posts {
 
 		$t_args = array(
 			'post_id'         => $post_id,
-			'wall_id'         => $wall_id, // TODO extends via filter hook in UM Activity extension.
 			'post'            => $post,
 			'count'           => $count,
 			'uploaded_photos' => $uploaded_photos,
@@ -215,25 +213,11 @@ class Posts {
 			wp_send_json_error( __( 'You should type something first.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
 		}
 
-		$wall_id = 0;
-		if ( ! empty( $_POST['_wall_id'] ) ) {
-			$wall_id = absint( $_POST['_wall_id'] ); // TODO extends via filter hook in UM Activity extension.
-		}
-
 		um_maybe_unset_time_limit();
 
 		if ( 0 === $post_id ) {
-			$post_id     = $this->handle_post_insert( $_post_content, $_post_images, $wall_id ); // TODO avoid using `$wall_id` attribute and extends data in this function via filter hook in UM Activity extension.
-			$wall_exists = ! empty( $_POST['wall_exists'] );
-			if ( ! $wall_exists ) {
-				// When there is only posting form on the page then we don't need return post data. Just a result success or not and post URL.
-				// translators: %s - activity post URL
-
-				$permalink = apply_filters( $this->wall->prefix . 'wall_publish_permalink', '', $post_id );
-				$output    = wp_kses_post( sprintf( __( 'Post is submitted successfully. To view post <a href="%s" class="um-link">click here</a>.', $this->wall->textdomain ), $permalink ) ); // phpcs:ignore WordPress.WP.I18n
-			} else {
-				$output = $this->prepare_response( $post_id );
-			}
+			$post_id = $this->handle_post_insert( $_post_content, $_post_images );
+			$output  = apply_filters( $this->wall->prefix . 'wall_publish_output', $this->prepare_response( $post_id ), $post_id );
 		} else {
 			if ( ! empty( $_POST['deleted_attachments'] ) ) {
 				$deleted_ids = explode( ',', sanitize_text_field( $_POST['deleted_attachments'] ) );
@@ -246,7 +230,7 @@ class Posts {
 				}
 			}
 
-			$post_id = $this->handle_post_update( $post_id, $_post_content, $_post_images, $wall_id ); // TODO avoid using `$wall_id` attribute and extends data in this function via filter hook in UM Activity extension.
+			$post_id = $this->handle_post_update( $post_id, $_post_content, $_post_images );
 			$output  = $this->prepare_response( $post_id );
 		}
 
@@ -288,6 +272,7 @@ class Posts {
 			'um_activity_wall' => $this->wall,
 			'comm_num'         => $comm_num,
 			'order_comment'    => $order_comment,
+			'profile_id'       => um_profile_id() ? um_profile_id() : 0,
 		);
 
 		$t_args        = apply_filters( $this->wall->prefix . 'wall_prepare_response_template_args', $t_args );
@@ -296,7 +281,7 @@ class Posts {
 		return UM()->ajax()->esc_html_spaces( UM()->get_template( $template_name, $this->wall->plugin_basename, $t_args ) );
 	}
 
-	private function handle_post_insert( $_post_content, $_post_images, $wall_id ) { // TODO avoid using `$wall_id` attribute and extends data below via filter hook in UM Activity extension.
+	private function handle_post_insert( $_post_content, $_post_images ) {
 		$current_user_id = get_current_user_id();
 		$orig_content    = apply_filters( $this->wall->prefix . 'new_post', $_post_content );
 
@@ -308,7 +293,6 @@ class Posts {
 			'post_content' => '',
 			'post_excerpt' => '',
 			'meta_input'   => array(
-				'_wall_id'          => $wall_id, // TODO extends via filter hook in UM Activity extension.
 				'_user_id'          => $current_user_id,
 				'_likes'            => 0,
 				'_comments'         => 0,
@@ -327,7 +311,7 @@ class Posts {
 				$this->wall->common()->posts()->hashtagit( $post_id, $orig_content );
 
 				$data = array(
-					'ID' => $post_id,
+						'ID' => $post_id,
 				);
 
 				$converted_content = $this->prepare_post_content( $orig_content ); // prepare blocks and preview cards from the text
@@ -347,19 +331,15 @@ class Posts {
 			$this->upload_images( $_post_images, $post_id );
 		}
 
-		/**
-		 * TODO Maybe use instead:
-		 * $args = apply_filters( $this->wall->prefix . 'after_wall_post_published_args', array( $post_id ) );
-		 * do_action_ref_array( $this->wall->prefix . 'after_wall_post_published', $args );
-		 */
-		do_action( $this->wall->prefix . 'after_wall_post_published', $post_id, $wall_id ); // TODO avoid using `$wall_id` attribute and extends data via filter hook in UM Activity extension. Or just remove it if it's not used.
+		$published_args = apply_filters( $this->wall->prefix . 'after_wall_post_published_args', array( $post_id ) );
+		do_action_ref_array( $this->wall->prefix . 'after_wall_post_published', $published_args );
 
 		update_post_meta( $post_id, '_um_post_version', $this->wall->plugin_version );
 
 		return $post_id;
 	}
 
-	private function handle_post_update( $post_id, $_post_content, $_post_images, $wall_id ) { // TODO avoid using `$wall_id` attribute and extends data below via filter hook in UM Activity extension.
+	private function handle_post_update( $post_id, $_post_content, $_post_images ) {
 		// Update post
 		$args = array( 'ID' => $post_id );
 
@@ -404,12 +384,8 @@ class Posts {
 			$this->upload_images( $_post_images, $post_id );
 		}
 
-		/**
-		 * TODO Maybe use instead:
-		 * $args = apply_filters( $this->wall->prefix . 'after_wall_post_updated_args', array( $post_id, $old_data ) );
-		 * do_action_ref_array( $this->wall->prefix . 'after_wall_post_updated', $args );
-		 */
-		do_action( $this->wall->prefix . 'after_wall_post_updated', $post_id, $wall_id, $old_data ); // TODO avoid using `$wall_id` attribute and extends data via filter hook in UM Activity extension. Or just remove it if it's not used.
+		$updated_args = apply_filters( $this->wall->prefix . 'after_wall_post_updated_args', array( $post_id, $old_data ) );
+		do_action_ref_array( $this->wall->prefix . 'after_wall_post_updated', $updated_args );
 
 		update_post_meta( $post_id, '_um_post_version', $this->wall->plugin_version );
 
