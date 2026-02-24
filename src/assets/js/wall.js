@@ -392,6 +392,106 @@ jQuery( document ).ready(function () {
 		$fileRow.remove();
 	});
 
+	/* Report post */
+	jQuery( document.body ).on('click', '.um-wall-report:not(.flagged)', function() {
+		let el = jQuery(this);
+		let post_id = el.attr('data-post_id');
+		let nonce = el.attr('data-report_nonce');
+		let loader = jQuery('#postid-' + post_id).find('.um-wall-post-loader');
+		loader.umShow();
+
+		let action = wp.hooks.applyFilters(
+			'um_wall_report_post_action',
+			'um_wall_report_post'
+		);
+
+		let data = {
+			post_id: post_id,
+			nonce: nonce
+		};
+		data = wp.hooks.applyFilters(
+			'um_wall_report_data',
+			data,
+			{
+				post_id: post_id,
+				nonce: nonce,
+				el: el
+			}
+		);
+
+		wp.ajax.send(
+			action,
+			{
+				data: data,
+				success: function( data ) {
+					console.log(data)
+					loader.umHide();
+					el.addClass('flagged').html(el.attr('data-cancel_report'));
+				},
+				error: function(data) {
+					loader.umHide();
+					if ( data.message ) {
+						let error = data.message;
+						jQuery(this).um_notice({
+							message: error,
+							type: 'error'
+						});
+					}
+				}
+			}
+		);
+	});
+
+	/* Cancel report post */
+	jQuery( document.body ).on('click', '.um-wall-report.flagged', function() {
+		let el = jQuery(this);
+		let post_id = el.attr('data-post_id');
+		let nonce = el.attr('data-unrepost_nonce');
+		let loader = jQuery('#postid-' + post_id).find('.um-wall-post-loader');
+		loader.umShow();
+
+		let action = wp.hooks.applyFilters(
+			'um_wall_unreport_post_action',
+			'um_wall_unreport_post'
+		);
+
+		let data = {
+			post_id: post_id,
+			nonce: nonce
+		};
+		data = wp.hooks.applyFilters(
+			'um_wall_report_data',
+			data,
+			{
+				post_id: post_id,
+				nonce: nonce,
+				el: el
+			}
+		);
+
+		wp.ajax.send(
+			action,
+			{
+				data: data,
+				success: function( data ) {
+					loader.umHide();
+					el.removeClass('flagged').html(el.attr('data-report'));
+				},
+				error: function(data) {
+					console.log(data);
+					// loader.umHide();
+					if ( data.message ) {
+						let error = data.message;
+						jQuery(this).um_notice({
+							message: error,
+							type: 'error'
+						});
+					}
+				}
+			}
+		);
+	});44444444
+
 	/* Like a post */
 	jQuery( document.body ).on('click', '.um-wall-post-like:not(.active)', function(e) {
 		let btn = jQuery(this);

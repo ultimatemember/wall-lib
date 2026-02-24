@@ -32,6 +32,9 @@ class Posts {
 		add_action( 'wp_ajax_' . $this->wall->prefix . 'wall_like_post', array( $this, 'like_post' ) );
 		add_action( 'wp_ajax_' . $this->wall->prefix . 'wall_unlike_post', array( $this, 'unlike_post' ) );
 
+		add_action( 'wp_ajax_' . $this->wall->prefix . 'wall_report_post', array( $this, 'report_post' ) );
+		add_action( 'wp_ajax_' . $this->wall->prefix . 'wall_unreport_post', array( $this, 'unreport_post' ) );
+
 		add_action( 'wp_ajax_' . $this->wall->prefix . 'wall_get_post_likes', array( $this, 'get_post_likes' ) );
 		add_action( 'wp_ajax_nopriv_' . $this->wall->prefix . 'wall_get_post_likes', array( $this, 'get_post_likes' ) );
 
@@ -969,6 +972,106 @@ class Posts {
 				'content' => UM()->ajax()->esc_html_spaces( $content ),
 			)
 		);
+	}
+
+	/**
+	 * Report wall post
+	 *
+	 */
+	public function report_post() {
+		// phpcs:disable WordPress.Security.NonceVerification
+		if ( empty( $_POST['post_id'] ) || ! $this->wall->common()->posts()->exists( absint( $_POST['post_id'] ) ) ) {
+			wp_send_json_error( array( 'message' => __( 'Wrong post ID.', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
+		}
+
+		$post_id = absint( $_POST['post_id'] );
+		// phpcs:enable WordPress.Security.NonceVerification
+
+		check_ajax_referer( 'um_wall_report_post' . $post_id, 'nonce' );
+
+		if ( ! is_user_logged_in() ) {
+			wp_send_json_error( array( 'message' => __( 'You must login to unlike', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
+		}
+
+		$user_id = get_current_user_id();
+
+		do_action( $this->wall->prefix . 'before_wall_post_report', $post_id, $user_id );
+
+		$users_reported = get_post_meta( $post_id, '_reported_by', true );
+		if ( empty( $users_reported ) ) {
+			$users_reported = array();
+		}
+
+		if ( ! isset( $users_reported[ $user_id ] ) ) {
+			$users_reported[ $user_id ] = current_time( 'timestamp' );
+			update_post_meta( $post_id, '_reported_by', $users_reported );
+		}
+
+		if ( ! get_post_meta( $post_id, '_reported', true ) ) {
+			$option = $this->wall->prefix . 'flagged';
+			$count  = absint( get_option( $option ) );
+			update_option( $option, $count + 1 );
+		}
+
+		$new_r = absint( get_post_meta( $post_id, '_reported', true ) );
+		update_post_meta( $post_id, '_reported', $new_r + 1 );
+
+		do_action( $this->wall->prefix . 'wall_after_post_reported', $post_id, $user_id );
+		wp_send_json_success( 'success' );
+	}
+
+	/**
+	 * Unreport wall post
+	 *
+	 */
+	public function unreport_post() {
+		// phpcs:disable WordPress.Security.NonceVerification
+		if ( empty( $_POST['post_id'] ) || ! $this->wall->common()->posts()->exists( absint( $_POST['post_id'] ) ) ) {
+			wp_send_json_error( array( 'message' => __( 'Wrong post ID.', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
+		}
+
+		$post_id = absint( $_POST['post_id'] );
+
+		// phpcs:enable WordPress.Security.NonceVerification
+		check_ajax_referer( 'um_wall_cancel_report_post' . $post_id, 'nonce' );
+
+		if ( ! is_user_logged_in() ) {
+			wp_send_json_error( array( 'message' => __( 'You must login to unlike', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
+		}
+
+		$user_id = get_current_user_id();
+
+		do_action( $this->wall->prefix . 'before_wall_post_unreport', $post_id, $user_id );
+
+		$users_reported = get_post_meta( $post_id, '_reported_by', true );
+		if ( is_array( $users_reported ) && isset( $users_reported[ $user_id ] ) ) {
+			unset( $users_reported[ $user_id ] );
+		}
+
+		if ( ! $users_reported ) {
+			$users_reported = '';
+		}
+
+		update_post_meta( $post_id, '_reported_by', $users_reported );
+
+		if ( get_post_meta( $post_id, '_reported', true ) ) {
+
+			$new_r = absint( get_post_meta( $post_id, '_reported', true ) );
+			--$new_r;
+			if ( $new_r < 0 ) {
+				$new_r = 0;
+			}
+			update_post_meta( $post_id, '_reported', $new_r );
+
+			if ( 0 === $new_r ) {
+				$option = $this->wall->prefix . 'flagged';
+				$count  = absint( get_option( $option ) );
+				update_option( $option, absint( $count - 1 ) );
+			}
+		}
+
+		do_action( $this->wall->prefix . 'wall_after_post_unreported', $post_id, $user_id );
+		wp_send_json_success( 'success' );
 	}
 
 	/**

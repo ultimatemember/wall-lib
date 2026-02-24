@@ -230,7 +230,6 @@ class Comments {
 
 	/**
 	 * Post comment.
-	 * @todo check post/update comments
 	 */
 	public function post_comment() {
 		// phpcs:disable WordPress.Security.NonceVerification
