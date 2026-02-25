@@ -801,7 +801,6 @@ jQuery( document ).ready(function () {
 		let btn = jQuery(this);
 		let btm_wrap = btn.parents('.um-wall-comment-edit')
 		let nonce = btn.attr('data-wpnonce');
-		let postid = btn.attr('data-post_id');
 		let commentid = btn.attr('data-commentid');
 
 		let textarea = btm_wrap.find('textarea');
@@ -818,7 +817,6 @@ jQuery( document ).ready(function () {
 
 		wp.ajax.send( action, {
 			data: {
-				post_id: postid,
 				comment_id: commentid,
 				comment: comment,
 				nonce: nonce
@@ -912,7 +910,6 @@ jQuery( document ).ready(function () {
 		btn.umHide();
 
 		let offset = btn.attr('data-loaded');
-		let post_id = btn.attr('data-post_id');
 		let comment_id = btn.attr('data-comment_id');
 		let nonce = btn.attr('data-wpnonce');
 		let loader = wrap.find('> .um-wall-comment-child > .um-wall-comment-loadmore > .um-wall-loader');
@@ -925,7 +922,6 @@ jQuery( document ).ready(function () {
 
 		wp.ajax.send( action, {
 			data: {
-				post_id: post_id,
 				comment_id: comment_id,
 				offset: offset,
 				nonce: nonce

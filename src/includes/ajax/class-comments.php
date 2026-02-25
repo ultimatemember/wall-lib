@@ -42,17 +42,21 @@ class Comments {
 	 ***    @load comment likes
 	 ***/
 	public function get_comment_likes() {
-		// phpcs:disable WordPress.Security.NonceVerification
-		if ( empty( $_POST['comment_id'] ) || ! $this->wall->common()->comments()->exists( absint( $_POST['comment_id'] ) ) ) {
+		if ( empty( $_POST['comment_id'] ) ) {
 			wp_send_json_error( __( 'Wrong comment ID.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
 		}
 
 		$comment_id = absint( $_POST['comment_id'] );
 
-		if ( ! wp_verify_nonce( $_POST['nonce'], 'um_wall_get_comment_likes' . $comment_id ) ) {
-			wp_send_json_error( __( 'Wrong nonce.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
+		check_ajax_referer( 'um_wall_get_comment_likes' . $comment_id, 'nonce' );
+
+		if ( UM()->is_rate_limited( 'wall_get_comment_likes' ) ) {
+			wp_send_json_error( __( 'Too many requests', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
 		}
-		// phpcs:enable WordPress.Security.NonceVerification
+
+		if ( ! $this->wall->common()->comments()->exists( $comment_id ) ) {
+			wp_send_json_error( __( 'Wrong comment ID.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
+		}
 
 		if ( ! $this->wall->common()->user()->can_view_comment_likes( $comment_id ) ) {
 			wp_send_json_error( __( 'You are not authorized to see likes.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
@@ -82,21 +86,17 @@ class Comments {
 	 *
 	 */
 	public function like_comment() {
-		// phpcs:disable WordPress.Security.NonceVerification
-		if ( empty( $_POST['comment_id'] ) || ! $this->wall->common()->comments()->exists( absint( $_POST['comment_id'] ) ) ) {
+		if ( empty( $_POST['comment_id'] ) ) {
 			wp_send_json_error( __( 'Wrong comment ID.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
 		}
 
 		$comment_id = absint( $_POST['comment_id'] );
 
-		if ( ! wp_verify_nonce( $_POST['nonce'], 'um_wall_like_comment' . $comment_id ) ) {
-			wp_send_json_error( __( 'Wrong nonce.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
-		}
+		check_ajax_referer( 'um_wall_like_comment' . $comment_id, 'nonce' );
 
-		if ( ! is_user_logged_in() ) {
-			wp_send_json_error( __( 'You must login to like', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
+		if ( ! $this->wall->common()->comments()->exists( $comment_id ) ) {
+			wp_send_json_error( __( 'Wrong comment ID.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
 		}
-		// phpcs:enable WordPress.Security.NonceVerification
 
 		if ( ! $this->wall->common()->user()->can_like_comment( $comment_id ) ) {
 			wp_send_json_error( __( 'You are not authorized to like this comment.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
@@ -160,21 +160,17 @@ class Comments {
 	 *
 	 */
 	public function unlike_comment() {
-		// phpcs:disable WordPress.Security.NonceVerification
-		if ( empty( $_POST['comment_id'] ) || ! $this->wall->common()->comments()->exists( absint( $_POST['comment_id'] ) ) ) {
+		if ( empty( $_POST['comment_id'] ) ) {
 			wp_send_json_error( __( 'Wrong comment ID.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
 		}
 
 		$comment_id = absint( $_POST['comment_id'] );
 
-		if ( ! wp_verify_nonce( $_POST['nonce'], 'um_wall_unlike_comment' . $comment_id ) ) {
-			wp_send_json_error( __( 'Wrong nonce.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
-		}
+		check_ajax_referer( 'um_wall_unlike_comment' . $comment_id, 'nonce' );
 
-		if ( ! is_user_logged_in() ) {
-			wp_send_json_error( __( 'You must login to unlike', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
+		if ( ! $this->wall->common()->comments()->exists( $comment_id ) ) {
+			wp_send_json_error( __( 'Wrong comment ID.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
 		}
-		// phpcs:enable WordPress.Security.NonceVerification
 
 		if ( ! $this->wall->common()->user()->can_unlike_comment( $comment_id ) ) {
 			wp_send_json_error( __( 'You are not authorized to unlike this comment.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
@@ -232,8 +228,7 @@ class Comments {
 	 * Post comment.
 	 */
 	public function post_comment() {
-		// phpcs:disable WordPress.Security.NonceVerification
-		if ( empty( $_POST['post_id'] ) || ! $this->wall->common()->posts()->exists( absint( $_POST['post_id'] ) ) ) {
+		if ( empty( $_POST['post_id'] ) ) {
 			$error = esc_html__( 'Wrong post ID.', $this->wall->textdomain ); // phpcs:ignore WordPress.WP.I18n
 			wp_send_json_error(
 				wp_kses(
@@ -251,8 +246,10 @@ class Comments {
 		}
 		$post_id = absint( $_POST['post_id'] );
 
-		if ( ! wp_verify_nonce( $_POST['nonce'], 'um_wall_comment_post' . $post_id ) ) {
-			$error = esc_html__( 'Wrong nonce.', $this->wall->textdomain ); // phpcs:ignore WordPress.WP.I18n
+		check_ajax_referer( 'um_wall_comment_post' . $post_id, 'nonce' );
+
+		if ( ! $this->wall->common()->posts()->exists( $post_id ) ) {
+			$error = esc_html__( 'Wrong post ID.', $this->wall->textdomain ); // phpcs:ignore WordPress.WP.I18n
 			wp_send_json_error(
 				wp_kses(
 					UM()->frontend()::layouts()::alert(
@@ -441,26 +438,7 @@ class Comments {
 	 *
 	 */
 	public function edit_comment() {
-		// phpcs:disable WordPress.Security.NonceVerification
-		if ( empty( $_POST['post_id'] ) || ! $this->wall->common()->posts()->exists( absint( $_POST['post_id'] ) ) ) {
-			$error = esc_html__( 'Wrong post ID.', $this->wall->textdomain ); // phpcs:ignore WordPress.WP.I18n
-			wp_send_json_error(
-				wp_kses(
-					UM()->frontend()::layouts()::alert(
-						esc_html__( 'Submission error', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
-						array(
-							'type'       => 'error',
-							'underline'  => false,
-							'supporting' => $error,
-						)
-					),
-					UM()->get_allowed_html( 'templates' )
-				)
-			);
-		}
-		$post_id = absint( $_POST['post_id'] );
-
-		if ( empty( $_POST['comment_id'] ) || ! $this->wall->common()->comments()->exists( absint( $_POST['comment_id'] ) ) ) {
+		if ( empty( $_POST['comment_id'] ) ) {
 			$error = esc_html__( 'Wrong comment ID.', $this->wall->textdomain ); // phpcs:ignore WordPress.WP.I18n
 			wp_send_json_error(
 				wp_kses(
@@ -478,8 +456,10 @@ class Comments {
 		}
 		$commentid = absint( $_POST['comment_id'] );
 
-		if ( ! wp_verify_nonce( $_POST['nonce'], 'um_wall_comment_edit' . $commentid ) ) {
-			$error = esc_html__( 'Wrong nonce.', $this->wall->textdomain ); // phpcs:ignore WordPress.WP.I18n
+		check_ajax_referer( 'um_wall_comment_edit' . $commentid, 'nonce' );
+
+		if ( ! $this->wall->common()->comments()->exists( $commentid ) ) {
+			$error = esc_html__( 'Wrong comment ID.', $this->wall->textdomain ); // phpcs:ignore WordPress.WP.I18n
 			wp_send_json_error(
 				wp_kses(
 					UM()->frontend()::layouts()::alert(
@@ -514,6 +494,27 @@ class Comments {
 
 		do_action( $this->wall->prefix . 'before_wall_comment_updated', $commentid, get_current_user_id() );
 
+		$old_data               = get_comment( $commentid );
+		$old_data->comment_meta = get_comment_meta( $commentid );
+
+		$post_id = $old_data->comment_post_ID;
+		if ( ! $this->wall->common()->posts()->exists( $post_id ) ) {
+			$error = esc_html__( 'Wrong post ID.', $this->wall->textdomain ); // phpcs:ignore WordPress.WP.I18n
+			wp_send_json_error(
+				wp_kses(
+					UM()->frontend()::layouts()::alert(
+						esc_html__( 'Submission error', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
+						array(
+							'type'       => 'error',
+							'underline'  => false,
+							'supporting' => $error,
+						)
+					),
+					UM()->get_allowed_html( 'templates' )
+				)
+			);
+		}
+
 		um_fetch_user( get_current_user_id() );
 
 		$orig_content    = wp_kses(
@@ -523,9 +524,6 @@ class Comments {
 			)
 		);
 		$comment_content = apply_filters( $this->wall->prefix . 'wall_comment_content_edit', $orig_content, $post_id );
-
-		$old_data               = get_comment( $commentid );
-		$old_data->comment_meta = get_comment_meta( $commentid );
 
 		$data = array(
 			'comment_ID'      => $commentid,
@@ -590,15 +588,20 @@ class Comments {
 	 * Load wall comments via AJAX
 	 */
 	public function load_more_comments() {
-		// phpcs:disable WordPress.Security.NonceVerification
-		if ( empty( $_POST['post_id'] ) || ! $this->wall->common()->posts()->exists( absint( $_POST['post_id'] ) ) ) {
+		if ( empty( $_POST['post_id'] ) ) {
 			wp_send_json_error( __( 'Wrong post ID.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
 		}
 
 		$post_id = absint( $_POST['post_id'] );
 
-		if ( ! wp_verify_nonce( $_POST['nonce'], 'um_wall_comments_loadmore' . $post_id ) ) {
-			wp_send_json_error( __( 'Wrong nonce.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
+		check_ajax_referer( 'um_wall_comments_loadmore' . $post_id, 'nonce' );
+
+		if ( ! $this->wall->common()->posts()->exists( $post_id ) ) {
+			wp_send_json_error( __( 'Wrong post ID.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
+		}
+
+		if ( UM()->is_rate_limited( 'wall_load_more_comments' ) ) {
+			wp_send_json_error( __( 'Too many requests', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
 		}
 
 		if ( ! $this->wall->common()->user()->can_view_post( $post_id ) ) {
@@ -647,30 +650,35 @@ class Comments {
 	 * Load wall replies via AJAX
 	 */
 	public function load_more_replies() {
-		// phpcs:disable WordPress.Security.NonceVerification
-		if ( empty( $_POST['post_id'] ) || ! $this->wall->common()->posts()->exists( absint( $_POST['post_id'] ) ) ) {
-			wp_send_json_error( __( 'Wrong post ID.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
-		}
-		$post_id = absint( $_POST['post_id'] );
-
-		if ( empty( $_POST['comment_id'] ) || ! $this->wall->common()->comments()->exists( absint( $_POST['comment_id'] ) ) ) {
+		if ( empty( $_POST['comment_id'] ) ) {
 			wp_send_json_error( __( 'Wrong comment ID.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
 		}
 		$comment_id = absint( $_POST['comment_id'] );
 
-		if ( ! wp_verify_nonce( $_POST['nonce'], 'um_wall_replies_loadmore' . $comment_id ) ) {
-			wp_send_json_error( __( 'Wrong nonce.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
+		check_ajax_referer( 'um_wall_replies_loadmore' . $comment_id, 'nonce' );
+
+		if ( UM()->is_rate_limited( 'wall_load_more_replies' ) ) {
+			wp_send_json_error( __( 'Too many requests', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
+		}
+
+		if ( ! $this->wall->common()->comments()->exists( $comment_id ) ) {
+			wp_send_json_error( __( 'Wrong comment ID.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
 		}
 
 		if ( ! $this->wall->common()->user()->can_view_comment( $comment_id ) ) {
 			wp_send_json_error( __( 'You are not authorized to load comments.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
 		}
 
+		$comment = get_comment( $comment_id );
+		$post_id = $comment->comment_post_ID;
+		if ( ! $this->wall->common()->posts()->exists( $post_id ) ) {
+			wp_send_json_error( __( 'Wrong post ID.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
+		}
+
 		$number    = apply_filters( $this->wall->prefix . 'wall_comments_loadmore_number', 10 );
 		$order     = apply_filters( $this->wall->prefix . 'wall_comments_loadmore_order', 10 );
 		$offset    = absint( $_POST['offset'] );
 		$post_link = $this->wall->common()->posts()->get_permalink( $post_id );
-		// phpcs:enable WordPress.Security.NonceVerification
 
 		$child     = $this->wall->common()->comments()->get_replies( $post_id, $comment_id, absint( $number ), $order, $offset );
 		$child_all = $this->wall->common()->comments()->get_replies_number( $post_id, $comment_id );
@@ -711,18 +719,15 @@ class Comments {
 	 * Removes a wall comment via AJAX
 	 */
 	public function remove_comment() {
-		// phpcs:disable WordPress.Security.NonceVerification
-		if ( empty( $_POST['comment_id'] ) || ! $this->wall->common()->comments()->exists( absint( $_POST['comment_id'] ) ) ) {
+		if ( empty( $_POST['comment_id'] ) ) {
 			wp_send_json_error( __( 'Wrong comment ID.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
 		}
 		$comment_id = absint( $_POST['comment_id'] );
 
-		if ( ! wp_verify_nonce( $_POST['nonce'], 'um_wall_delete_comment' . $comment_id ) ) {
-			wp_send_json_error( __( 'Wrong nonce.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
-		}
-		// phpcs:enable WordPress.Security.NonceVerification
+		check_ajax_referer( 'um_wall_delete_comment' . $comment_id, 'nonce' );
+
 		if ( ! $this->wall->common()->comments()->exists( $comment_id ) ) {
-			wp_send_json_error( __( 'You are not authorized to delete this comment.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
+			wp_send_json_error( __( 'Wrong comment ID.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
 		}
 
 		if ( $this->wall->common()->user()->can_edit_comment( $comment_id, get_current_user_id() ) ) {
