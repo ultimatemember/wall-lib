@@ -141,6 +141,16 @@ class Init {
 				);
 
 				$full_path = __DIR__ . $slash . 'includes' . $path . '.php';
+			} elseif ( strpos( $class, 'WallLib\\admin\\' ) !== false ) {
+				$class = implode( '\\', $array );
+				$slash = DIRECTORY_SEPARATOR;
+				$path  = str_replace(
+					array( strtolower( __NAMESPACE__ ), '_', '\\' ),
+					array( '', '-', $slash ),
+					$class
+				);
+
+				$full_path = __DIR__ . $slash . 'includes' . $path . '.php';
 			}
 
 			if ( isset( $full_path ) && file_exists( $full_path ) ) {
@@ -155,6 +165,8 @@ class Init {
 			$this->ajax()->includes();
 		} elseif ( UM()->is_request( 'frontend' ) ) {
 			$this->frontend()->includes();
+		} elseif ( UM()->is_request( 'admin' ) ) {
+			$this->admin()->includes();
 		}
 	}
 
@@ -189,5 +201,16 @@ class Init {
 			UM()->classes[ $this->prefix . 'WallLib\common\Init' ] = new common\Init( $this );
 		}
 		return UM()->classes[ $this->prefix . 'WallLib\common\Init' ];
+	}
+
+	/**
+	 *
+	 * @return admin\Init
+	 */
+	public function admin() {
+		if ( empty( UM()->classes[ $this->prefix . 'WallLib\admin\Init' ] ) ) {
+			UM()->classes[ $this->prefix . 'WallLib\admin\Init' ] = new admin\Init( $this );
+		}
+		return UM()->classes[ $this->prefix . 'WallLib\admin\Init' ];
 	}
 }
