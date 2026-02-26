@@ -228,16 +228,15 @@ class Comments {
 	 * Post comment.
 	 */
 	public function post_comment() {
-		if ( empty( $_POST['post_id'] ) ) {
-			$error = esc_html__( 'Wrong post ID.', $this->wall->textdomain ); // phpcs:ignore WordPress.WP.I18n
+		// phpcs:disable WordPress.Security.NonceVerification
+		if ( empty( $_POST['post_id'] ) || ! $this->wall->common()->posts()->exists( absint( $_POST['post_id'] ) ) ) {
 			wp_send_json_error(
 				wp_kses(
 					UM()->frontend()::layouts()::alert(
-						esc_html__( 'Submission error', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
+						esc_html__( 'Wrong post ID.', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
 						array(
-							'type'       => 'error',
-							'underline'  => false,
-							'supporting' => $error,
+							'type'      => 'error',
+							'underline' => false,
 						)
 					),
 					UM()->get_allowed_html( 'templates' )
@@ -246,18 +245,14 @@ class Comments {
 		}
 		$post_id = absint( $_POST['post_id'] );
 
-		check_ajax_referer( 'um_wall_comment_post' . $post_id, 'nonce' );
-
-		if ( ! $this->wall->common()->posts()->exists( $post_id ) ) {
-			$error = esc_html__( 'Wrong post ID.', $this->wall->textdomain ); // phpcs:ignore WordPress.WP.I18n
+		if ( ! wp_verify_nonce( $_POST['nonce'], 'um_wall_comment_post' . $post_id ) ) {
 			wp_send_json_error(
 				wp_kses(
 					UM()->frontend()::layouts()::alert(
-						esc_html__( 'Submission error', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
+						esc_html__( 'Wrong nonce.', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
 						array(
-							'type'       => 'error',
-							'underline'  => false,
-							'supporting' => $error,
+							'type'      => 'error',
+							'underline' => false,
 						)
 					),
 					UM()->get_allowed_html( 'templates' )
@@ -266,15 +261,13 @@ class Comments {
 		}
 
 		if ( ! $this->wall->common()->user()->can_comment() ) {
-			$error = esc_html__( 'You can\'t comment this post.', $this->wall->textdomain ); // phpcs:ignore WordPress.WP.I18n
 			wp_send_json_error(
 				wp_kses(
 					UM()->frontend()::layouts()::alert(
-						esc_html__( 'Submission error', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
+						esc_html__( 'You can\'t comment this post.', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
 						array(
-							'type'       => 'error',
-							'underline'  => false,
-							'supporting' => $error,
+							'type'      => 'error',
+							'underline' => false,
 						)
 					),
 					UM()->get_allowed_html( 'templates' )
@@ -283,15 +276,13 @@ class Comments {
 		}
 
 		if ( empty( sanitize_textarea_field( $_POST['comment'] ) ) ) {
-			$error = esc_html__( 'Empty comment.', $this->wall->textdomain ); // phpcs:ignore WordPress.WP.I18n
 			wp_send_json_error(
 				wp_kses(
 					UM()->frontend()::layouts()::alert(
-						esc_html__( 'Submission error', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
+						esc_html__( 'Empty comment.', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
 						array(
-							'type'       => 'error',
-							'underline'  => false,
-							'supporting' => $error,
+							'type'      => 'error',
+							'underline' => false,
 						)
 					),
 					UM()->get_allowed_html( 'templates' )
@@ -346,9 +337,8 @@ class Comments {
 					UM()->frontend()::layouts()::alert(
 						esc_html__( 'Something went wrong with comment store', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
 						array(
-							'type'       => 'error',
-							'underline'  => false,
-							'supporting' => $error,
+							'type'      => 'error',
+							'underline' => false,
 						)
 					),
 					UM()->get_allowed_html( 'templates' )
@@ -412,22 +402,10 @@ class Comments {
 
 			$output = UM()->get_template( $template, $this->wall->plugin_basename, $t_args );
 
-			$status = wp_kses(
-				UM()->frontend()::layouts()::alert(
-					esc_html__( 'Submission success', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
-					array(
-						'type'       => 'success',
-						'underline'  => false,
-						'supporting' => esc_html__( 'Comment posted successfully.', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
-					)
-				),
-				UM()->get_allowed_html( 'templates' )
-			);
 			// phpcs:enable WordPress.Security.NonceVerification
 			wp_send_json_success(
 				array(
 					'content' => UM()->ajax()->esc_html_spaces( $output ),
-					'status'  => $status,
 				)
 			);
 		}
@@ -438,16 +416,31 @@ class Comments {
 	 *
 	 */
 	public function edit_comment() {
-		if ( empty( $_POST['comment_id'] ) ) {
-			$error = esc_html__( 'Wrong comment ID.', $this->wall->textdomain ); // phpcs:ignore WordPress.WP.I18n
+		// phpcs:disable WordPress.Security.NonceVerification
+		if ( empty( $_POST['post_id'] ) || ! $this->wall->common()->posts()->exists( absint( $_POST['post_id'] ) ) ) {
 			wp_send_json_error(
 				wp_kses(
 					UM()->frontend()::layouts()::alert(
-						esc_html__( 'Submission error', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
+						esc_html__( 'Wrong post ID.', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
 						array(
-							'type'       => 'error',
-							'underline'  => false,
-							'supporting' => $error,
+							'type'      => 'error',
+							'underline' => false,
+						)
+					),
+					UM()->get_allowed_html( 'templates' )
+				)
+			);
+		}
+		$post_id = absint( $_POST['post_id'] );
+
+		if ( empty( $_POST['comment_id'] ) || ! $this->wall->common()->comments()->exists( absint( $_POST['comment_id'] ) ) ) {
+			wp_send_json_error(
+				wp_kses(
+					UM()->frontend()::layouts()::alert(
+						esc_html__( 'Wrong comment ID.', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
+						array(
+							'type'      => 'error',
+							'underline' => false,
 						)
 					),
 					UM()->get_allowed_html( 'templates' )
@@ -456,18 +449,14 @@ class Comments {
 		}
 		$commentid = absint( $_POST['comment_id'] );
 
-		check_ajax_referer( 'um_wall_comment_edit' . $commentid, 'nonce' );
-
-		if ( ! $this->wall->common()->comments()->exists( $commentid ) ) {
-			$error = esc_html__( 'Wrong comment ID.', $this->wall->textdomain ); // phpcs:ignore WordPress.WP.I18n
+		if ( ! wp_verify_nonce( $_POST['nonce'], 'um_wall_comment_edit' . $commentid ) ) {
 			wp_send_json_error(
 				wp_kses(
 					UM()->frontend()::layouts()::alert(
-						esc_html__( 'Submission error', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
+						esc_html__( 'Wrong nonce.', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
 						array(
-							'type'       => 'error',
-							'underline'  => false,
-							'supporting' => $error,
+							'type'      => 'error',
+							'underline' => false,
 						)
 					),
 					UM()->get_allowed_html( 'templates' )
@@ -476,15 +465,13 @@ class Comments {
 		}
 
 		if ( ! $this->wall->common()->user()->can_edit_comment( $commentid, get_current_user_id() ) ) {
-			$error = esc_html__( 'You can\'t edit this comment.', $this->wall->textdomain ); // phpcs:ignore WordPress.WP.I18n
 			wp_send_json_error(
 				wp_kses(
 					UM()->frontend()::layouts()::alert(
-						esc_html__( 'Submission error', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
+						esc_html__( 'You can\'t edit this comment.', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
 						array(
-							'type'       => 'error',
-							'underline'  => false,
-							'supporting' => $error,
+							'type'      => 'error',
+							'underline' => false,
 						)
 					),
 					UM()->get_allowed_html( 'templates' )
@@ -493,27 +480,6 @@ class Comments {
 		}
 
 		do_action( $this->wall->prefix . 'before_wall_comment_updated', $commentid, get_current_user_id() );
-
-		$old_data               = get_comment( $commentid );
-		$old_data->comment_meta = get_comment_meta( $commentid );
-
-		$post_id = $old_data->comment_post_ID;
-		if ( ! $this->wall->common()->posts()->exists( $post_id ) ) {
-			$error = esc_html__( 'Wrong post ID.', $this->wall->textdomain ); // phpcs:ignore WordPress.WP.I18n
-			wp_send_json_error(
-				wp_kses(
-					UM()->frontend()::layouts()::alert(
-						esc_html__( 'Submission error', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
-						array(
-							'type'       => 'error',
-							'underline'  => false,
-							'supporting' => $error,
-						)
-					),
-					UM()->get_allowed_html( 'templates' )
-				)
-			);
-		}
 
 		um_fetch_user( get_current_user_id() );
 
@@ -524,6 +490,9 @@ class Comments {
 			)
 		);
 		$comment_content = apply_filters( $this->wall->prefix . 'wall_comment_content_edit', $orig_content, $post_id );
+
+		$old_data               = get_comment( $commentid );
+		$old_data->comment_meta = get_comment_meta( $commentid );
 
 		$data = array(
 			'comment_ID'      => $commentid,
@@ -557,15 +526,13 @@ class Comments {
 		}
 
 		if ( empty( $commentid ) ) {
-			$error = esc_html__( 'You can\'t edit this comment.', $this->wall->textdomain ); // phpcs:ignore WordPress.WP.I18n
 			wp_send_json_error(
 				wp_kses(
 					UM()->frontend()::layouts()::alert(
-						esc_html__( 'Something went wrong with comment store', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
+						esc_html__( 'You can\'t edit this comment.', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
 						array(
-							'type'       => 'error',
-							'underline'  => false,
-							'supporting' => $error,
+							'type'      => 'error',
+							'underline' => false,
 						)
 					),
 					UM()->get_allowed_html( 'templates' )

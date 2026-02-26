@@ -490,7 +490,7 @@ jQuery( document ).ready(function () {
 				}
 			}
 		);
-	});44444444
+	});
 
 	/* Like a post */
 	jQuery( document.body ).on('click', '.um-wall-post-like:not(.active)', function(e) {
@@ -512,7 +512,8 @@ jQuery( document ).ready(function () {
 				success: function (answer) {
 					btn.addClass('active');
 					wrap.find('.um-badge').html(answer.likes);
-					wrap.find('.um-wall-post-likes-avatars').html(answer.content);
+					wrap.find('.um-wall-post-likes-avatars').html(answer.content).umShow();
+					wrap.find('.um-wall-show-likes').attr('disabled', false);
 				},
 				error: function (data) {
 					let error;
@@ -550,6 +551,11 @@ jQuery( document ).ready(function () {
 				btn.removeClass('active');
 				wrap.find('.um-badge').html(answer.likes);
 				wrap.find('.um-wall-post-likes-avatars').html(answer.content);
+				let count = wrap.find('.um-wall-show-likes .um-badge').text();
+				if ( parseInt( count ) === 0 ) {
+					wrap.find('.um-wall-post-likes-avatars').umHide();
+					wrap.find('.um-wall-show-likes').attr('disabled', true);
+				}
 			},
 			error: function( data ) {
 				console.log( data );
@@ -755,7 +761,6 @@ jQuery( document ).ready(function () {
 				nonce: nonce
 			},
 			success: function( response ) {
-				console.log(response)
 				loader.umHide();
 				textarea.val('');
 				btn.attr('disabled', true);
@@ -774,13 +779,14 @@ jQuery( document ).ready(function () {
 					} else {
 						wrap.append(response.content);
 					}
+					btn.parents('.um-wall-comment-info').find('.um-wall-comment-reply').umShow();
 				}
 
 				let count = wrap.parent().find('.um-wall-comments-toggle .um-badge');
 				count.html( parseInt( count.html() ) + 1 );
+				wrap.parent().find('.um-wall-comments-toggle').umShow().attr('disabled', false);
 
 				if ( 'undefined' === typeof( reply_to ) ) {
-					btn.before( response.status );
 					setTimeout( function() {
 						btm_wrap.find('.um-alert').remove();
 					}, 2000 );
@@ -791,7 +797,10 @@ jQuery( document ).ready(function () {
 			error: function( data ) {
 				console.log( data );
 				loader.umHide();
-				btn.before( data );
+				jQuery(this).um_notice({
+					message: data,
+					type: 'error'
+				});
 			}
 		});
 	});
@@ -822,7 +831,6 @@ jQuery( document ).ready(function () {
 				nonce: nonce
 			},
 			success: function( response ) {
-				console.log(response)
 				loader.umHide();
 				btn.parents('.um-wall-comment-edit').umToggle();
 
@@ -834,7 +842,10 @@ jQuery( document ).ready(function () {
 			error: function( data ) {
 				console.log( data );
 				loader.umHide();
-				btn.before( data );
+				jQuery(this).um_notice({
+					message: data,
+					type: 'error'
+				});
 			}
 		});
 	});
@@ -852,11 +863,13 @@ jQuery( document ).ready(function () {
 			reply_form.find('.um-wall-comment-post').attr('data-comment_id', comment_id).attr('data-reply_to', reply_to);
 			wrap.find('.um-wall-original-comment-info').append(reply_form);
 		}
+		btn.umHide();
 	});
 
 	/* remove reply form */
 	jQuery( document.body ).on( 'click', '.um-wall-reply-cancel', function(e) {
 		let btn = jQuery(this);
+		btn.parents('.um-wall-comment-info').find('.um-wall-comment-reply').umShow();
 		btn.parents('.um-wall-reply-form').remove();
 	});
 
@@ -975,8 +988,11 @@ jQuery( document ).ready(function () {
 								btn.parents('.um-wall-commentwrap').remove();
 							}
 
-							let count = wrap.parent().find('.um-wall-comments-toggle .um-badge');
-							count.html( parseInt( count.html() ) - 1 );
+							let count = wrap.find('.um-wall-comments-toggle .um-badge');
+							count.html( parseInt( count.text() ) - 1 );
+							if ( parseInt( count.text() ) === 0 ) {
+								wrap.find('.um-wall-comments-toggle').umHide();
+							}
 						},
 						error: function( data ) {
 							console.log( data );
