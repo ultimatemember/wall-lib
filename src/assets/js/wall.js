@@ -66,8 +66,9 @@ function um_check_comment_length( textarea ) {
 let Loadwall_ajax = false;
 
 jQuery( document ).ready(function () {
-	autosize( jQuery('.um-wall-post-form-wrapper .um-wall-textarea-elem') );
-	autosize( jQuery('.um-wall-widget .um-wall-comment-textarea') );
+	/* Textarea autosize */
+	UM.frontend.autosize.init( '.um-wall-textarea-elem', 2 );
+	UM.frontend.autosize.init( 'textarea.um-wall-comment-textarea', 2 );
 	// AJAX wall request
 	if ( jQuery('.um-wall:not([data-single_post="1"])').not('[data-loading="sync"]').length ) {
 		um_wall_ajax_request();
@@ -180,7 +181,7 @@ jQuery( document ).ready(function () {
 				form.find('.um-uploader-filelist').html('').umHide();
 				form.find('.um-wall-insert .um-badge').remove();
 
-				autosize( jQuery('.um-wall-widget .um-wall-comment-textarea') );
+				UM.frontend.autosize.init( 'textarea.um-wall-comment-textarea', 2 );
 
 				////// NEW
 				form.find('.um-wall-right .um-ajax-spinner-svg').hide();
@@ -324,7 +325,6 @@ jQuery( document ).ready(function () {
 			{
 				data: data,
 				success: function( data ) {
-					console.log(data)
 					loader.umHide();
 					widget.find('.um-wall-body').umHide();
 					widget.find('.um-wall-comments').umHide();
@@ -424,7 +424,6 @@ jQuery( document ).ready(function () {
 			{
 				data: data,
 				success: function( data ) {
-					console.log(data)
 					loader.umHide();
 					el.addClass('flagged').html(el.attr('data-cancel_report'));
 				},
@@ -479,7 +478,7 @@ jQuery( document ).ready(function () {
 				},
 				error: function(data) {
 					console.log(data);
-					// loader.umHide();
+					loader.umHide();
 					if ( data.message ) {
 						let error = data.message;
 						jQuery(this).um_notice({
@@ -652,6 +651,10 @@ jQuery( document ).ready(function () {
 				},
 				error: function (data) {
 					console.log(data);
+					jQuery(this).um_notice({
+						message: data,
+						type: 'error'
+					});
 				}
 			});
 		}
