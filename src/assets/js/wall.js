@@ -779,7 +779,7 @@ jQuery( document ).ready(function () {
 					} else {
 						wrap.append(response.content);
 					}
-					btn.parents('.um-wall-comment-info').find('.um-wall-comment-reply').umShow();
+					btn.parents('.um-wall-commentwrap').find('.um-wall-comment-reply').umShow();
 				}
 
 				let count = wrap.parent().find('.um-wall-comments-toggle .um-badge');
@@ -861,7 +861,7 @@ jQuery( document ).ready(function () {
 			let reply_to = wrap.attr('data-comment_id');
 
 			reply_form.find('.um-wall-comment-post').attr('data-comment_id', comment_id).attr('data-reply_to', reply_to);
-			wrap.find('.um-wall-original-comment-info').append(reply_form);
+			wrap.find('.um-wall-comment-child-loop').append(reply_form);
 		}
 		btn.umHide();
 	});
@@ -965,11 +965,17 @@ jQuery( document ).ready(function () {
 		let msg = btn.attr('data-msg');
 		let title = btn.attr('data-title');
 		let wrap = btn.parents('.um-wall-widget');
+		let is_reply = btn.attr('data-is_reply');
 
 		let action = wp.hooks.applyFilters(
 			'um_wall_remove_comment_action',
 			'um_wall_remove_comment'
 		);
+
+		if ( 1 === parseInt( is_reply ) ) {
+			btn.parents('.um-wall-commentl.is-child').addClass('um-group-delete-loading');
+			btn.parents('.um-wall-editc').find('button').attr('disabled', true);
+		}
 
 		jQuery.um_confirm(
 			{
@@ -987,15 +993,22 @@ jQuery( document ).ready(function () {
 							} else {
 								btn.parents('.um-wall-commentwrap').remove();
 							}
-
-							let count = wrap.find('.um-wall-comments-toggle .um-badge');
-							count.html( parseInt( count.text() ) - 1 );
-							if ( parseInt( count.text() ) === 0 ) {
-								wrap.find('.um-wall-comments-toggle').umHide();
+							if ( 1 !== parseInt( is_reply ) ) {
+								let count = wrap.find('.um-wall-comments-toggle .um-badge');
+								count.html( parseInt( count.text() ) - 1 );
+								if ( parseInt( count.text() ) === 0 ) {
+									wrap.find('.um-wall-comments-toggle').umHide();
+								}
 							}
 						},
 						error: function( data ) {
 							console.log( data );
+							btn.parents('.um-wall-commentl.is-child').removeClass('um-group-delete-loading');
+							btn.parents('.um-wall-editc').find('button').attr('disabled', false);
+							jQuery(this).um_notice({
+								message: data,
+								type: 'error'
+							});
 						}
 					});
 				},

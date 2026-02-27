@@ -166,7 +166,7 @@
             +flex( row, start, start, nowrap )
             column-gap: $spacing-sm
             .#{$prefix}user-display-name
-              +flex( row, flex-start, center, nowrap )
+              display: block
               line-height: var(--um-text-line-height-sm, 20px)
     .#{$prefix}wall-body
       +flex( column, flex-start, stretch, nowrap )
@@ -328,11 +328,6 @@
               margin-left: calc( $spacing-6xl + 4px )
               +typography( text, sm, regular )
               color: $gray-600
-              .#{$prefix}wall-reply-form
-                width: 100%
-                .#{$prefix}wall-comment-reply-actions
-                  +flex( row, end, start, nowrap )
-                  column-gap: $spacing-md
               .#{$prefix}wall-comment-data
                 width: 100%
                 .#{$prefix}wall-comment-text
@@ -378,6 +373,11 @@
               width: 100%
               +flex( column, flex-start, center, nowrap )
               row-gap: $spacing-xl
+              .#{$prefix}wall-comment-reply-actions
+                +flex( row, end, center, nowrap )
+                column-gap: $spacing-md
+                .#{$prefix}wall-loader
+                  margin: 0
               .#{$prefix}wall-commentl
                 .#{$prefix}wall-comment-info
                   width: calc( 100% - $spacing-6xl - 4px )
@@ -483,7 +483,7 @@
   min-width: 180px
   box-shadow: 0 4px 12px rgba(0,0,0,0.15)
   font-size: 14px
-  .um-mention-item
+  .#{$prefix}mention-item
     display: flex
     align-items: center
     padding: 6px 10px
@@ -500,3 +500,13 @@
       margin-right: 6px
     .username
       opacity: 0.6
+
+@media (max-width: 1024px)
+  .um
+    .#{$prefix}wall-widget
+      .#{$prefix}wall-comments
+        .#{$prefix}wall-comments-loop
+          .#{$prefix}wall-commentwrap
+            .#{$prefix}wall-commentl
+              .#{$prefix}wall-editc
+                opacity: 1
