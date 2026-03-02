@@ -112,8 +112,7 @@ jQuery( document ).ready(function () {
 			'',
 			{ form: form, formdata: formdata }
 		);
-		let photos = formdata.hasOwnProperty(photoField) ? formdata[photoField] : null;
-		let hasPhotos = Array.isArray(photos) ? photos.length > 0 : !!photos;
+		let hasPhotos = 1 === parseInt( jQuery('#_post_imgs').val() );
 
 		if ( '' === formdata['_post_content'] && !hasPhotos ) {
 			form.find('textarea').trigger('focus');
@@ -180,6 +179,7 @@ jQuery( document ).ready(function () {
 
 				form.find('.um-uploader-filelist').html('').umHide();
 				form.find('.um-wall-insert .um-badge').remove();
+				jQuery('#_post_imgs').val('')
 
 				UM.frontend.autosize.init( 'textarea.um-wall-comment-textarea', 2 );
 
@@ -210,16 +210,10 @@ jQuery( document ).ready(function () {
 				} else {
 					error = form.attr('data-error');
 				}
-				form.find('.um-wall-posting-result').umShow();
-				UM.common.form.messageTimeout(
-					form.find('.um-wall-posting-result'),
-					error,
-					3000,
-					( wrapper ) => {
-						wrapper.addClass( 'um-error-text' );
-					}
-				);
-				console.log( data );
+				jQuery(this).um_notice({
+					message: error,
+					type: 'error'
+				});
 			}
 		});
 	});

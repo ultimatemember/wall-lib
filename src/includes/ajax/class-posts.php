@@ -217,7 +217,7 @@ class Posts {
 		}
 
 		if ( empty( $_post_content ) && empty( $_post_images ) ) {
-			wp_send_json_error( __( 'You should type something first.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
+			wp_send_json_error( array( 'message' => __( 'You should type something first or add a photo.', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
 		}
 
 		um_maybe_unset_time_limit();
@@ -264,7 +264,7 @@ class Posts {
 			wp_send_json_success( $output );
 		}
 
-		wp_send_json_error( __( 'Something went wrong.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
+		wp_send_json_error( array( 'message' => __( 'Something went wrong.', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
 	}
 
 	private function prepare_response( $post_id ) {
@@ -311,7 +311,7 @@ class Posts {
 		$args    = apply_filters( $this->wall->prefix . 'insert_post_args', $args );
 		$post_id = wp_insert_post( $args );
 		if ( empty( $post_id ) || is_wp_error( $post_id ) ) {
-			wp_send_json_error( __( 'Something went wrong with post store.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
+			wp_send_json_error( array( 'message' => __( 'Something went wrong with post store.', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
 		} else {
 			if ( '' !== $orig_content ) {
 				// Apply hashtags for the post.
@@ -363,7 +363,7 @@ class Posts {
 		$post_id = wp_update_post( $args );
 
 		if ( empty( $post_id ) || is_wp_error( $post_id ) ) {
-			wp_send_json_error( __( 'Something went wrong with post store.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
+			wp_send_json_error( array( 'message' => __( 'Something went wrong with post store.', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
 		} else {
 			if ( $old_data->post_meta['_original_content'] !== $orig_content ) {
 				$this->wall->common()->posts()->hashtagit( $post_id, $orig_content ); // Update hashtags for the post.
