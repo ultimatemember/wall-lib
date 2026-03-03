@@ -353,6 +353,9 @@ jQuery( document ).ready(function () {
 			return false;
 		}
 
+		let count = jQuery(this).parents('.um-uploader-filelist').find('.um-uploader-file').length;
+		jQuery(this).parents('.um-wall-post-form-wrapper').find('.um-wall-uploaded-count').text( parseInt( count ) - 1);
+
 		let id = jQuery(this).data( 'id' );
 		if ( id ) {
 			let $input = jQuery('#um_wall_deleted_attachments');

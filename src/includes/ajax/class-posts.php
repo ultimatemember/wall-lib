@@ -216,13 +216,13 @@ class Posts {
 			}
 		}
 
-		if ( empty( $_post_content ) && empty( $_post_images ) ) {
-			wp_send_json_error( array( 'message' => __( 'You should type something first or add a photo.', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
-		}
-
 		um_maybe_unset_time_limit();
 
 		if ( 0 === $post_id ) {
+			if ( empty( $_post_content ) && empty( $_post_images ) ) {
+				wp_send_json_error( array( 'message' => __( 'You should type something first or add a photo.', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
+			}
+
 			$post_id = $this->handle_post_insert( $_post_content, $_post_images );
 			$output  = apply_filters( $this->wall->prefix . 'wall_publish_output', $this->prepare_response( $post_id ), $post_id );
 		} else {
@@ -235,6 +235,19 @@ class Posts {
 						wp_delete_attachment( $attachment_id, true );
 					}
 				}
+			}
+
+			$attachments = get_children(
+				array(
+					'post_parent'    => $post_id,
+					'post_type'      => 'attachment',
+					'post_mime_type' => 'image',
+					'numberposts'    => -1,
+				)
+			);
+
+			if ( empty( $_post_content ) && empty( $_post_images ) && empty( $attachments ) ) {
+				wp_send_json_error( array( 'message' => __( 'You should type something first or add a photo.', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
 			}
 
 			$post_id = $this->handle_post_update( $post_id, $_post_content, $_post_images );
