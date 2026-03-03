@@ -1067,56 +1067,130 @@ jQuery( document ).ready(function () {
 
 	// Text editor with the contenteditable attribute
 	let activeEditor = null;
+	let rafPending = false;
 
-	jQuery(document).on('focus', '.um-wall-textarea-elem', function () {
+	function scheduleSync() {
+		if (rafPending) return;
+		rafPending = true;
+		requestAnimationFrame(() => {
+			rafPending = false;
+			syncToolbarFromSelection();
+		});
+	}
+
+	function getSelectionNode() {
+		const sel = window.getSelection && window.getSelection();
+		if (!sel || sel.rangeCount === 0) return null;
+		return sel.focusNode || sel.anchorNode || null;
+	}
+
+	function getEditorFromNode(node) {
+		if (!node) return null;
+		const el = (node.nodeType === 3) ? node.parentElement : node; // text node -> element
+		if (!el || !el.closest) return null;
+		return el.closest('.um-wall-textarea-elem');
+	}
+
+	function getToolbarForEditor(editor) {
+		// find toolbar within the same editor wrapper, otherwise fallback to the first toolbar on the page
+		const $wrap = jQuery(editor).closest('form');
+		const $tb = $wrap.find('.um-wall-editor-toolbar').first();
+		return $tb.length ? $tb : jQuery('.um-wall-editor-toolbar').first();
+	}
+
+	function setBtn($toolbar, key, isActive) {
+		$toolbar
+			.find(`button[data-cmd="${key}"], button[data-action="${key}"]`)
+			.toggleClass('active', !!isActive);
+	}
+
+	function isInsideTag(node, editor, selector) {
+		const el = (node && node.nodeType === 3) ? node.parentElement : node;
+		if (!el) return false;
+		const found = el.closest(selector);
+		return !!(found && editor.contains(found));
+	}
+
+	function syncToolbarFromSelection() {
+		const sel = window.getSelection && window.getSelection();
+		if (!sel || sel.rangeCount === 0) return;
+
+		const range = sel.getRangeAt(0);
+
+		const node = sel.focusNode || sel.anchorNode || range.commonAncestorContainer;
+		const editor = getEditorFromNode(node);
+		if (!editor) return;
+
+		activeEditor = editor;
+		const $toolbar = getToolbarForEditor(editor);
+		// console.log('Syncing toolbar for editor', editor, 'toolbar:', $toolbar);
+		if (!sel.isCollapsed) {
+			setBtn($toolbar, 'bold', !!document.queryCommandState('bold'));
+			setBtn($toolbar, 'italic', !!document.queryCommandState('italic'));
+			setBtn($toolbar, 'underline', !!document.queryCommandState('underline'));
+
+			const common = range.commonAncestorContainer.nodeType === 3
+				? range.commonAncestorContainer.parentElement
+				: range.commonAncestorContainer;
+
+			const inUl = common && common.closest && !!common.closest('ul');
+			const inOl = common && common.closest && !!common.closest('ol');
+
+			setBtn($toolbar, 'ul', inUl);
+			setBtn($toolbar, 'ol', inOl);
+
+			return;
+		}
+
+		const bold = isInsideTag(node, editor, 'b, strong, [style*="font-weight"]');
+		const italic = isInsideTag(node, editor, 'i, em, [style*="font-style: italic"]');
+		const underline = isInsideTag(node, editor, 'u, [style*="text-decoration"], [style*="underline"]');
+
+		const ul = isInsideTag(node, editor, 'ul li, ul');
+		const ol = isInsideTag(node, editor, 'ol li, ol');
+
+		setBtn($toolbar, 'bold', bold);
+		setBtn($toolbar, 'italic', italic);
+		setBtn($toolbar, 'underline', underline);
+		setBtn($toolbar, 'ul', ul);
+		setBtn($toolbar, 'ol', ol);
+	}
+
+	// sync toolbar when focusing or typing in the editor
+	jQuery(document).on('focus mousedown mouseup keyup input', '.um-wall-textarea-elem', function () {
 		activeEditor = this;
+		scheduleSync();
 	});
-	jQuery(document).on('mousedown', '.um-wall-textarea-elem', function () {
-		activeEditor = this;
-	});
+
+	// prevent losing focus on toolbar click
 	jQuery(document).on('mousedown', '.um-wall-editor-toolbar button', function (e) {
 		e.preventDefault();
 	});
 
+	// handle toolbar actions
 	jQuery(document).on('click', '.um-wall-editor-toolbar button', function (e) {
 		e.preventDefault();
-
-		jQuery(this).toggleClass('active');
-
 		if (!activeEditor) return;
 
 		activeEditor.focus();
 
-		let cmd = jQuery(this).data('cmd');
-		let action = jQuery(this).data('action');
+		const cmd = jQuery(this).data('cmd');
+		const action = jQuery(this).data('action');
 
 		switch (cmd || action) {
-
-			case 'bold':
-				document.execCommand('bold');
-				break;
-
-			case 'italic':
-				document.execCommand('italic');
-				break;
-
-			case 'underline':
-				document.execCommand('underline');
-				break;
-
-			case 'ul':
-				document.execCommand('insertUnorderedList');
-				break;
-
-			case 'ol':
-				document.execCommand('insertOrderedList');
-				break;
-
-			case 'clear':
-				document.execCommand('removeFormat');
-				break;
+			case 'bold': document.execCommand('bold'); break;
+			case 'italic': document.execCommand('italic'); break;
+			case 'underline': document.execCommand('underline'); break;
+			case 'ul': document.execCommand('insertUnorderedList'); break;
+			case 'ol': document.execCommand('insertOrderedList'); break;
+			case 'clear': document.execCommand('removeFormat'); break;
 		}
+
+		scheduleSync();
 	});
+
+	// sync toolbar when selection changes (e.g. with mouse)
+	document.addEventListener('selectionchange', scheduleSync);
 });
 
 // AJAX wall request on scroll
