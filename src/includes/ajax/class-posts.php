@@ -193,13 +193,12 @@ class Posts {
 		do_action( $this->wall->prefix . 'before_wall_post_publish', $post_id );
 
 		$_post_content = str_replace( '&nbsp;', ' ', $_POST['_post_content'] ); // replace &nbsp; to space
-		$_post_content = preg_replace( '/<\/div>\s*<div[^>]*>/', "\n", $_post_content ); // replace div to new line
-		$_post_content = preg_replace( '/<\/?div[^>]*>/i', '', $_post_content ); // remove other div tags
-		$_post_content = strip_tags( $_post_content, '<b><i><u><ol><ul><li>' ); // allow only these tags
-		$_post_content = preg_replace( "/\n+/", "\n", $_post_content ); // remove multiple new lines
-		$_post_content = rtrim( $_post_content ); // remove trailing new lines
-		$_post_content = wp_kses_post( wp_unslash( trim( $_post_content ) ) ); // sanitize content
-		$_post_content = ! empty( $_post_content ) ? $_post_content : ''; // make sure it's string
+		$_post_content = preg_replace( '/<div[^>]*>/i', "\n", $_post_content ); // replace div to new line
+		$_post_content = preg_replace( '/<\/div>/i', '', $_post_content ); // remove closing div tags
+		$_post_content = preg_replace( "/[ \t]*\n[ \t]*/", "\n", $_post_content ); // remove spaces and tabs around new lines
+		$_post_content = preg_replace( "/\n{2,}/", "\n", $_post_content ); // replace multiple new lines with a single one
+		$_post_content = trim( $_post_content ); // remove leading and trailing whitespace
+		$_post_content = preg_replace( '/(?:<br\s*\/?>\s*)+$/i', '', $_post_content ); // remove trailing <br> tags
 
 		$_post_images = array();
 		$_photo_key   = apply_filters( $this->wall->prefix . 'photo_post_key', '' );
@@ -331,7 +330,7 @@ class Posts {
 				$this->wall->common()->posts()->hashtagit( $post_id, $orig_content );
 
 				$data = array(
-						'ID' => $post_id,
+					'ID' => $post_id,
 				);
 
 				$converted_content = $this->prepare_post_content( $orig_content ); // prepare blocks and preview cards from the text
@@ -848,17 +847,20 @@ class Posts {
 	 *
 	 */
 	public function like_post() {
-		if ( empty( $_POST['post_id'] ) ) {
+		// phpcs:disable WordPress.Security.NonceVerification
+		if ( empty( $_POST['post_id'] ) || ! $this->wall->common()->posts()->exists( absint( $_POST['post_id'] ) ) ) {
 			wp_send_json_error( array( 'message' => __( 'Wrong post ID.', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
 		}
+
 		$post_id = absint( $_POST['post_id'] );
 
 		check_ajax_referer( 'um_wall_like_post' . $post_id, 'nonce' );
 
-		if ( ! $this->wall->common()->posts()->exists( $post_id ) ) {
-			wp_send_json_error( array( 'message' => __( 'Wrong post ID.', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
+		if ( ! is_user_logged_in() ) {
+			wp_send_json_error( array( 'message' => __( 'You must login to like', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
 		}
 
+		// phpcs:enable WordPress.Security.NonceVerification
 		if ( ! $this->wall->common()->user()->can_like( $post_id ) ) {
 			wp_send_json_error( array( 'message' => __( 'You are not authorized to like this post.', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
 		}
@@ -922,16 +924,19 @@ class Posts {
 	 *
 	 */
 	public function unlike_post() {
-		if ( empty( $_POST['post_id'] ) ) {
+		// phpcs:disable WordPress.Security.NonceVerification
+		if ( empty( $_POST['post_id'] ) || ! $this->wall->common()->posts()->exists( absint( $_POST['post_id'] ) ) ) {
 			wp_send_json_error( array( 'message' => __( 'Wrong post ID.', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
 		}
+
 		$post_id = absint( $_POST['post_id'] );
 
 		check_ajax_referer( 'um_wall_unlike_post' . $post_id, 'nonce' );
 
-		if ( ! $this->wall->common()->posts()->exists( $post_id ) ) {
-			wp_send_json_error( array( 'message' => __( 'Wrong post ID.', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
+		if ( ! is_user_logged_in() ) {
+			wp_send_json_error( array( 'message' => __( 'You must login to unlike', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
 		}
+		// phpcs:enable WordPress.Security.NonceVerification
 
 		if ( ! $this->wall->common()->user()->can_unlike( $post_id ) ) {
 			wp_send_json_error( array( 'message' => __( 'You are not authorized to unlike this post.', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
@@ -990,16 +995,18 @@ class Posts {
 	 *
 	 */
 	public function report_post() {
-		if ( empty( $_POST['post_id'] ) ) {
+		// phpcs:disable WordPress.Security.NonceVerification
+		if ( empty( $_POST['post_id'] ) || ! $this->wall->common()->posts()->exists( absint( $_POST['post_id'] ) ) ) {
 			wp_send_json_error( array( 'message' => __( 'Wrong post ID.', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
 		}
 
 		$post_id = absint( $_POST['post_id'] );
+		// phpcs:enable WordPress.Security.NonceVerification
 
 		check_ajax_referer( 'um_wall_report_post' . $post_id, 'nonce' );
 
-		if ( ! $this->wall->common()->posts()->exists( $post_id ) ) {
-			wp_send_json_error( array( 'message' => __( 'Wrong post ID.', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
+		if ( ! is_user_logged_in() ) {
+			wp_send_json_error( array( 'message' => __( 'You must login to unlike', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
 		}
 
 		$user_id = get_current_user_id();
@@ -1034,16 +1041,18 @@ class Posts {
 	 *
 	 */
 	public function unreport_post() {
-		if ( empty( $_POST['post_id'] ) ) {
+		// phpcs:disable WordPress.Security.NonceVerification
+		if ( empty( $_POST['post_id'] ) || ! $this->wall->common()->posts()->exists( absint( $_POST['post_id'] ) ) ) {
 			wp_send_json_error( array( 'message' => __( 'Wrong post ID.', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
 		}
 
 		$post_id = absint( $_POST['post_id'] );
 
+		// phpcs:enable WordPress.Security.NonceVerification
 		check_ajax_referer( 'um_wall_cancel_report_post' . $post_id, 'nonce' );
 
-		if ( ! $this->wall->common()->posts()->exists( $post_id ) ) {
-			wp_send_json_error( array( 'message' => __( 'Wrong post ID.', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
+		if ( ! is_user_logged_in() ) {
+			wp_send_json_error( array( 'message' => __( 'You must login to unlike', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
 		}
 
 		$user_id = get_current_user_id();
@@ -1085,20 +1094,18 @@ class Posts {
 	 * Load post likes via AJAX
 	 */
 	public function get_post_likes() {
-		if ( empty( $_POST['post_id'] ) ) {
+		// phpcs:disable WordPress.Security.NonceVerification
+		if ( empty( $_POST['post_id'] ) || ! $this->wall->common()->posts()->exists( absint( $_POST['post_id'] ) ) ) {
 			wp_send_json_error( array( 'message' => __( 'Wrong post ID.', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
 		}
 
 		$post_id = absint( $_POST['post_id'] );
 
+		// phpcs:enable WordPress.Security.NonceVerification
 		check_ajax_referer( 'um_wall_show_likes' . $post_id, 'nonce' );
 
 		if ( UM()->is_rate_limited( 'wall_get_post_likes' ) ) {
 			wp_send_json_error( __( 'Too many requests', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
-		}
-
-		if ( ! $this->wall->common()->posts()->exists( $post_id ) ) {
-			wp_send_json_error( array( 'message' => __( 'Wrong post ID.', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
 		}
 
 		if ( ! $this->wall->common()->user()->can_view_likes( $post_id ) ) {
@@ -1141,16 +1148,14 @@ class Posts {
 	 * Removes a wall post
 	 */
 	public function remove_post() {
-		if ( empty( $_POST['post_id'] ) ) {
+		// phpcs:disable WordPress.Security.NonceVerification
+		if ( empty( $_POST['post_id'] ) || ! $this->wall->common()->posts()->exists( absint( $_POST['post_id'] ) ) ) {
 			wp_send_json_error( __( 'Wrong post ID.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
 		}
 		$post_id = absint( $_POST['post_id'] );
 
 		check_ajax_referer( 'um_wall_delete_post' . $post_id, 'nonce' );
-
-		if ( ! $this->wall->common()->posts()->exists( $post_id ) ) {
-			wp_send_json_error( __( 'Wrong post ID.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
-		}
+		// phpcs:enable WordPress.Security.NonceVerification
 
 		if ( ! $this->wall->common()->user()->can_remove_post( $post_id ) ) {
 			wp_send_json_error( array( 'message' => __( 'You are not authorized to remove this post.', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
@@ -1175,6 +1180,9 @@ class Posts {
 		check_ajax_referer( $this->wall->prefix . 'get_full_post_' . $post_id, 'nonce' );
 
 		$content_raw = get_post_field( 'post_content', $post_id );
+
+		remove_filter( 'the_content', 'prepend_attachment' );
+		remove_filter( 'the_content', 'wpautop' );
 
 		$content = apply_filters( 'the_content', $content_raw );
 		$content = $this->wall->common()->posts()->linkify_hashtags_in_content( $content );

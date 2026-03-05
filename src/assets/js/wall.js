@@ -112,7 +112,7 @@ jQuery( document ).ready(function () {
 			'',
 			{ form: form, formdata: formdata }
 		);
-		let hasPhotos = 1 === parseInt( jQuery('#_post_imgs').val() );
+		let hasPhotos = 1 === parseInt( form.find('#_post_imgs').val() );
 
 		if ( '' === formdata['_post_content'] && !hasPhotos ) {
 			form.find('textarea').trigger('focus');
