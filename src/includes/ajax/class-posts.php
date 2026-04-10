@@ -198,7 +198,7 @@ class Posts {
 		$_post_content = preg_replace( "/[ \t]*\n[ \t]*/", "\n", $_post_content ); // remove spaces and tabs around new lines
 		$_post_content = preg_replace( "/\n{2,}/", "\n", $_post_content ); // replace multiple new lines with a single one
 		$_post_content = trim( $_post_content ); // remove leading and trailing whitespace
-		$_post_content = preg_replace( '/(?:<br\s*\/?>\s*)+$/i', '', $_post_content ); // remove trailing <br> tags
+		$_post_content = preg_replace( '/<br\s*\/?>/i', "\n", $_post_content ); // remove <br> in text
 
 		$_post_images = array();
 		$_photo_key   = apply_filters( $this->wall->prefix . 'photo_post_key', '' );
@@ -836,9 +836,6 @@ class Posts {
 			$attach_data = wp_generate_attachment_metadata( $attach_id, $new_path );
 			wp_update_attachment_metadata( $attach_id, $attach_data );
 			remove_filter( 'intermediate_image_sizes_advanced', '__return_empty_array' );
-
-			// transfer old UI image meta to new UI
-			update_post_meta( $post_id, '_transfer_new_ui', 1 );
 		}
 	}
 
