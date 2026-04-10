@@ -294,6 +294,12 @@ class Posts {
 			'profile_id'       => um_profile_id() ? um_profile_id() : 0,
 		);
 
+		// phpcs:disable WordPress.Security.NonceVerification -- already verified here
+		if ( ! empty( $_POST['_page'] ) ) {
+			$t_args['page'] = sanitize_key( $_POST['_page'] );
+		}
+		// phpcs:enable WordPress.Security.NonceVerification -- already verified here
+
 		$t_args        = apply_filters( $this->wall->prefix . 'wall_prepare_response_template_args', $t_args );
 		$template_name = apply_filters( $this->wall->prefix . 'wall_posts_template', 'v3/posts-loop.php' );
 
