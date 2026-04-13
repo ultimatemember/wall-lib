@@ -1295,8 +1295,142 @@ function um_post_placeholder( obj ) {
 	obj.attr( 'placeholder', obj.attr( 'data-ph' ) );
 }
 
-// mentions
 jQuery(document).ready(function () {
+	// Clear pasted text
+	const ALLOWED_TAGS = new Set([ 'B', 'I', 'U', 'OL', 'UL', 'LI', 'BR' ]);
+
+	/**
+	 * Sanitize pasted HTML:
+	 * - keeps only allowed tags
+	 * - removes all attributes
+	 * - unwraps disallowed elements but keeps their children/text
+	 *
+	 * @param {string} html
+	 * @return {string}
+	 */
+	function sanitizePastedHtml(html) {
+		const parser = new DOMParser();
+		const doc = parser.parseFromString('<div>' + html + '</div>', 'text/html');
+		const container = doc.body.firstChild;
+
+		function sanitizeNode(node) {
+			// Text node.
+			if (node.nodeType === Node.TEXT_NODE) {
+				return doc.createTextNode(node.nodeValue);
+			}
+
+			// Ignore comments and other node types.
+			if (node.nodeType !== Node.ELEMENT_NODE) {
+				return null;
+			}
+
+			const tagName = node.tagName.toUpperCase();
+			const fragment = doc.createDocumentFragment();
+
+			// If tag is not allowed, unwrap it but keep sanitized children.
+			if (!ALLOWED_TAGS.has(tagName)) {
+				Array.from(node.childNodes).forEach(function (child) {
+					const cleanChild = sanitizeNode(child);
+					if (cleanChild) {
+						fragment.appendChild(cleanChild);
+					}
+				});
+
+				return fragment;
+			}
+
+			// Create clean allowed element with no attributes.
+			const cleanElement = doc.createElement(tagName.toLowerCase());
+
+			// Special case: <br> has no children.
+			if (tagName === 'BR') {
+				return cleanElement;
+			}
+
+			Array.from(node.childNodes).forEach(function (child) {
+				const cleanChild = sanitizeNode(child);
+				if (cleanChild) {
+					cleanElement.appendChild(cleanChild);
+				}
+			});
+
+			return cleanElement;
+		}
+
+		const output = doc.createElement('div');
+
+		Array.from(container.childNodes).forEach(function (child) {
+			const cleanChild = sanitizeNode(child);
+			if (cleanChild) {
+				output.appendChild(cleanChild);
+			}
+		});
+
+		return output.innerHTML;
+	}
+
+	/**
+	 * Insert HTML at current caret position inside contenteditable.
+	 *
+	 * @param {string} html
+	 */
+	function insertHtmlAtCaret(html) {
+		const sel = window.getSelection();
+
+		if (!sel || !sel.rangeCount) {
+			return;
+		}
+
+		const range = sel.getRangeAt(0);
+		range.deleteContents();
+
+		const temp = document.createElement('div');
+		temp.innerHTML = html;
+
+		const frag = document.createDocumentFragment();
+		let node;
+		let lastNode = null;
+
+		while ((node = temp.firstChild)) {
+			lastNode = frag.appendChild(node);
+		}
+
+		range.insertNode(frag);
+
+		// Move caret to the end of inserted content.
+		if (lastNode) {
+			const newRange = document.createRange();
+			newRange.setStartAfter(lastNode);
+			newRange.collapse(true);
+
+			sel.removeAllRanges();
+			sel.addRange(newRange);
+		}
+	}
+	jQuery(document).on('paste', '.um-wall-textarea-elem', function (e) {
+		e.preventDefault();
+
+		const clipboardData = e.originalEvent.clipboardData || window.clipboardData;
+		const html = clipboardData.getData('text/html');
+		const text = clipboardData.getData('text/plain');
+
+		let cleanContent = '';
+
+		if (html) {
+			cleanContent = sanitizePastedHtml(html);
+		} else if (text) {
+			// Plain text: preserve line breaks.
+			cleanContent = text
+				.replace(/&/g, '&amp;')
+				.replace(/</g, '&lt;')
+				.replace(/>/g, '&gt;')
+				.replace(/\r\n|\r|\n/g, '<br>');
+		}
+
+		insertHtmlAtCaret(cleanContent);
+	});
+
+	// mentions
 	let activeEditor = null;
 	let mentionTimer = null;
 	let savedRange = null;
