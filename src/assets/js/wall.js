@@ -199,6 +199,8 @@ jQuery( document ).ready(function () {
 				if ( params.has( '_wpnonce' ) ) {
 					UM.frontend.url.deleteURLSearchParam('_wpnonce');
 				}
+
+				UM.frontend.dropdown.init();
 				UM.frontend.image.lazyload.init();
 			},
 			error: function(data) {
