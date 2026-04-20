@@ -279,6 +279,13 @@ class Posts {
 		wp_send_json_error( array( 'message' => __( 'Something went wrong.', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
 	}
 
+	/**
+	 * Prepare response after post insert/update
+	 *
+	 * @param int $post_id post ID
+	 *
+	 * @return string prepared HTML content for AJAX response
+	 */
 	private function prepare_response( $post_id ) {
 		$comm_num      = apply_filters( $this->wall->prefix . 'wall_comments_loadmore_number', 10 );
 		$order_comment = apply_filters( $this->wall->prefix . 'wall_comments_loadmore_order', 10 );
@@ -306,6 +313,14 @@ class Posts {
 		return UM()->ajax()->esc_html_spaces( UM()->get_template( $template_name, $this->wall->plugin_basename, $t_args ) );
 	}
 
+	/**
+	 * Handle post insert
+	 *
+	 * @param $_post_content
+	 * @param $_post_images
+	 *
+	 * @return int|\WP_Error
+	 */
 	private function handle_post_insert( $_post_content, $_post_images ) {
 		$current_user_id = get_current_user_id();
 		$orig_content    = apply_filters( $this->wall->prefix . 'new_post', $_post_content );
@@ -364,6 +379,15 @@ class Posts {
 		return $post_id;
 	}
 
+	/**
+	 * Handle post update
+	 *
+	 * @param $post_id
+	 * @param $_post_content
+	 * @param $_post_images
+	 *
+	 * @return int|\WP_Error
+	 */
 	private function handle_post_update( $post_id, $_post_content, $_post_images ) {
 		// Update post
 		$args = array( 'ID' => $post_id );
@@ -765,6 +789,12 @@ class Posts {
 		return $string;
 	}
 
+	/**
+	 * Upload post images and attach them to the post
+	 *
+	 * @param array $post_images Array of images to upload, each item should have 'path', 'filename', and 'hash' keys.
+	 * @param int   $post_id     ID of the post to attach images to.
+	 */
 	private function upload_images( $_post_images, $post_id ) {
 		global $wp_filesystem;
 		if ( ! $wp_filesystem instanceof WP_Filesystem_Base ) {
