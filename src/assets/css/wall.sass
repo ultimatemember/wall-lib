@@ -133,13 +133,25 @@
       grid-template-columns: repeat(3, 1fr)
       gap: $spacing-md
       .#{$prefix}uploader-image-file-placeholder
+        border: none
+        border-radius: 0
+        max-width: 180px
+        padding: 0
+        margin: 0
         &.#{$prefix}upload-completed
-          border-color: $gray-200
+          border: none
+          border-radius: 0
+          padding: 0
+          margin: 0
         &.#{$prefix}upload-failed
-          border-color: $error-600
-        canvas
-          width: 100% !important
-          height: auto !important
+          border: none
+          border-radius: 0
+          padding: 0
+          margin: 0
+        .#{$prefix}uploader-file-name
+          white-space: nowrap
+          overflow: hidden
+          text-overflow: ellipsis
 
 // Single wall post
 .um
