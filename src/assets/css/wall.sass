@@ -34,21 +34,10 @@
         padding: 0
         gap: $spacing-lg
         textarea
-          resize: none
+          resize: vertical
           min-height: $spacing-7xl
-          border: 0
-          border-radius: 0
-          box-shadow: none
           width: 100%
           margin: 0
-          padding: 0
-          &:focus,
-          &:focus-visible
-            border: 0
-            border-radius: 0
-            box-shadow: none
-            margin: 0
-            padding: 0
         .#{$prefix}toggle-block-inner
           +flex( column, flex-start, stretch, nowrap )
           +border-box
@@ -106,7 +95,7 @@
       button
         &.active
           background: $button-bg-hover
-    .um-wall-textarea
+    .#{$prefix}wall-textarea-hidden
       visibility: hidden
       display: none
   .#{$prefix}wall-commentl

@@ -155,6 +155,8 @@ class Posts {
 			$count = '' !== $attachments ? 1 : 0;
 		}
 
+		$editor = apply_filters( $this->wall->prefix . 'wall_html_editor', 0 );
+
 		$t_args = array(
 			'post_id'         => $post_id,
 			'post'            => $post,
@@ -162,6 +164,7 @@ class Posts {
 			'uploaded_photos' => $uploaded_photos,
 			'attachments'     => $attachments,
 			'allowed_html'    => $this->wall->common()->posts()->get_allowed_html(),
+			'editor'          => $editor,
 		);
 
 		$t_args        = apply_filters( $this->wall->prefix . 'wall_edit_post_template_args', $t_args );

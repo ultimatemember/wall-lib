@@ -28,8 +28,14 @@
  */
 function um_check_textarea_length( editor ) {
 	let form = editor.parents('form');
-	let text = editor.text().trim();
-	if (text.length > 0) {
+	let text;
+	if ( editor.is('textarea' ) ) {
+		text = editor.val().trim();
+	} else {
+		text = editor.text().trim();
+	}
+
+	if ( text.length > 0 ) {
 		um_enable_post_submit(form);
 	} else {
 		if (form.find('.um-uploader-file.um-upload-completed').length === 0) {
@@ -1407,7 +1413,7 @@ jQuery(document).ready(function () {
 			sel.addRange(newRange);
 		}
 	}
-	jQuery(document).on('paste', '.um-wall-textarea-elem', function (e) {
+	jQuery(document).on('paste', 'div.um-wall-textarea-elem', function (e) {
 		e.preventDefault();
 
 		const clipboardData = e.originalEvent.clipboardData || window.clipboardData;
@@ -1626,7 +1632,7 @@ jQuery(document).ready(function () {
 					if (response) showMentionBox(response, editor);
 					else hideMentionBox();
 				},
-				error: function(){
+				error: function(e){
 					jQuery(this).um_notice({
 						message: e,
 						type: 'error'
