@@ -174,7 +174,7 @@ class Posts {
 				'numberposts'    => -1,
 			)
 		);
-		$title     = esc_html__( 'Post image', $this->wall->textdomain ); // phpcs:ignore WordPress.WP.I18n
+		$title       = esc_html__( 'Post image', $this->wall->textdomain ); // phpcs:ignore WordPress.WP.I18n
 
 		if ( ! empty( $attachments ) ) {
 			$content = '';
@@ -199,7 +199,7 @@ class Posts {
 						$content .= "<img src=\"{$photo_url}\" title=\"{$title}\" alt=\"\" style=\"width: 100%;\" />";
 					}
 				} else {
-					$content .= "<div class=\"um-image-lazyload-wrapper\"><div class=\"um-skeleton-box\"></div><img class=\"um-image-lazyload\" loading=\"lazy\" src=\"{$photo_url}\" title=\"{$title}\" alt=\"\" /></div>";
+					$content .= "<div class=\"um-image-lazyload-wrapper\" id=\"um-wall-photo-{$attachment->ID}\"><div class=\"um-skeleton-box\"></div><img class=\"um-image-lazyload\" loading=\"lazy\" src=\"{$photo_url}\" title=\"{$title}\" alt=\"\" /></div>";
 				}
 			}
 		} else {
@@ -214,7 +214,7 @@ class Posts {
 		if ( empty( $photo_url ) ) {
 			return '';
 		}
-		$photo_url = esc_attr( $photo_url );
+		$photo_url = esc_url( $photo_url );
 		$title     = esc_html__( 'Post image', $this->wall->textdomain ); // phpcs:ignore WordPress.WP.I18n
 
 		$content = '';

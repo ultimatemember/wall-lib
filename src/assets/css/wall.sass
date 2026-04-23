@@ -466,6 +466,14 @@
 
 // modal
 .#{$prefix}wall-photo-view-modal
+  .#{$prefix}button
+    position: absolute
+    top: 50%
+    z-index: 1
+    &.#{$prefix}wall-modal-prev
+      left: 0
+    &.#{$prefix}wall-modal-next
+      right: 0
   img
     max-width: 100%
     height: auto
