@@ -57,23 +57,10 @@
 }
 .um .um-box.um-wall-new-post .um-box-content textarea, .um .um-box.um-wall-edit-post .um-box-content textarea,
 .um .um-box .um-wall-edit-post .um-box-content textarea {
-  resize: none;
+  resize: vertical;
   min-height: 64px;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
   width: 100%;
   margin: 0;
-  padding: 0;
-}
-.um .um-box.um-wall-new-post .um-box-content textarea:focus, .um .um-box.um-wall-new-post .um-box-content textarea:focus-visible, .um .um-box.um-wall-edit-post .um-box-content textarea:focus, .um .um-box.um-wall-edit-post .um-box-content textarea:focus-visible,
-.um .um-box .um-wall-edit-post .um-box-content textarea:focus,
-.um .um-box .um-wall-edit-post .um-box-content textarea:focus-visible {
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
-  margin: 0;
-  padding: 0;
 }
 .um .um-box.um-wall-new-post .um-box-content .um-toggle-block-inner, .um .um-box.um-wall-edit-post .um-box-content .um-toggle-block-inner,
 .um .um-box .um-wall-edit-post .um-box-content .um-toggle-block-inner {
@@ -129,6 +116,7 @@
   padding: 0;
 }
 .um .um-box .um-wall-textarea-elem {
+  overflow-y: auto;
   min-height: 64px;
   box-sizing: border-box;
   -moz-box-sizing: border-box;
@@ -138,8 +126,8 @@
   padding: 8px 12px;
   margin: 0;
   color: var(--um-gray-900, #101828);
-  font-size: var(--um-text-font-size-md, 16px);
-  line-height: var(--um-text-line-height-md, 24px);
+  font-size: var(--um-text-font-size-sm, 14px);
+  line-height: var(--um-text-line-height-sm, 20px);
   font-weight: var(--um-text-font-weight-regular, 400);
 }
 .um .um-box .um-wall-textarea-elem:not(.wp-editor-area) {
@@ -174,7 +162,7 @@
 .um .um-box .um-wall-editor-toolbar button.active {
   background: var(--um-blocks-button-bg-hover-color, var(--um-gray-50, #f9fafb));
 }
-.um .um-box .um-wall-textarea {
+.um .um-box .um-wall-textarea-hidden {
   visibility: hidden;
   display: none;
 }
@@ -220,6 +208,11 @@
   padding: 0;
   margin: 0;
 }
+.um .um-wall-uploader-section .um-uploader-filelist .um-uploader-image-file-placeholder .um-uploader-file-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 .um .um-wall-widget {
   width: 100%;
@@ -234,6 +227,12 @@
   margin: 0;
   padding: 0;
   column-gap: 12px;
+  position: relative;
+}
+.um .um-wall-widget .um-wall-head .um-wall-post-loader {
+  position: absolute;
+  top: 0;
+  right: 0;
 }
 .um .um-wall-widget .um-wall-head .um-wall-author {
   flex: 1;
@@ -250,11 +249,7 @@
   column-gap: 6px;
 }
 .um .um-wall-widget .um-wall-head .um-wall-author .um-small-data .um-data-header .um-user-display-name {
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-start;
-  align-items: center;
-  flex-wrap: nowrap;
+  display: block;
   line-height: var(--um-text-line-height-sm, 20px);
 }
 .um .um-wall-widget .um-wall-body {
@@ -494,17 +489,6 @@
   font-weight: var(--um-text-font-weight-regular, 400);
   color: var(--um-gray-600, #475467);
 }
-.um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-commentl .um-wall-comment-info .um-wall-reply-form {
-  width: 100%;
-}
-.um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-commentl .um-wall-comment-info .um-wall-reply-form .um-wall-comment-reply-actions {
-  display: flex;
-  flex-direction: row;
-  justify-content: end;
-  align-items: start;
-  flex-wrap: nowrap;
-  column-gap: 8px;
-}
 .um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-commentl .um-wall-comment-info .um-wall-comment-data {
   width: 100%;
 }
@@ -588,6 +572,17 @@
   align-items: center;
   flex-wrap: nowrap;
   row-gap: 16px;
+}
+.um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-comment-child .um-wall-comment-child-loop .um-wall-comment-reply-actions {
+  display: flex;
+  flex-direction: row;
+  justify-content: end;
+  align-items: center;
+  flex-wrap: nowrap;
+  column-gap: 8px;
+}
+.um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-comment-child .um-wall-comment-child-loop .um-wall-comment-reply-actions .um-wall-loader {
+  margin: 0;
 }
 .um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-comment-child .um-wall-comment-child-loop .um-wall-commentl .um-wall-comment-info {
   width: calc(100% - 48px - 4px);
@@ -694,9 +689,20 @@
   justify-content: flex-end;
   align-items: center;
   flex-wrap: nowrap;
-  gap: 52px;
+  gap: 8px;
 }
 
+.um-wall-photo-view-modal .um-button {
+  position: absolute;
+  top: 50%;
+  z-index: 1;
+}
+.um-wall-photo-view-modal .um-button.um-wall-modal-prev {
+  left: 0;
+}
+.um-wall-photo-view-modal .um-button.um-wall-modal-next {
+  right: 0;
+}
 .um-wall-photo-view-modal img {
   max-width: 100%;
   height: auto;
@@ -735,4 +741,10 @@
 }
 #um-mention-autocomplete .um-mention-item .username {
   opacity: 0.6;
+}
+
+@media (max-width: 1024px) {
+  .um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-commentl .um-wall-editc {
+    opacity: 1;
+  }
 }
