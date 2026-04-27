@@ -243,13 +243,17 @@
 .um .um-wall-widget .um-wall-head .um-wall-author .um-small-data .um-data-header {
   display: flex;
   flex-direction: row;
-  justify-content: start;
-  align-items: start;
+  justify-content: flex-start;
+  align-items: center;
   flex-wrap: nowrap;
   column-gap: 6px;
 }
 .um .um-wall-widget .um-wall-head .um-wall-author .um-small-data .um-data-header .um-user-display-name {
-  display: block;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  flex-wrap: nowrap;
   line-height: var(--um-text-line-height-sm, 20px);
 }
 .um .um-wall-widget .um-wall-body {

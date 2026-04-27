@@ -162,10 +162,10 @@
         .#{$prefix}small-data
           width: 100%
           .#{$prefix}data-header
-            +flex( row, start, start, nowrap )
+            +flex( row, flex-start, center, nowrap )
             column-gap: $spacing-sm
             .#{$prefix}user-display-name
-              display: block
+              +flex( row, flex-start, center, nowrap )
               line-height: var(--um-text-line-height-sm, 20px)
     .#{$prefix}wall-body
       +flex( column, flex-start, stretch, nowrap )
