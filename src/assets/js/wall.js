@@ -1798,3 +1798,44 @@ jQuery(document).ready(function () {
 		}
 	});
 });
+
+// Update files count badge and submit button state
+function um_wall_calculate_files( $uploader, up, action ) {
+	let count = $uploader.parents('.um-wall-post-form-wrapper').find('.um-wall-uploaded-count').text();
+	let form = $uploader.parents( 'form' );
+	if ( jQuery.isNumeric(count) && count > 0 ) {
+		let filesCountBadge;
+		// if action is add increase count by 1, if action is remove decrease by 1
+		if ( action === 'add' ) {
+			filesCountBadge = parseInt(count) + 1;
+		} else {
+			filesCountBadge = parseInt(count) - 1;
+		}
+		if ( filesCountBadge === 0 ) {
+			let textarea = form.find( '.um-wall-textarea-elem' );
+			let textarea_val;
+			// check if textarea or contenteditable div and get value
+			if ( textarea.is('textarea' ) ) {
+				textarea_val = textarea.val();
+			} else {
+				textarea_val = textarea.text();
+			}
+			// if there is text in the textarea enable submit button, otherwise disable
+			if ( textarea_val.trim().length > 0 ) {
+				um_enable_post_submit( form );
+			} else {
+				um_disable_post_submit( form );
+			}
+			$uploader.parents('.um-wall-post-form-wrapper').find('.um-wall-uploaded-count').addClass('um-display-none').text('');
+		} else {
+			if ( filesCountBadge > 10 ) {
+				filesCountBadge = '10+';
+			}
+			um_enable_post_submit( form );
+			$uploader.parents('.um-wall-post-form-wrapper').find('.um-wall-uploaded-count').removeClass('um-display-none').text( filesCountBadge );
+		}
+	} else {
+		$uploader.parents('.um-wall-post-form-wrapper').find('.um-wall-uploaded-count').removeClass('um-display-none').text( 1 );
+		um_enable_post_submit( form );
+	}
+}
