@@ -320,6 +320,10 @@
   width: 100%;
   height: auto;
 }
+.um .um-wall-widget .um-wall-body .um-wall-bodyinner .um-wall-bodyinner-txt img.avatar {
+  width: 40px;
+  vertical-align: middle;
+}
 .um .um-wall-widget .um-wall-body .um-wall-bodyinner .um-wall-bodyinner-txt .um-wall-seemore,
 .um .um-wall-widget .um-wall-body .um-wall-bodyinner .um-wall-bodyinner-txt .um-link {
   cursor: pointer;
