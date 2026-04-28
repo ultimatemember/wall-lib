@@ -27,7 +27,7 @@
   align-items: stretch;
   flex-wrap: nowrap;
   padding: 16px 24px;
-  row-gap: 12px;
+  row-gap: 0;
 }
 .um .um-box.um-wall-new-post .um-box-header, .um .um-box.um-wall-edit-post .um-box-header,
 .um .um-box .um-wall-edit-post .um-box-header {
@@ -38,6 +38,7 @@
   flex-wrap: nowrap;
   padding: 0;
   gap: 12px;
+  margin-bottom: 12px;
 }
 .um .um-box.um-wall-new-post .um-box-header .um-wall-post-author, .um .um-box.um-wall-edit-post .um-box-header .um-wall-post-author,
 .um .um-box .um-wall-edit-post .um-box-header .um-wall-post-author {
@@ -754,5 +755,15 @@
 @media (max-width: 1024px) {
   .um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-commentl .um-wall-editc {
     opacity: 1;
+  }
+}
+@media (max-width: 768px) {
+  .um .um-wall-uploader-section .um-uploader-filelist {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 500px) {
+  .um .um-wall-uploader-section .um-uploader-filelist {
+    grid-template-columns: repeat(1, 1fr);
   }
 }
