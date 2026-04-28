@@ -117,6 +117,7 @@
   padding: 0;
 }
 .um .um-box .um-wall-textarea-elem {
+  white-space: pre-wrap;
   overflow-y: auto;
   min-height: 64px;
   box-sizing: border-box;
@@ -134,6 +135,8 @@
 .um .um-box .um-wall-textarea-elem:not(.wp-editor-area) {
   border-radius: 8px;
   border: 1px solid var(--um-gray-300, #d0d5dd);
+  white-space: pre-wrap;
+  overflow-y: auto;
 }
 .um .um-box .um-wall-textarea-elem:not(.wp-editor-area):focus, .um .um-box .um-wall-textarea-elem:not(.wp-editor-area):focus-visible {
   border: 1px solid var(--um-primary-300-bg, #d6bbfb);

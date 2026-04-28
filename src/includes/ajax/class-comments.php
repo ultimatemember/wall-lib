@@ -489,7 +489,7 @@ class Comments {
 				'br' => array(),
 			)
 		);
-		$comment_content = apply_filters( $this->wall->prefix . 'wall_comment_content_edit', $orig_content, $post_id );
+		$comment_content = apply_filters( $this->wall->prefix . 'wall_comment_content_edit', $orig_content, $post_id, $commentid );
 
 		$old_data               = get_comment( $commentid );
 		$old_data->comment_meta = get_comment_meta( $commentid );

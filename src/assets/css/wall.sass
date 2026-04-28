@@ -61,6 +61,7 @@
     .#{$prefix}wall-edit-post
       padding: 0
     .#{$prefix}wall-textarea-elem
+      white-space: pre-wrap
       overflow-y: auto
       min-height: $spacing-7xl
       +border-box
@@ -73,6 +74,8 @@
       &:not(.wp-editor-area)
         border-radius: $radius-md
         border: 1px solid $gray-300
+        white-space: pre-wrap
+        overflow-y: auto
         &:focus,
         &:focus-visible
           border: 1px solid $primary-300
