@@ -195,7 +195,8 @@ class Posts {
 
 		do_action( $this->wall->prefix . 'before_wall_post_publish', $post_id );
 
-		$_post_content = str_replace( '&nbsp;', ' ', $_POST['_post_content'] ); // replace &nbsp; to space
+		$_post_content = wp_kses_post( $_POST['_post_content'] ); // sanitize content with allowed html tags for posts.
+		$_post_content = str_replace( '&nbsp;', ' ', $_post_content ); // replace &nbsp; to space
 		$_post_content = preg_replace( '/<div[^>]*>/i', "\n", $_post_content ); // replace div to new line
 		$_post_content = preg_replace( '/<\/div>/i', '', $_post_content ); // remove closing div tags
 		$_post_content = preg_replace( "/[ \t]*\n[ \t]*/", "\n", $_post_content ); // remove spaces and tabs around new lines

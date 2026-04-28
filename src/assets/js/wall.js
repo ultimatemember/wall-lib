@@ -332,7 +332,8 @@ jQuery( document ).ready(function () {
 					widget.find('.um-wall-comments').umHide();
 					widget.find('.um-wall-comment-form').umHide();
 					widget.find('.um-wall-body').before(data);
-					UM.frontend.uploader.init()
+					UM.frontend.uploader.init();
+					UM.frontend.autosize.init( '.um-wall-textarea-elem', 2 );
 				},
 				error: function(data) {
 					console.log(data);
@@ -819,6 +820,7 @@ jQuery( document ).ready(function () {
 		let btm_wrap = btn.parents('.um-wall-comment-edit')
 		let nonce = btn.attr('data-wpnonce');
 		let commentid = btn.attr('data-commentid');
+		let post_id = btn.attr('data-post_id');
 
 		let textarea = btm_wrap.find('textarea');
 		let comment = textarea.val();
@@ -835,6 +837,7 @@ jQuery( document ).ready(function () {
 		wp.ajax.send( action, {
 			data: {
 				comment_id: commentid,
+				post_id: post_id,
 				comment: comment,
 				nonce: nonce
 			},
