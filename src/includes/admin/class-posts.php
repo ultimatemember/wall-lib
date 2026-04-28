@@ -32,31 +32,36 @@ class Posts {
 		if ( $this->wall->post_type !== $_REQUEST['post_type'] ) {
 			return;
 		}
+
 		if ( empty( $_REQUEST['post_id'] ) || empty( $_REQUEST['_wpnonce'] ) || ! wp_verify_nonce( $_REQUEST['_wpnonce'], "wall_report{$_REQUEST['post_id']}" ) ) {
 			wp_die( esc_html__( 'Security check', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
 		}
 
+		$admin_url = admin_url( 'edit.php?post_type=' . $this->wall->post_type );
+
 		if ( ! is_numeric( $_REQUEST['post_id'] ) ) {
-			die();
+			wp_safe_redirect( $admin_url );
+			exit;
 		}
 
 		$post_id = absint( $_REQUEST['post_id'] );
 
 		if ( ! $this->wall->common()->posts()->reported( $post_id ) ) {
-			die();
+			wp_safe_redirect( $admin_url );
+			exit;
 		}
 
 		delete_post_meta( $post_id, '_reported' );
 		delete_post_meta( $post_id, '_reported_by' );
 
 		$option = $this->wall->prefix . 'flagged';
-		$count  = absint( get_option( $option ) );
-		if ( $count < 1 ) {
+		$count  = get_option( $option, 1 );
+		if ( ! is_numeric( $count ) || $count < 1 ) {
 			$count = 1;
 		}
 		update_option( $option, absint( $count - 1 ) );
 
-		wp_safe_redirect( admin_url( 'edit.php?post_type=' . $this->wall->post_type ) );
+		wp_safe_redirect( $admin_url );
 		exit;
 	}
 

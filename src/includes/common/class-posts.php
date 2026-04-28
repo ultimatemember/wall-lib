@@ -18,10 +18,20 @@ class Posts {
 	private $wall;
 
 	/**
+	 * @var array Global actions.
+	 */
+	private $global_actions;
+
+	/**
 	 * Post constructor.
 	 */
 	public function __construct( $wall ) {
 		$this->wall = $wall;
+		add_action( 'init', array( &$this, 'set_global_actions' ), 11 );
+	}
+
+	public function set_global_actions() {
+		$this->global_actions = apply_filters( $this->wall->prefix . 'global_actions', array() );
 	}
 
 	public function get_allowed_html() {
