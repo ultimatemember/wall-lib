@@ -38,9 +38,11 @@ class Comments {
 		add_action( 'wp_ajax_' . $this->wall->prefix . 'wall_remove_comment', array( $this, 'remove_comment' ) );
 	}
 
-	/***
-	 ***    @load comment likes
-	 ***/
+	/**
+	 * Load comment likes.
+	 *
+	 * @return void
+	 */
 	public function get_comment_likes() {
 		if ( empty( $_POST['comment_id'] ) ) {
 			wp_send_json_error( __( 'Wrong comment ID.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
@@ -229,7 +231,7 @@ class Comments {
 	 */
 	public function post_comment() {
 		// phpcs:disable WordPress.Security.NonceVerification
-		if ( empty( $_POST['post_id'] ) || ! $this->wall->common()->posts()->exists( absint( $_POST['post_id'] ) ) ) {
+		if ( empty( $_POST['post_id'] ) ) {
 			wp_send_json_error(
 				wp_kses(
 					UM()->frontend()::layouts()::alert(
@@ -243,13 +245,16 @@ class Comments {
 				)
 			);
 		}
+
 		$post_id = absint( $_POST['post_id'] );
 
-		if ( ! wp_verify_nonce( $_POST['nonce'], 'um_wall_comment_post' . $post_id ) ) {
+		check_ajax_referer( 'um_wall_comment_post' . $post_id, 'nonce' );
+
+		if ( ! $this->wall->common()->posts()->exists( $post_id ) ) {
 			wp_send_json_error(
 				wp_kses(
 					UM()->frontend()::layouts()::alert(
-						esc_html__( 'Wrong nonce.', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
+						esc_html__( 'Wrong post ID.', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
 						array(
 							'type'      => 'error',
 							'underline' => false,
@@ -275,7 +280,23 @@ class Comments {
 			);
 		}
 
-		if ( empty( sanitize_textarea_field( $_POST['comment'] ) ) ) {
+		if ( empty( $_POST['comment'] ) ) {
+			wp_send_json_error(
+				wp_kses(
+					UM()->frontend()::layouts()::alert(
+						esc_html__( 'Empty comment.', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
+						array(
+							'type'      => 'error',
+							'underline' => false,
+						)
+					),
+					UM()->get_allowed_html( 'templates' )
+				)
+			);
+		}
+
+		$orig_content = sanitize_textarea_field( wp_unslash( $_POST['comment'] ) );
+		if ( empty( $orig_content ) ) {
 			wp_send_json_error(
 				wp_kses(
 					UM()->frontend()::layouts()::alert(
@@ -298,7 +319,7 @@ class Comments {
 		$time_gmt = current_time( 'mysql', true );
 
 		$orig_content    = wp_kses(
-			trim( sanitize_textarea_field( $_POST['comment'] ) ),
+			$orig_content,
 			array(
 				'br' => array(),
 			)
@@ -318,10 +339,7 @@ class Comments {
 			'comment_type'         => 'um-social-activity',
 		);
 
-		$comment_parent = 0;
-		if ( ! empty( $_POST['reply_to'] ) ) {
-			$comment_parent = absint( $_POST['reply_to'] );
-		}
+		$comment_parent = ! empty( $_POST['reply_to'] ) ? absint( $_POST['reply_to'] ) : 0;
 
 		$data['comment_parent']   = $comment_parent;
 		$data['comment_date']     = $time;
@@ -417,23 +435,7 @@ class Comments {
 	 */
 	public function edit_comment() {
 		// phpcs:disable WordPress.Security.NonceVerification
-		if ( empty( $_POST['post_id'] ) || ! $this->wall->common()->posts()->exists( absint( $_POST['post_id'] ) ) ) {
-			wp_send_json_error(
-				wp_kses(
-					UM()->frontend()::layouts()::alert(
-						esc_html__( 'Wrong post ID.', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
-						array(
-							'type'      => 'error',
-							'underline' => false,
-						)
-					),
-					UM()->get_allowed_html( 'templates' )
-				)
-			);
-		}
-		$post_id = absint( $_POST['post_id'] );
-
-		if ( empty( $_POST['comment_id'] ) || ! $this->wall->common()->comments()->exists( absint( $_POST['comment_id'] ) ) ) {
+		if ( empty( $_POST['comment_id'] ) ) {
 			wp_send_json_error(
 				wp_kses(
 					UM()->frontend()::layouts()::alert(
@@ -449,11 +451,13 @@ class Comments {
 		}
 		$commentid = absint( $_POST['comment_id'] );
 
-		if ( ! wp_verify_nonce( $_POST['nonce'], 'um_wall_comment_edit' . $commentid ) ) {
+		check_ajax_referer( 'um_wall_comment_edit' . $commentid, 'nonce' );
+
+		if ( ! $this->wall->common()->comments()->exists( $commentid ) ) {
 			wp_send_json_error(
 				wp_kses(
 					UM()->frontend()::layouts()::alert(
-						esc_html__( 'Wrong nonce.', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
+						esc_html__( 'Wrong comment ID.', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
 						array(
 							'type'      => 'error',
 							'underline' => false,
@@ -479,19 +483,67 @@ class Comments {
 			);
 		}
 
+		if ( empty( $_POST['comment'] ) ) {
+			wp_send_json_error(
+				wp_kses(
+					UM()->frontend()::layouts()::alert(
+						esc_html__( 'Empty comment.', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
+						array(
+							'type'      => 'error',
+							'underline' => false,
+						)
+					),
+					UM()->get_allowed_html( 'templates' )
+				)
+			);
+		}
+
+		$orig_content = sanitize_textarea_field( wp_unslash( $_POST['comment'] ) );
+		if ( empty( $orig_content ) ) {
+			wp_send_json_error(
+				wp_kses(
+					UM()->frontend()::layouts()::alert(
+						esc_html__( 'Empty comment.', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
+						array(
+							'type'      => 'error',
+							'underline' => false,
+						)
+					),
+					UM()->get_allowed_html( 'templates' )
+				)
+			);
+		}
+
+		$old_data = get_comment( $commentid );
+		$post_id  = $old_data->comment_post_ID;
+
+		if ( ! $this->wall->common()->posts()->exists( $post_id ) ) {
+			wp_send_json_error(
+				wp_kses(
+					UM()->frontend()::layouts()::alert(
+						esc_html__( 'Wrong post ID.', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
+						array(
+							'type'      => 'error',
+							'underline' => false,
+						)
+					),
+					UM()->get_allowed_html( 'templates' )
+				)
+			);
+		}
+
 		do_action( $this->wall->prefix . 'before_wall_comment_updated', $commentid, get_current_user_id() );
 
 		um_fetch_user( get_current_user_id() );
 
 		$orig_content    = wp_kses(
-			trim( sanitize_textarea_field( $_POST['comment'] ) ),
+			$orig_content,
 			array(
 				'br' => array(),
 			)
 		);
 		$comment_content = apply_filters( $this->wall->prefix . 'wall_comment_content_edit', $orig_content, $post_id, $commentid );
 
-		$old_data               = get_comment( $commentid );
 		$old_data->comment_meta = get_comment_meta( $commentid );
 
 		$data = array(
@@ -523,9 +575,17 @@ class Comments {
 			} else {
 				do_action( $this->wall->prefix . 'after_wall_comment_updated', $commentid, $old_data );
 			}
-		}
 
-		if ( empty( $commentid ) ) {
+			update_comment_meta( $commentid, 'orig_content', wp_slash( $orig_content ) );
+			update_comment_meta( $commentid, '_um_comment_version', $this->wall->plugin_version );
+
+			// phpcs:enable WordPress.Security.NonceVerification
+			wp_send_json_success(
+				array(
+					'content' => UM()->ajax()->esc_html_spaces( $comment_content ),
+				)
+			);
+		} else {
 			wp_send_json_error(
 				wp_kses(
 					UM()->frontend()::layouts()::alert(
@@ -536,16 +596,6 @@ class Comments {
 						)
 					),
 					UM()->get_allowed_html( 'templates' )
-				)
-			);
-		} else {
-			update_comment_meta( $commentid, 'orig_content', wp_slash( $orig_content ) );
-			update_comment_meta( $commentid, '_um_comment_version', $this->wall->plugin_version );
-
-			// phpcs:enable WordPress.Security.NonceVerification
-			wp_send_json_success(
-				array(
-					'content' => UM()->ajax()->esc_html_spaces( $comment_content ),
 				)
 			);
 		}
@@ -577,7 +627,7 @@ class Comments {
 
 		$number    = apply_filters( $this->wall->prefix . 'wall_comments_loadmore_number', 10 );
 		$order     = apply_filters( $this->wall->prefix . 'wall_comments_loadmore_order', 'asc' );
-		$offset    = absint( $_POST['offset'] );
+		$offset    = ! empty( $_POST['offset'] ) ? absint( $_POST['offset'] ) : 0;
 		$post_link = $this->wall->common()->posts()->get_permalink( $post_id );
 		// phpcs:enable WordPress.Security.NonceVerification
 
@@ -644,7 +694,7 @@ class Comments {
 
 		$number    = apply_filters( $this->wall->prefix . 'wall_comments_loadmore_number', 10 );
 		$order     = apply_filters( $this->wall->prefix . 'wall_comments_loadmore_order', 10 );
-		$offset    = absint( $_POST['offset'] );
+		$offset    = ! empty( $_POST['offset'] ) ? absint( $_POST['offset'] ) : 0;
 		$post_link = $this->wall->common()->posts()->get_permalink( $post_id );
 
 		$child     = $this->wall->common()->comments()->get_replies( $post_id, $comment_id, absint( $number ), $order, $offset );

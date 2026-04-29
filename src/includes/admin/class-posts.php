@@ -33,11 +33,14 @@ class Posts {
 			return;
 		}
 
-		if ( empty( $_REQUEST['post_id'] ) || empty( $_REQUEST['_wpnonce'] ) || ! wp_verify_nonce( $_REQUEST['_wpnonce'], "wall_report{$_REQUEST['post_id']}" ) ) {
-			wp_die( esc_html__( 'Security check', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
+		$admin_url = admin_url( 'edit.php?post_type=' . $this->wall->post_type );
+
+		if ( empty( $_REQUEST['post_id'] ) ) {
+			wp_safe_redirect( $admin_url );
+			exit;
 		}
 
-		$admin_url = admin_url( 'edit.php?post_type=' . $this->wall->post_type );
+		check_admin_referer( 'wall_report' . $_REQUEST['post_id'] );
 
 		if ( ! is_numeric( $_REQUEST['post_id'] ) ) {
 			wp_safe_redirect( $admin_url );

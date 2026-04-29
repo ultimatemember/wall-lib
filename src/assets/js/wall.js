@@ -820,7 +820,6 @@ jQuery( document ).ready(function () {
 		let btm_wrap = btn.parents('.um-wall-comment-edit')
 		let nonce = btn.attr('data-wpnonce');
 		let commentid = btn.attr('data-commentid');
-		let post_id = btn.attr('data-post_id');
 
 		let textarea = btm_wrap.find('textarea');
 		let comment = textarea.val();
@@ -837,7 +836,6 @@ jQuery( document ).ready(function () {
 		wp.ajax.send( action, {
 			data: {
 				comment_id: commentid,
-				post_id: post_id,
 				comment: comment,
 				nonce: nonce
 			},
