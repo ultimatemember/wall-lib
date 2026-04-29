@@ -1034,22 +1034,23 @@ jQuery( document ).ready(function () {
 		let el = jQuery(this);
 		let wrap = el.parents('.um-wall-bodyinner-photo');
 		let el_id = el.parent().attr('id');
-		let image = '<div class="um-wall-photo-view-modal-wrap">' +
+
+		let image = '<img src="' + el.attr('src') + '" alt="' + el.attr('alt') + '" />' +
+			'<div class="um-wall-photo-view-modal-wrap">' +
 			'<button type="button" class="um-button um-button-link-gray um-button-size-s has-background has-text-color um-button-has-icon um-button-icon-content um-wall-modal-prev" data-id="' + el_id + '" title=""><svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-left"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M15 6l-6 6l6 6"></path></svg></button>' +
 			'<button type="button" class="um-button um-button-link-gray um-button-size-s has-background has-text-color um-button-has-icon um-button-icon-content um-wall-modal-next" data-id="' + el_id + '" title=""><svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-right"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M9 6l6 6l-6 6"></path></svg></button>' +
-			'<img src="' + el.attr('src') + '" alt="" />' +
 			'</div>';
-		let header = el.attr('title');
 
 		let count = wrap.find('.um-image-lazyload-wrapper').length;
 
 		let settings = {
 			classes:  'um-wall-photo-view-modal',
 			duration: 400,
-			header:   header,
+			header:   '',
 			footer:   '',
 			size:     'large',
-			content:  image
+			content:  image,
+			template: '<div class="um-modal"><span class="um-modal-close um-modal-close-fixed">&times;</span><div class="um-modal-body"></div></div>'
 		};
 
 		UM.modal.addModal( settings, null );
@@ -1059,7 +1060,7 @@ jQuery( document ).ready(function () {
 		}
 	});
 
-	jQuery( document.body ).on( 'click', '.um-wall-modal-prev, .um-wall-modal-next', function( e ){
+	jQuery(document).on( 'click', '.um-wall-modal-prev, .um-wall-modal-next', function() {
 		let el = jQuery(this);
 		let current_id = el.attr('data-id');
 		let current = jQuery('#' + current_id);
@@ -1083,13 +1084,10 @@ jQuery( document ).ready(function () {
 				el_id = last.attr('id');
 			}
 		}
-		let image = '<div class="um-wall-photo-view-modal-wrap">' +
-			'<button type="button" class="um-button um-button-link-gray um-button-size-s has-background has-text-color um-button-has-icon um-button-icon-content um-wall-modal-prev" data-id="' + el_id + '" title=""><svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-left"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M15 6l-6 6l6 6"></path></svg></button>' +
-			'<button type="button" class="um-button um-button-link-gray um-button-size-s has-background has-text-color um-button-has-icon um-button-icon-content um-wall-modal-next" data-id="' + el_id + '" title=""><svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-right"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M9 6l6 6l-6 6"></path></svg></button>' +
-			'<img src="' + img_src + '" alt="" />' +
-			'</div>';
 
-		jQuery('.um-wall-photo-view-modal-wrap').html( image );
+		jQuery('.um-modal-body img').replaceWith( '<img src="' + img_src + '" alt="' + el.attr('alt') + '" />' );
+		jQuery('.um-wall-photo-view-modal-wrap .um-wall-modal-prev').replaceWith( '<button type="button" class="um-button um-button-link-gray um-button-size-s has-background has-text-color um-button-has-icon um-button-icon-content um-wall-modal-prev" data-id="' + el_id + '" title=""><svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-left"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M15 6l-6 6l6 6"></path></svg></button>' );
+		jQuery('.um-wall-photo-view-modal-wrap .um-wall-modal-next').replaceWith( '<button type="button" class="um-button um-button-link-gray um-button-size-s has-background has-text-color um-button-has-icon um-button-icon-content um-wall-modal-next" data-id="' + el_id + '" title=""><svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-right"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M9 6l6 6l-6 6"></path></svg></button>' );
 		UM.modal.responsive();
 	});
 
