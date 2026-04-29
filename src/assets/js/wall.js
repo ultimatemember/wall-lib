@@ -403,7 +403,10 @@ jQuery( document ).ready(function () {
 		let el = jQuery(this);
 		let post_id = el.attr('data-post_id');
 		let nonce = el.attr('data-report_nonce');
+		let widget = jQuery(this).parents('.um-wall-widget');
 		let loader = jQuery('#postid-' + post_id).find('.um-wall-post-loader');
+
+		widget.find('.um-post-actions-toggle').umHide();
 		loader.umShow();
 
 		let action = wp.hooks.applyFilters(
@@ -430,10 +433,12 @@ jQuery( document ).ready(function () {
 			{
 				data: data,
 				success: function( data ) {
+					widget.find('.um-post-actions-toggle').umShow();
 					loader.umHide();
 					el.addClass('flagged').html(el.attr('data-cancel_report'));
 				},
 				error: function(data) {
+					widget.find('.um-post-actions-toggle').umShow();
 					loader.umHide();
 					if ( data.message ) {
 						let error = data.message;
@@ -452,7 +457,10 @@ jQuery( document ).ready(function () {
 		let el = jQuery(this);
 		let post_id = el.attr('data-post_id');
 		let nonce = el.attr('data-unrepost_nonce');
+		let widget = jQuery(this).parents('.um-wall-widget');
 		let loader = jQuery('#postid-' + post_id).find('.um-wall-post-loader');
+
+		widget.find('.um-post-actions-toggle').umHide();
 		loader.umShow();
 
 		let action = wp.hooks.applyFilters(
@@ -479,11 +487,13 @@ jQuery( document ).ready(function () {
 			{
 				data: data,
 				success: function( data ) {
+					widget.find('.um-post-actions-toggle').umShow();
 					loader.umHide();
 					el.removeClass('flagged').html(el.attr('data-report'));
 				},
 				error: function(data) {
 					console.log(data);
+					widget.find('.um-post-actions-toggle').umShow();
 					loader.umHide();
 					if ( data.message ) {
 						let error = data.message;
