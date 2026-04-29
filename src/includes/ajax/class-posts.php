@@ -84,6 +84,12 @@ class Posts {
 			'allowed_html'     => $this->wall->common()->posts()->get_allowed_html(),
 		);
 
+		// phpcs:disable WordPress.Security.NonceVerification -- already verified here
+		if ( ! empty( $_POST['core_page'] ) ) {
+			$t_args['page'] = sanitize_key( $_POST['core_page'] );
+		}
+		// phpcs:enable WordPress.Security.NonceVerification -- already verified here
+
 		$t_args        = apply_filters( $this->wall->prefix . 'wall_template_args', $t_args, $args, $query, $data );
 		$template_name = apply_filters( $this->wall->prefix . 'wall_posts_template', 'v3/posts-loop.php' );
 
