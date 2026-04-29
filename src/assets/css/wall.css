@@ -705,10 +705,17 @@
   gap: 8px;
 }
 
+.um-wall-photo-view-modal .um-modal-close {
+  position: fixed;
+  color: #fff;
+}
 .um-wall-photo-view-modal .um-button {
-  position: absolute;
-  top: 50%;
+  position: fixed;
   z-index: 1;
+  top: 50%;
+  background: none;
+  border: none;
+  color: #fff;
 }
 .um-wall-photo-view-modal .um-button.um-wall-modal-prev {
   left: 0;
@@ -717,9 +724,7 @@
   right: 0;
 }
 .um-wall-photo-view-modal img {
-  max-width: 100%;
-  height: auto;
-  max-height: 100% !important;
+  object-fit: contain;
 }
 
 #um-mention-autocomplete {

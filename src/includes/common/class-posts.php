@@ -209,7 +209,7 @@ class Posts {
 						$content .= "<img src=\"{$photo_url}\" title=\"{$title}\" alt=\"\" style=\"width: 100%;\" />";
 					}
 				} else {
-					$content .= "<div class=\"um-image-lazyload-wrapper\" id=\"um-wall-photo-{$attachment->ID}\"><div class=\"um-skeleton-box\"></div><img class=\"um-image-lazyload\" loading=\"lazy\" src=\"{$photo_url}\" title=\"{$title}\" alt=\"\" /></div>";
+					$content .= "<div class=\"um-image-lazyload-wrapper\" id=\"um-wall-photo-{$attachment->ID}\"><div class=\"um-skeleton-box\"></div><img class=\"um-image-lazyload\" loading=\"lazy\" src=\"{$photo_url}\" title=\"{$title}\" alt=\"{$title}\" /></div>";
 				}
 			}
 		} else {

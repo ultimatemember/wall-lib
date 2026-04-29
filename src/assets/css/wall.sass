@@ -474,24 +474,28 @@
 
 // modal
 .#{$prefix}wall-photo-view-modal
+  .#{$prefix}modal-close
+    position: fixed
+    color: $um-white
   .#{$prefix}button
-    position: absolute
-    top: 50%
+    position: fixed
     z-index: 1
+    top: 50%
+    background: none
+    border: none
+    color: $um-white
     &.#{$prefix}wall-modal-prev
       left: 0
     &.#{$prefix}wall-modal-next
       right: 0
   img
-    max-width: 100%
-    height: auto
-    max-height: 100% !important
+    object-fit: contain
 
 // mentions
 #um-mention-autocomplete
   position: absolute
   z-index: 99999
-  background: #fff
+  background: $um-white
   border: 1px solid #ccc
   border-radius: 6px
   display: none
