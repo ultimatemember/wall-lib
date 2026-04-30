@@ -21,7 +21,7 @@
     &.#{$prefix}wall-edit-post,
     .#{$prefix}wall-edit-post
       +flex( column, flex-start, stretch, nowrap )
-      padding: $spacing-xl $spacing-3xl
+      padding: $spacing-xl $spacing-2xl
       row-gap: 0
       .#{$prefix}box-header
         +flex( row, flex-start, start, nowrap )
@@ -115,37 +115,61 @@
       .#{$prefix}wall-comment-post
         justify-self: right
   .#{$prefix}wall-uploader-section
-    .#{$prefix}uploader-filelist
-      .#{$prefix}uploader-file
-        img
-          max-width: 100%
-          height: auto
-  .#{$prefix}wall-uploader-section
-    .#{$prefix}uploader-filelist
-      display: grid
-      grid-template-rows: auto 1fr
-      grid-template-columns: repeat(3, 1fr)
-      gap: $spacing-md
-      .#{$prefix}uploader-image-file-placeholder
-        border: none
-        border-radius: 0
-        max-width: 180px
-        padding: 0
-        margin: 0
-        &.#{$prefix}upload-completed
-          border: none
-          border-radius: 0
-          padding: 0
+    .#{$prefix}uploader
+      .#{$prefix}uploader-filelist
+        display: grid
+        grid-template-rows: auto 1fr
+        grid-template-columns: repeat(3, 1fr)
+        gap: $spacing-lg
+        margin: 0 0 $spacing-lg 0 !important
+        .#{$prefix}uploader-file
           margin: 0
-        &.#{$prefix}upload-failed
-          border: none
-          border-radius: 0
-          padding: 0
-          margin: 0
-        .#{$prefix}uploader-file-name
-          white-space: nowrap
-          overflow: hidden
-          text-overflow: ellipsis
+          max-width: 184px
+          box-sizing: border-box
+          .#{$prefix}ploader-file-data
+            row-gap: $spacing-sm
+            .#{$prefix}uploader-wall-photos-data-wrapper
+              row-gap: $spacing-sm
+              +flex( column, flex-start, start, nowrap )
+              .#{$prefix}uploader-file-data-header
+                max-width: 100%
+                .#{$prefix}uploader-file-name
+                  white-space: nowrap
+                  overflow: hidden
+                  text-overflow: ellipsis
+          .#{$prefix}uploader-file-preview
+            overflow: hidden
+            width: 100%
+            height: 150px
+            display: flex
+            flex-direction: row
+            justify-content: center
+            align-items: center
+            flex-wrap: nowrap
+            img
+              width: 150px
+              height: 150px
+              object-fit: cover
+            canvas
+              width: 150px !important
+              height: 150px !important
+        .#{$prefix}uploader-image-file-placeholder
+          max-width: 184px
+          +flex( row, flex-start, start, nowrap )
+          padding: $spacing-xl
+          background: $um-white
+          border: 1px solid $gray-200
+          border-radius: $radius-xl
+          column-gap: $spacing-lg
+          box-sizing: border-box
+          &.#{$prefix}upload-completed
+            border-color: $gray-200
+          &.#{$prefix}upload-failed
+            border-color: $gray-200
+          .#{$prefix}uploader-file-name
+            white-space: nowrap
+            overflow: hidden
+            text-overflow: ellipsis
 
 // Single wall post
 .um
@@ -530,14 +554,20 @@
               .#{$prefix}wall-editc
                 opacity: 1
 
-@media (max-width: 768px)
+@media (max-width: 735px)
   .um
     .#{$prefix}wall-uploader-section
-      .#{$prefix}uploader-filelist
-        grid-template-columns: repeat(2, 1fr)
+      .#{$prefix}uploader
+        .#{$prefix}uploader-filelist
+          grid-template-columns: repeat(2, minmax(0, 1fr))
+          .#{$prefix}uploader-image-file-placeholder
+            max-width: 100%
+          .#{$prefix}uploader-file
+            max-width: 100%
 
 @media (max-width: 500px)
   .um
     .#{$prefix}wall-uploader-section
-      .#{$prefix}uploader-filelist
-        grid-template-columns: repeat(1, 1fr)
+      .#{$prefix}uploader
+        .#{$prefix}uploader-filelist
+          grid-template-columns: repeat(1, minmax(0, 1fr))
