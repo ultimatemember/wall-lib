@@ -28,10 +28,32 @@ class Posts {
 	public function __construct( $wall ) {
 		$this->wall = $wall;
 		add_action( 'init', array( &$this, 'set_global_actions' ), 11 );
+		add_filter( 'post_class', array( &$this, 'flagged_class' ), 10, 3 );
 	}
 
 	public function set_global_actions() {
 		$this->global_actions = apply_filters( $this->wall->prefix . 'global_actions', array() );
+	}
+
+	/**
+	 * @param array $classes
+	 * @param array $css_class
+	 * @param int   $post_id
+	 *
+	 * @return array
+	 */
+	public function flagged_class( $classes, $css_class, $post_id ) {
+		$post_type = get_post_type( $post_id );
+		if ( $this->wall->post_type !== $post_type ) {
+			return $classes;
+		}
+
+		$is_reported = get_post_meta( $post_id, '_reported', true );
+		if ( $is_reported ) {
+			$classes[] = 'is-flagged';
+		}
+
+		return $classes;
 	}
 
 	public function get_allowed_html() {
