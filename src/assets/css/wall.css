@@ -213,6 +213,9 @@
   max-width: 100%;
   width: 100%;
 }
+.um .um-wall-uploader-section .um-uploader .um-uploader-filelist .um-uploader-file .um-uploader-file-data .um-uploader-wall-photos-data-wrapper .um-uploader-file-data-header .um-wall-delete-photo {
+  padding: 0;
+}
 .um .um-wall-uploader-section .um-uploader .um-uploader-filelist .um-uploader-file .um-uploader-file-data .um-uploader-wall-photos-data-wrapper .um-uploader-file-data-header .um-uploader-file-name {
   white-space: nowrap;
   overflow: hidden;
