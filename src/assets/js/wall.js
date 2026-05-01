@@ -367,13 +367,7 @@ jQuery( document ).ready(function () {
 
 		let id = jQuery(this).data( 'id' );
 		if ( id ) {
-			let $input = jQuery('#um_wall_deleted_attachments');
-			let currentVal = $input.val();
-			let ids = currentVal ? currentVal.split(',') : [];
-			if ( !ids.includes(String(id)) ) {
-				ids.push(id);
-				$input.val(ids.join(','));
-			}
+			wp.hooks.doAction( 'um_wall_uploader_after_file_row_removed', id, jQuery(this) );
 		}
 
 		let $uploader = jQuery(this).parents( '.um-uploader' );

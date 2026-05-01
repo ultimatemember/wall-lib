@@ -211,6 +211,7 @@
 }
 .um .um-wall-uploader-section .um-uploader .um-uploader-filelist .um-uploader-file .um-uploader-file-data .um-uploader-wall-photos-data-wrapper .um-uploader-file-data-header {
   max-width: 100%;
+  width: 100%;
 }
 .um .um-wall-uploader-section .um-uploader .um-uploader-filelist .um-uploader-file .um-uploader-file-data .um-uploader-wall-photos-data-wrapper .um-uploader-file-data-header .um-uploader-file-name {
   white-space: nowrap;
@@ -817,5 +818,11 @@
   }
   .um .um-wall-uploader-section .um-uploader .um-uploader-filelist .um-uploader-file {
     max-width: 100%;
+  }
+}
+@media (max-width: 500px) {
+  .um .um-wall-uploader-section .um-uploader .um-uploader-filelist .um-uploader-file {
+    max-width: 100%;
+    width: 100%;
   }
 }

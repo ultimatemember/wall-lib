@@ -133,7 +133,7 @@ class Uploader {
 
 		ob_start();
 		?>
-		<div class="um-uploader-file" id="wall-photo-<?php echo esc_attr( $photo_id ); ?>">
+		<div class="um-uploader-file" id="wall-photo-<?php echo absint( $photo_id ); ?>">
 			<div class="um-uploader-file-data">
 				<div class="um-uploader-file-preview-error um-display-none"></div>
 				<div class="um-uploader-wall-photos-data-wrapper">
@@ -155,7 +155,7 @@ class Uploader {
 									'icon_position' => 'content',
 									'icon'          => $button_content,
 									'title'         => __( 'Delete photo', 'um-user-photos' ),
-									'classes'       => array( 'um-wall-delete-photo', 'um-uploader-file-remove' ),
+									'classes'       => array( 'um-wall-delete-photo' ),
 									'data'          => array(
 										'id'           => $photo_id,
 										'nonce'        => wp_create_nonce( 'um_wall_delete_photo' . $photo_id ),

@@ -131,6 +131,7 @@
               +flex( column, flex-start, start, nowrap )
               .#{$prefix}uploader-file-data-header
                 max-width: 100%
+                width: 100%
                 .#{$prefix}uploader-file-name
                   white-space: nowrap
                   overflow: hidden
@@ -563,3 +564,12 @@
             max-width: 100%
           .#{$prefix}uploader-file
             max-width: 100%
+
+@media (max-width: 500px)
+  .um
+    .#{$prefix}wall-uploader-section
+      .#{$prefix}uploader
+        .#{$prefix}uploader-filelist
+          .#{$prefix}uploader-file
+            max-width: 100%
+            width: 100%
