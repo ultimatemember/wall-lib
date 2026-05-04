@@ -1068,7 +1068,16 @@ class Posts {
 		update_post_meta( $post_id, '_reported', $new_r + 1 );
 
 		do_action( $this->wall->prefix . 'wall_after_post_reported', $post_id, $user_id );
-		wp_send_json_success( 'success' );
+
+		$flag = UM()->frontend()::layouts()::badge(
+			__( 'Reported', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
+			array(
+				'size'  => 's',
+				'color' => 'warning',
+			)
+		);
+
+		wp_send_json_success( array( 'flag' => UM()->ajax()->esc_html_spaces( $flag ) ) );
 	}
 
 	/**
@@ -1096,11 +1105,11 @@ class Posts {
 			unset( $users_reported[ $user_id ] );
 		}
 
-		if ( ! $users_reported ) {
-			$users_reported = '';
+		if ( empty( $users_reported ) ) {
+			delete_post_meta( $post_id, '_reported_by' );
+		} else {
+			update_post_meta( $post_id, '_reported_by', $users_reported );
 		}
-
-		update_post_meta( $post_id, '_reported_by', $users_reported );
 
 		if ( get_post_meta( $post_id, '_reported', true ) ) {
 

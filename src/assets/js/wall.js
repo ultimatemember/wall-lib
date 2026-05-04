@@ -428,6 +428,7 @@ jQuery( document ).ready(function () {
 				data: data,
 				success: function( data ) {
 					widget.find('.um-post-actions-toggle').umShow();
+					widget.find('.um-wall-author .um-small-data').after(data.flag);
 					loader.umHide();
 					el.addClass('flagged').html(el.attr('data-cancel_report'));
 				},
@@ -482,6 +483,7 @@ jQuery( document ).ready(function () {
 				data: data,
 				success: function( data ) {
 					widget.find('.um-post-actions-toggle').umShow();
+					widget.find('.um-wall-head .um-badge').remove();
 					loader.umHide();
 					el.removeClass('flagged').html(el.attr('data-report'));
 				},

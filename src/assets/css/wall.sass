@@ -188,9 +188,10 @@
         top: 0
         right: 0
       .#{$prefix}wall-author
-        flex: 1
+        +flex( row, flex-start, flex-start, nowrap )
+        column-gap: $spacing-lg
         .#{$prefix}small-data
-          width: 100%
+          row-gap: 0
           .#{$prefix}data-header
             +flex( row, flex-start, center, nowrap )
             column-gap: $spacing-sm
