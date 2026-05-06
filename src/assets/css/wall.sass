@@ -45,6 +45,10 @@
           .#{$prefix}uploader
             padding: 0 0 $spacing-lg 0
             width: calc( 100% - 1px ) // fix while animation crop the uploader border.
+            .#{$prefix}upload-link
+              &.#{$prefix}upload-link-disabled
+                pointer-events: none
+                color: $gray-600
 
       .#{$prefix}box-footer
         +flex( row, space-between, stretch, nowrap )

@@ -45,11 +45,13 @@ function um_check_textarea_length( editor ) {
 }
 
 function um_enable_post_submit( form ) {
-	form.find( '.um-wall-post' ).prop( 'disabled', false );
+	form.find( '.um-button' ).prop( 'disabled', false );
+	form.find( '.um-upload-link' ).removeClass('um-upload-link-disabled');
 }
 
 function um_disable_post_submit( form ) {
-	form.find( '.um-wall-post' ).prop( 'disabled', true );
+	form.find( '.um-button' ).prop( 'disabled', true );
+	form.find( '.um-upload-link' ).addClass('um-upload-link-disabled');
 }
 
 function um_enable_comment_submit( form ) {
@@ -208,6 +210,7 @@ jQuery( document ).ready(function () {
 
 				UM.frontend.dropdown.init();
 				UM.frontend.image.lazyload.init();
+				um_enable_post_submit( form );
 			},
 			error: function(data) {
 				form.find('.um-wall-right .um-ajax-spinner-svg').hide();
@@ -222,6 +225,7 @@ jQuery( document ).ready(function () {
 					message: error,
 					type: 'error'
 				});
+				um_enable_post_submit( form );
 			}
 		});
 	});
