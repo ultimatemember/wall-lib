@@ -55,11 +55,11 @@ function um_disable_post_submit( form ) {
 }
 
 function um_enable_comment_submit( form ) {
-	form.find( '.um-wall-comment-post' ).prop( 'disabled', false );
+	form.find( '.um-button' ).prop( 'disabled', false );
 }
 
 function um_disable_comment_submit( form ) {
-	form.find( '.um-wall-comment-post' ).prop( 'disabled', true );
+	form.find( '.um-button' ).prop( 'disabled', true );
 }
 
 function um_check_comment_length( textarea ) {
@@ -771,6 +771,8 @@ jQuery( document ).ready(function () {
 			'um_wall_post_comment'
 		);
 
+		um_disable_comment_submit( btm_wrap );
+
 		wp.ajax.send( action, {
 			data: {
 				post_id: postid,
@@ -812,6 +814,7 @@ jQuery( document ).ready(function () {
 				} else {
 					btn.parents('.um-wall-reply-form').remove();
 				}
+				um_enable_comment_submit( btm_wrap );
 			},
 			error: function( data ) {
 				console.log( data );
@@ -820,6 +823,7 @@ jQuery( document ).ready(function () {
 					message: data,
 					type: 'error'
 				});
+				um_enable_comment_submit( btm_wrap );
 			}
 		});
 	});
@@ -843,6 +847,8 @@ jQuery( document ).ready(function () {
 			'um_wall_edit_comment'
 		);
 
+		um_disable_comment_submit( btm_wrap );
+
 		wp.ajax.send( action, {
 			data: {
 				comment_id: commentid,
@@ -857,6 +863,7 @@ jQuery( document ).ready(function () {
 
 				btn.parents('.um-wall-commentl').find('.um-wall-editc .um-wall-edit-comment-cancel').umToggle();
 				btn.parents('.um-wall-commentl').find('.um-wall-editc .um-wall-edit-comment').umToggle();
+				um_enable_comment_submit( btm_wrap );
 			},
 			error: function( data ) {
 				console.log( data );
@@ -865,6 +872,7 @@ jQuery( document ).ready(function () {
 					message: data,
 					type: 'error'
 				});
+				um_enable_comment_submit( btm_wrap );
 			}
 		});
 	});
