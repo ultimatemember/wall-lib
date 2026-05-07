@@ -55,6 +55,15 @@
         padding: $spacing-lg 0 0 0
         .#{$prefix}wall-left
           +flex( row, flex-start, center, nowrap )
+          .#{$prefix}wall-toggle-uploader
+            position: relative
+            .#{$prefix}wall-uploaded-count
+              bottom: 0
+              position: absolute
+              right: 0
+              font-size: 10px
+              padding: 3px
+              line-height: 1
         .#{$prefix}wall-right
           +flex( row, flex-end, center, nowrap )
           gap: $spacing-md
