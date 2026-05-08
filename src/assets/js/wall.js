@@ -36,30 +36,40 @@ function um_check_textarea_length( editor ) {
 	}
 
 	if ( text.length > 0 ) {
-		um_enable_post_submit(form);
+		um_enable_post_submit(form, false);
 	} else {
 		if (form.find('.um-uploader-file.um-upload-completed').length === 0) {
-			um_disable_post_submit(form);
+			um_disable_post_submit(form, false);
 		}
 	}
 }
 
-function um_enable_post_submit( form ) {
-	form.find( '.um-button' ).prop( 'disabled', false );
+function um_enable_post_submit( form, empty = true, submit = true, success = false ) {
+	form.find( '.um-button, textarea' ).prop( 'disabled', false );
 	form.find( '.um-upload-link' ).removeClass('um-upload-link-disabled');
+	form.find('.um-wall-textarea-elem').attr('contenteditable', true);
+	if ( true === success ) {
+		form.find('.um-wall-post').prop( 'disabled', true );
+	}
 }
 
-function um_disable_post_submit( form ) {
-	form.find( '.um-button' ).prop( 'disabled', true );
-	form.find( '.um-upload-link' ).addClass('um-upload-link-disabled');
+function um_disable_post_submit( form, empty = true, submit = true ) {
+	if ( true === empty ) {
+		form.find('.um-wall-post').prop( 'disabled', true );
+	}
+	if ( true === submit ) {
+		form.find( '.um-upload-link' ).addClass('um-upload-link-disabled');
+		form.find( '.um-button' ).prop( 'disabled', true );
+		form.find( '.um-wall-textarea-elem' ).attr('contenteditable', false);
+	}
 }
 
 function um_enable_comment_submit( form ) {
-	form.find( '.um-button' ).prop( 'disabled', false );
+	form.find( '.um-button, .um-wall-comment-textarea, .um-wall-comment-edit textarea' ).prop( 'disabled', false );
 }
 
 function um_disable_comment_submit( form ) {
-	form.find( '.um-button' ).prop( 'disabled', true );
+	form.find( '.um-button, .um-wall-comment-textarea, .um-wall-comment-edit textarea' ).prop( 'disabled', true );
 }
 
 function um_check_comment_length( textarea ) {
@@ -1829,30 +1839,14 @@ function um_wall_calculate_files( $uploader, up, action ) {
 			filesCountBadge = parseInt(count) - 1;
 		}
 		if ( filesCountBadge === 0 ) {
-			let textarea = form.find( '.um-wall-textarea-elem' );
-			let textarea_val;
-			// check if textarea or contenteditable div and get value
-			if ( textarea.is('textarea' ) ) {
-				textarea_val = textarea.val();
-			} else {
-				textarea_val = textarea.text();
-			}
-			// if there is text in the textarea enable submit button, otherwise disable
-			if ( textarea_val.trim().length > 0 ) {
-				um_enable_post_submit( form );
-			} else {
-				um_disable_post_submit( form );
-			}
 			$uploader.parents('.um-wall-post-form-wrapper').find('.um-wall-uploaded-count').addClass('um-display-none').text('');
 		} else {
 			if ( filesCountBadge > 10 ) {
 				filesCountBadge = '10+';
 			}
-			um_enable_post_submit( form );
 			$uploader.parents('.um-wall-post-form-wrapper').find('.um-wall-uploaded-count').removeClass('um-display-none').text( filesCountBadge );
 		}
 	} else {
 		$uploader.parents('.um-wall-post-form-wrapper').find('.um-wall-uploaded-count').removeClass('um-display-none').text( 1 );
-		um_enable_post_submit( form );
 	}
 }

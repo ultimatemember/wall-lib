@@ -151,6 +151,9 @@
   line-height: var(--um-text-line-height-sm, 20px);
   font-weight: var(--um-text-font-weight-regular, 400);
 }
+.um .um-box .um-wall-textarea-elem.um-upload-link-disabled {
+  background: var(--um-gray-100, #f2f4f7);
+}
 .um .um-box .um-wall-textarea-elem:not(.wp-editor-area) {
   border-radius: 8px;
   border: 1px solid var(--um-gray-300, #d0d5dd);
