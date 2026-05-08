@@ -413,10 +413,8 @@
                 opacity: 1
           .#{$prefix}wall-comment-child
             margin-left: calc( $spacing-6xl + 4px )
-            margin-top: $spacing-xl
             width: calc( 100% - $spacing-6xl - 4px )
             +flex( column, flex-start, center, nowrap )
-            row-gap: $spacing-xl
             .#{$prefix}wall-comment-child-loop
               width: 100%
               +flex( column, flex-start, center, nowrap )
@@ -427,6 +425,10 @@
                 .#{$prefix}wall-loader
                   margin: 0
               .#{$prefix}wall-commentl
+                &:first-child
+                  margin-top: $spacing-xl
+                &:last-child
+                  margin-bottom: $spacing-xl
                 .#{$prefix}wall-comment-info
                   width: calc( 100% - $spacing-6xl - 4px )
                 .#{$prefix}wall-editc

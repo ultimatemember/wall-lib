@@ -641,14 +641,12 @@
 }
 .um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-comment-child {
   margin-left: 52px;
-  margin-top: 16px;
   width: calc(100% - 48px - 4px);
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
   flex-wrap: nowrap;
-  row-gap: 16px;
 }
 .um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-comment-child .um-wall-comment-child-loop {
   width: 100%;
@@ -669,6 +667,12 @@
 }
 .um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-comment-child .um-wall-comment-child-loop .um-wall-comment-reply-actions .um-wall-loader {
   margin: 0;
+}
+.um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-comment-child .um-wall-comment-child-loop .um-wall-commentl:first-child {
+  margin-top: 16px;
+}
+.um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-comment-child .um-wall-comment-child-loop .um-wall-commentl:last-child {
+  margin-bottom: 16px;
 }
 .um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-comment-child .um-wall-comment-child-loop .um-wall-commentl .um-wall-comment-info {
   width: calc(100% - 48px - 4px);
