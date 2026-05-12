@@ -728,6 +728,10 @@ jQuery( document ).ready(function () {
 				},
 				error: function( data ) {
 					console.log( data );
+					jQuery(this).um_notice({
+						message: data,
+						type: 'error'
+					});
 					loader.umHide();
 				}
 			});
@@ -765,6 +769,10 @@ jQuery( document ).ready(function () {
 			},
 			error: function( data ) {
 				console.log( data );
+				jQuery(this).um_notice({
+					message: data,
+					type: 'error'
+				});
 				loader.umHide();
 			}
 		});
