@@ -525,6 +525,9 @@ jQuery( document ).ready(function () {
 		let nonce = jQuery(this).attr('data-likenonce');
 
 		if ( ! jQuery(this).parents('.um-wall-widget').hasClass('unready') ) {
+			let loader = wrap.find('.um-wall-post-like-loader');
+			loader.umShow();
+
 			let action = wp.hooks.applyFilters(
 				'um_wall_like',
 				'um_wall_like_post'
@@ -539,8 +542,10 @@ jQuery( document ).ready(function () {
 					wrap.find('.um-badge').html(answer.likes);
 					wrap.find('.um-wall-post-likes-avatars').html(answer.content).umShow();
 					wrap.find('.um-wall-show-likes').attr('disabled', false);
+					loader.umHide();
 				},
 				error: function (data) {
+					loader.umHide();
 					let error;
 					if ( data.message ) {
 						error = data.message;
@@ -561,6 +566,8 @@ jQuery( document ).ready(function () {
 		let wrap = jQuery(this).parents('.um-wall-like-wrap');
 		let postid = jQuery(this).attr('data-id');
 		let nonce = jQuery(this).attr('data-unlikenonce');
+		let loader = wrap.find('.um-wall-post-like-loader');
+		loader.umShow();
 
 		let action = wp.hooks.applyFilters(
 			'um_wall_unlike',
@@ -581,9 +588,11 @@ jQuery( document ).ready(function () {
 					wrap.find('.um-wall-post-likes-avatars').umHide();
 					wrap.find('.um-wall-show-likes').attr('disabled', true);
 				}
+				loader.umHide();
 			},
 			error: function( data ) {
 				console.log( data );
+				loader.umHide();
 				let error;
 				if ( data.message ) {
 					error = data.message;
@@ -693,6 +702,8 @@ jQuery( document ).ready(function () {
 			let commentid = btn.attr('data-commentid');
 			let nonce = btn.attr('data-likenonce');
 			let wrap = jQuery(this).parents('.um-wall-comment-meta');
+			let loader = wrap.find('.um-wall-comment-like-loader');
+			loader.umShow();
 
 			let action = wp.hooks.applyFilters(
 				'um_wall_like_comment_action',
@@ -713,9 +724,11 @@ jQuery( document ).ready(function () {
 					if ( parseInt( response.likes) >0 ) {
 						wrap.find('.um-wall-comment-likes-avatars').umShow();
 					}
+					loader.umHide();
 				},
 				error: function( data ) {
 					console.log( data );
+					loader.umHide();
 				}
 			});
 		}
@@ -727,6 +740,8 @@ jQuery( document ).ready(function () {
 		let commentid = btn.attr('data-commentid');
 		let nonce = btn.attr('data-unlikenonce');
 		let wrap = jQuery(this).parents('.um-wall-comment-meta');
+		let loader = wrap.find('.um-wall-comment-like-loader');
+		loader.umShow();
 
 		let action = wp.hooks.applyFilters(
 			'um_wall_unlike_comment_action',
@@ -746,9 +761,11 @@ jQuery( document ).ready(function () {
 				if ( parseInt( response.likes) >0 ) {
 					wrap.find('.um-wall-comment-likes-avatars').umShow();
 				}
+				loader.umHide();
 			},
 			error: function( data ) {
 				console.log( data );
+				loader.umHide();
 			}
 		});
 	});

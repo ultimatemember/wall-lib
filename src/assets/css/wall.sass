@@ -343,7 +343,7 @@
             padding: 0
             .#{$prefix}wall-post-likes
               +flex( row, flex-start, center, nowrap )
-              column-gap: $spacing-md
+              column-gap: $spacing-xs
       .#{$prefix}photo-modal
         img
           max-width: 100%
@@ -408,6 +408,7 @@
             .#{$prefix}wall-comment-meta
               +flex( row, flex-start, center, nowrap )
               column-gap: $spacing-sm
+              min-height: 24px
             &:hover
               .#{$prefix}wall-editc
                 opacity: 1
