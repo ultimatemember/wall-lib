@@ -1028,6 +1028,9 @@ jQuery( document ).ready(function () {
 		let title = btn.attr('data-title');
 		let wrap = btn.parents('.um-wall-widget');
 		let is_reply = btn.attr('data-is_reply');
+		let comment = btn.parents('.um-wall-commentl');
+		comment.css('opacity', '0.5');
+		comment.find('button').attr('disabled', true);
 
 		let action = wp.hooks.applyFilters(
 			'um_wall_remove_comment_action',
@@ -1071,6 +1074,8 @@ jQuery( document ).ready(function () {
 								message: data,
 								type: 'error'
 							});
+							comment.css('opacity', '1');
+							comment.find('button').attr('disabled', false);
 						}
 					});
 				},
