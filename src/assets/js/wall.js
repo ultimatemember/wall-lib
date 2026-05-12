@@ -906,7 +906,7 @@ jQuery( document ).ready(function () {
 	/* remove reply form */
 	jQuery( document.body ).on( 'click', '.um-wall-reply-cancel', function(e) {
 		let btn = jQuery(this);
-		btn.parents('.um-wall-comment-info').find('.um-wall-comment-reply').umShow();
+		btn.parents('.um-wall-commentwrap').find('.um-wall-comment-reply').umShow();
 		btn.parents('.um-wall-reply-form').remove();
 	});
 
