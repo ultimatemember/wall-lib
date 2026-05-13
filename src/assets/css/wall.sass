@@ -357,9 +357,6 @@
       .#{$prefix}wall-comments-loop
         row-gap: $spacing-3xl
         +flex( column, flex-start, start, nowrap )
-        .#{$prefix}wall-loader
-          margin: 0 auto
-          display: block
         .#{$prefix}wall-commentwrap
           width: 100%
           +flex( column, flex-start, start, nowrap )
@@ -384,7 +381,7 @@
                     &:hover
                       color: $link-hover-color
                 .#{$prefix}wall-comment-edit-actions
-                  +flex( row, end, start, nowrap )
+                  +flex( row, end, center, nowrap )
                   column-gap: $spacing-md
             a
               text-decoration: none

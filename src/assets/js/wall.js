@@ -98,8 +98,15 @@ jQuery( document ).ready(function () {
 	});
 
 	/* Detect change in textarea content */
-	jQuery( document.body ).on( 'input properychange', '.um-wall-comment-textarea', function() {
-		um_check_comment_length( jQuery( this ) );
+	jQuery( document.body ).on( 'input properychange', '.um-wall-comment-textarea, .um-wall-reply-textarea', function() {
+		let form = jQuery( this ).parents( '.um-activity-comment-info' );
+		let button = form.find('.um-wall-edit-comment-save');
+		if ( jQuery( this ).val() !== jQuery( this ).text() ) {
+			button.prop( 'disabled', false );
+			um_check_comment_length( jQuery( this ) );
+		} else {
+			button.prop( 'disabled', true );
+		}
 	});
 
 	/* Post a status */
@@ -249,6 +256,7 @@ jQuery( document ).ready(function () {
 		let title = btn.attr('data-title');
 		let post = jQuery('#postid-' + post_id);
 		post.css('opacity', '0.5');
+		post.find('button, textarea').prop('disabled', true);
 
 		let action = wp.hooks.applyFilters(
 			'um_wall_remove_action',
@@ -270,6 +278,7 @@ jQuery( document ).ready(function () {
 						},
 						error: function( data ) {
 							post.css('opacity', '1');
+							post.find('button, textarea').prop('disabled', true);
 							let error = jQuery(this).attr('data-error');
 							if ( data.message ) {
 								error = data.message;
