@@ -57,7 +57,6 @@ class Posts {
 	}
 
 	public function get_allowed_html() {
-		// Adds iframe and onclick to allowed tags and attributes only for activity wall.
 		add_filter( 'um_late_escaping_allowed_tags', array( &$this, 'add_extra_kses_allowed_tags' ), 10, 2 );
 		$allowed_html = UM()->get_allowed_html( 'templates' );
 		remove_filter( 'um_late_escaping_allowed_tags', array( &$this, 'add_extra_kses_allowed_tags' ) );
@@ -67,29 +66,11 @@ class Posts {
 
 	public function add_extra_kses_allowed_tags( $allowed_html, $context ) {
 		if ( 'templates' === $context ) {
-			$allowed_html['iframe'] = array(
-				'allow'          => true,
-				'frameborder'    => true,
-				'loading'        => true,
-				'name'           => true,
-				'referrerpolicy' => true,
-				'sandbox'        => true,
-				'src'            => true,
-				'srcdoc'         => true,
-				'title'          => true,
-				'width'          => true,
-				'height'         => true,
-			);
-
-			$allowed_html['figure'] = array(
-				'class' => true,
-			);
-
-			$allowed_html['strong']['onclick'] = true;
-
 			$allowed_html['u'] = true;
 			$allowed_html['i'] = true;
 			$allowed_html['b'] = true;
+
+			$allowed_html = apply_filters( $this->wall->prefix . 'late_escaping_allowed_tags_extend', $allowed_html );
 		}
 
 		return $allowed_html;
