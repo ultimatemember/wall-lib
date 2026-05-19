@@ -757,9 +757,10 @@ class Comments {
 		$author_id = $this->wall->common()->posts()->get_author( $comment->comment_post_ID );
 		if ( get_current_user_id() === $author_id ) {
 			$this->wall->common()->comments()->delete_comment( $comment_id );
+			wp_send_json_success();
 		}
 
-		wp_send_json_success();
+		wp_send_json_error( __( 'Something went wrong.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
 	}
 
 	/**
