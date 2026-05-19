@@ -178,7 +178,7 @@ class Posts {
 
 		add_filter( 'um_late_escaping_allowed_tags', array( $this->wall->common()->posts(), 'add_extra_kses_allowed_tags' ), 10, 2 );
 		$output = UM()->get_template( $template_name, $this->wall->plugin_basename, $t_args );
-		add_filter( 'um_late_escaping_allowed_tags', array( $this->wall->common()->posts(), 'add_extra_kses_allowed_tags' ), 10, 2 );
+		remove_filter( 'um_late_escaping_allowed_tags', array( $this->wall->common()->posts(), 'add_extra_kses_allowed_tags' ), 10, 2 );
 
 		wp_send_json_success( $output );
 	}
@@ -407,7 +407,7 @@ class Posts {
 		$old_data->post_meta = get_post_meta( $post_id );
 
 		// Compare new changed content with the saved original content. Used `$old_data->post_meta['_original_content'][0]` because cannot get all `post_meta` via get_post_meta( $post_id ) with $single marker.
-		if ( $old_data->post_meta['_original_content'] !== $orig_content ) {
+		if ( $old_data->post_meta['_original_content'][0] !== $orig_content ) {
 			$args['meta_input']['_original_content'] = wp_slash( $orig_content );
 		}
 
@@ -417,7 +417,7 @@ class Posts {
 		if ( empty( $post_id ) || is_wp_error( $post_id ) ) {
 			wp_send_json_error( array( 'message' => __( 'Something went wrong with post store.', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
 		} else {
-			if ( $old_data->post_meta['_original_content'] !== $orig_content ) {
+			if ( $old_data->post_meta['_original_content'][0] !== $orig_content ) {
 				$this->wall->common()->posts()->hashtagit( $post_id, $orig_content ); // Update hashtags for the post.
 
 				$data = array(

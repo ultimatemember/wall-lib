@@ -754,7 +754,7 @@ class Comments {
 
 		// Post authors can delete spam and malicious comments under their posts.
 		$comment   = get_comment( $comment_id );
-		$author_id = $this->wall->common()->post()->get_author( $comment->comment_post_ID );
+		$author_id = $this->wall->common()->posts()->get_author( $comment->comment_post_ID );
 		if ( get_current_user_id() === $author_id ) {
 			$this->wall->common()->comments()->delete_comment( $comment_id );
 		}
