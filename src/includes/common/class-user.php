@@ -27,10 +27,11 @@ class User {
 	}
 
 	public function can_remove_post( $post_id ) {
-		$can_remove = true;
-
 		$author_id = $this->wall->common()->posts()->get_author( $post_id );
-		if ( ! current_user_can( 'edit_users' ) || get_current_user_id() !== absint( $author_id ) ) {
+
+		if ( current_user_can( 'edit_users' ) || get_current_user_id() === absint( $author_id ) ) {
+			$can_remove = true;
+		} else {
 			$can_remove = false;
 		}
 
