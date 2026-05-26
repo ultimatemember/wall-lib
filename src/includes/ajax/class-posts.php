@@ -95,7 +95,7 @@ class Posts {
 
 		$output = UM()->get_template( $template_name, $this->wall->plugin_basename, $t_args );
 
-		wp_send_json_success( $output );
+		wp_send_json_success( UM()->ajax()->esc_html_spaces( $output ) );
 	}
 
 	/**
@@ -177,7 +177,7 @@ class Posts {
 		$template_name = apply_filters( $this->wall->prefix . 'wall_edit_posts_template', 'v3/edit-post.php' );
 
 		$output = UM()->get_template( $template_name, $this->wall->plugin_basename, $t_args );
-		wp_send_json_success( $output );
+		wp_send_json_success( UM()->ajax()->esc_html_spaces( $output ) );
 	}
 
 	/**
@@ -280,7 +280,7 @@ class Posts {
 		$output = apply_filters( 'um_wall_ajax_publish_output', $output );
 
 		if ( ! empty( $output ) ) {
-			wp_send_json_success( $output );
+			wp_send_json_success( UM()->ajax()->esc_html_spaces( $output ) );
 		}
 
 		wp_send_json_error( array( 'message' => __( 'Something went wrong.', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
@@ -1235,6 +1235,6 @@ class Posts {
 		add_filter( 'the_content', 'prepend_attachment' );
 		add_filter( 'the_content', 'wpautop' );
 
-		wp_send_json_success( array( 'content' => $content ) );
+		wp_send_json_success( array( 'content' => UM()->ajax()->esc_html_spaces( $content ) ) );
 	}
 }

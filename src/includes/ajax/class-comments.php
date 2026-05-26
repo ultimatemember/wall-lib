@@ -80,7 +80,7 @@ class Comments {
 			)
 		);
 
-		wp_send_json_success( array( 'content' => $content ) );
+		wp_send_json_success( array( 'content' => UM()->ajax()->esc_html_spaces( $content ) ) );
 	}
 
 	/**
@@ -655,7 +655,7 @@ class Comments {
 
 		wp_send_json_success(
 			array(
-				'content'  => $content,
+				'content'  => UM()->ajax()->esc_html_spaces( $content ),
 				'loadmore' => $loadmore,
 				'offset'   => absint( $offset ) + absint( $number ),
 				'count'    => absint( $comments_all ) - absint( $offset ) - absint( $number ),
@@ -724,7 +724,7 @@ class Comments {
 
 		wp_send_json_success(
 			array(
-				'content'  => $content,
+				'content'  => UM()->ajax()->esc_html_spaces( $content ),
 				'loadmore' => $loadmore,
 				'offset'   => absint( $offset ) + absint( $number ),
 				'count'    => absint( $child_all ) - absint( $offset ) - absint( $number ),
