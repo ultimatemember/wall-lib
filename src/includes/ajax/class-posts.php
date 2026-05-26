@@ -176,10 +176,7 @@ class Posts {
 		$t_args        = apply_filters( $this->wall->prefix . 'wall_edit_post_template_args', $t_args );
 		$template_name = apply_filters( $this->wall->prefix . 'wall_edit_posts_template', 'v3/edit-post.php' );
 
-		add_filter( 'um_late_escaping_allowed_tags', array( $this->wall->common()->posts(), 'add_extra_kses_allowed_tags' ), 10, 2 );
 		$output = UM()->get_template( $template_name, $this->wall->plugin_basename, $t_args );
-		remove_filter( 'um_late_escaping_allowed_tags', array( $this->wall->common()->posts(), 'add_extra_kses_allowed_tags' ), 10, 2 );
-
 		wp_send_json_success( $output );
 	}
 
