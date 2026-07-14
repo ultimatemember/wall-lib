@@ -66,10 +66,6 @@ class Posts {
 
 	public function add_extra_kses_allowed_tags( $allowed_html, $context ) {
 		if ( 'templates' === $context ) {
-			// Text formatting short-tags
-			$allowed_html['u'] = true;
-			$allowed_html['b'] = true;
-
 			// It's required for displaying WordPress native oembed elements. That was converted via WP_Oembed to iframes and figures.
 			$allowed_html['figure'] = array();
 			$allowed_html['iframe'] = array(
