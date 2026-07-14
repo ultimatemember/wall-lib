@@ -68,7 +68,6 @@ class Posts {
 		if ( 'templates' === $context ) {
 			// Text formatting short-tags
 			$allowed_html['u'] = true;
-			$allowed_html['i'] = true;
 			$allowed_html['b'] = true;
 
 			// It's required for displaying WordPress native oembed elements. That was converted via WP_Oembed to iframes and figures.
