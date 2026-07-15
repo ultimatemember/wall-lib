@@ -15,7 +15,7 @@
  *
  * @package UM_WallLib
  */
-
+// Just the workaround for checking WPCS in the Plugin Checker. This file isn't used everywhere.
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
