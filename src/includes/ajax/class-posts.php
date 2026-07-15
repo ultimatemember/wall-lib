@@ -47,7 +47,7 @@ class Posts {
 	 * Load wall posts
 	 */
 	public function ajax_load_wall() {
-		do_action( $this->wall->prefix . 'before_wall_load_posts' );
+		do_action( $this->wall->prefix . 'before_wall_load_posts' ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 
 		if ( UM()->is_rate_limited( 'wall_load_posts' ) ) {
 			wp_send_json_error( __( 'Too many requests', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
@@ -56,10 +56,7 @@ class Posts {
 		// phpcs:ignore WordPress.Security.NonceVerification
 		$user_id = empty( $_POST['user_id'] ) ? 0 : absint( $_POST['user_id'] );
 
-		$data = apply_filters( $this->wall->prefix . 'wall_load_posts_data', array() );
-
-		$comm_num      = apply_filters( $this->wall->prefix . 'wall_comments_loadmore_number', 10 );
-		$order_comment = apply_filters( $this->wall->prefix . 'wall_comments_loadmore_order', 10 );
+		$data = apply_filters( $this->wall->prefix . 'wall_load_posts_data', array() ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 
 		$args = array(
 			'fields'      => 'ids',
@@ -67,7 +64,7 @@ class Posts {
 			'post_status' => 'publish',
 			'meta_query'  => array(),
 		);
-		$args = apply_filters( $this->wall->prefix . 'wall_posts_args', $args, $data );
+		$args = apply_filters( $this->wall->prefix . 'wall_posts_args', $args, $data ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 
 		$query = new WP_Query( $args );
 
@@ -78,8 +75,8 @@ class Posts {
 		$t_args = array(
 			'wall_posts'       => $query->posts,
 			'um_activity_wall' => $this->wall,
-			'comm_num'         => $comm_num,
-			'order_comment'    => $order_comment,
+			'comm_num'         => $this->wall->common()->comments()->get_comments_per_page(),
+			'order_comment'    => $this->wall->common()->comments()->get_comments_order(),
 			'profile_id'       => $user_id,
 			'allowed_html'     => $this->wall->common()->posts()->get_allowed_html(),
 		);
@@ -90,8 +87,8 @@ class Posts {
 		}
 		// phpcs:enable WordPress.Security.NonceVerification -- already verified here
 
-		$t_args        = apply_filters( $this->wall->prefix . 'wall_template_args', $t_args, $args, $query, $data );
-		$template_name = apply_filters( $this->wall->prefix . 'wall_posts_template', 'v3/posts-loop.php' );
+		$t_args        = apply_filters( $this->wall->prefix . 'wall_template_args', $t_args, $args, $query, $data ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
+		$template_name = apply_filters( $this->wall->prefix . 'wall_posts_template', 'v3/posts-loop.php' ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 
 		$output = UM()->get_template( $template_name, $this->wall->plugin_basename, $t_args );
 
@@ -161,7 +158,7 @@ class Posts {
 			$count = '' !== $attachments ? 1 : 0;
 		}
 
-		$editor = apply_filters( $this->wall->prefix . 'wall_html_editor', 0 );
+		$editor = apply_filters( $this->wall->prefix . 'wall_html_editor', 0 ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 
 		$t_args = array(
 			'post_id'         => $post_id,
@@ -173,8 +170,8 @@ class Posts {
 			'editor'          => $editor,
 		);
 
-		$t_args        = apply_filters( $this->wall->prefix . 'wall_edit_post_template_args', $t_args );
-		$template_name = apply_filters( $this->wall->prefix . 'wall_edit_posts_template', 'v3/edit-post.php' );
+		$t_args        = apply_filters( $this->wall->prefix . 'wall_edit_post_template_args', $t_args ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
+		$template_name = apply_filters( $this->wall->prefix . 'wall_edit_posts_template', 'v3/edit-post.php' ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 
 		$output = UM()->get_template( $template_name, $this->wall->plugin_basename, $t_args );
 		wp_send_json_success( UM()->ajax()->esc_html_spaces( $output ) );
@@ -196,9 +193,9 @@ class Posts {
 			check_ajax_referer( $this->wall->prefix . 'wall_post_edit' . $post_id, 'nonce' );
 		}
 
-		do_action( $this->wall->prefix . 'before_wall_post_publish', $post_id );
+		do_action( $this->wall->prefix . 'before_wall_post_publish', $post_id ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 
-		$_post_content = wp_kses_post( wp_unslash( $_POST['_post_content'] ) ); // sanitize content with allowed html tags for posts.
+		$_post_content = ! empty( $_POST['_post_content'] ) ? wp_kses_post( wp_unslash( $_POST['_post_content'] ) ) : ''; // sanitize content with allowed html tags for posts.
 		$_post_content = str_replace( '&nbsp;', ' ', $_post_content ); // replace &nbsp; to space
 		$_post_content = preg_replace( '/<div[^>]*>/i', "\n", $_post_content ); // replace div to new line
 		$_post_content = preg_replace( '/<\/div>/i', '', $_post_content ); // remove closing div tags
@@ -208,9 +205,9 @@ class Posts {
 		$_post_content = preg_replace( '/<br\s*\/?>/i', "\n", $_post_content ); // remove <br> in text
 
 		$_post_images = array();
-		$_photo_key   = apply_filters( $this->wall->prefix . 'photo_post_key', '' );
-		if ( ! empty( $_POST[ $_photo_key ] ) ) { // don't need to sanitize there. It's sanitized in the lower level before save to the DB.
-			foreach ( $_POST[ $_photo_key ] as $post_photo ) {
+		$_photo_key   = apply_filters( $this->wall->prefix . 'photo_post_key', '' ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
+		if ( ! empty( $_POST[ $_photo_key ] ) ) { // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- don't need to sanitize there. It's sanitized in the lower level before saving to the DB.
+			foreach ( $_POST[ $_photo_key ] as $post_photo ) { // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- don't need to sanitize there. It's sanitized in the lower level before saving to the DB.
 				if ( ! array_key_exists( 'hash', $post_photo ) ) {
 					continue;
 				}
@@ -230,10 +227,10 @@ class Posts {
 			}
 
 			$post_id = $this->handle_post_insert( $_post_content, $_post_images );
-			$output  = apply_filters( $this->wall->prefix . 'wall_publish_output', $this->prepare_response( $post_id ), $post_id );
+			$output  = apply_filters( $this->wall->prefix . 'wall_publish_output', $this->prepare_response( $post_id ), $post_id ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 		} else {
 			if ( ! empty( $_POST['deleted_attachments'] ) ) {
-				$deleted_ids = explode( ',', sanitize_text_field( $_POST['deleted_attachments'] ) );
+				$deleted_ids = explode( ',', sanitize_text_field( wp_unslash( $_POST['deleted_attachments'] ) ) );
 
 				foreach ( $deleted_ids as $id ) {
 					$attachment_id = absint( $id );
@@ -277,7 +274,7 @@ class Posts {
 		 * }
 		 * add_filter( 'um_wall_ajax_publish_output', 'my_um_wall_ajax_publish_output' );
 		 */
-		$output = apply_filters( 'um_wall_ajax_publish_output', $output );
+		$output = apply_filters( 'um_wall_ajax_publish_output', $output ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- properly prefixed after installation and library init.
 
 		if ( ! empty( $output ) ) {
 			wp_send_json_success( UM()->ajax()->esc_html_spaces( $output ) );
@@ -294,17 +291,14 @@ class Posts {
 	 * @return string prepared HTML content for AJAX response
 	 */
 	private function prepare_response( $post_id ) {
-		$comm_num      = apply_filters( $this->wall->prefix . 'wall_comments_loadmore_number', 10 );
-		$order_comment = apply_filters( $this->wall->prefix . 'wall_comments_loadmore_order', 10 );
-
 		$t_args = array(
 			'allowed_html'     => $this->wall->common()->posts()->get_allowed_html(),
 			'wall_post'        => $post_id,
 			'wall_posts'       => array( $post_id ),
 			'single_post'      => true,
 			'um_activity_wall' => $this->wall,
-			'comm_num'         => $comm_num,
-			'order_comment'    => $order_comment,
+			'comm_num'         => $this->wall->common()->comments()->get_comments_per_page(),
+			'order_comment'    => $this->wall->common()->comments()->get_comments_order(),
 			'profile_id'       => um_profile_id() ? um_profile_id() : 0,
 		);
 
@@ -313,9 +307,8 @@ class Posts {
 			$t_args['page'] = sanitize_key( $_POST['_page'] );
 		}
 		// phpcs:enable WordPress.Security.NonceVerification -- already verified here
-
-		$t_args        = apply_filters( $this->wall->prefix . 'wall_prepare_response_template_args', $t_args );
-		$template_name = apply_filters( $this->wall->prefix . 'wall_posts_template', 'v3/posts-loop.php' );
+		$t_args        = apply_filters( $this->wall->prefix . 'wall_prepare_response_template_args', $t_args ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
+		$template_name = apply_filters( $this->wall->prefix . 'wall_posts_template', 'v3/posts-loop.php' ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 
 		return UM()->ajax()->esc_html_spaces( UM()->get_template( $template_name, $this->wall->plugin_basename, $t_args ) );
 	}
@@ -330,7 +323,7 @@ class Posts {
 	 */
 	private function handle_post_insert( $_post_content, $_post_images ) {
 		$current_user_id = get_current_user_id();
-		$orig_content    = apply_filters( $this->wall->prefix . 'new_post', $_post_content );
+		$orig_content    = apply_filters( $this->wall->prefix . 'new_post', $_post_content ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 
 		$args = array(
 			'post_title'   => '',
@@ -348,7 +341,7 @@ class Posts {
 			),
 		);
 
-		$args    = apply_filters( $this->wall->prefix . 'insert_post_args', $args );
+		$args    = apply_filters( $this->wall->prefix . 'insert_post_args', $args ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 		$post_id = wp_insert_post( $args );
 		if ( empty( $post_id ) || is_wp_error( $post_id ) ) {
 			wp_send_json_error( array( 'message' => __( 'Something went wrong with post store.', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
@@ -368,7 +361,7 @@ class Posts {
 				}
 				$data['post_content'] = wp_slash( $converted_content );
 
-				$data = apply_filters( $this->wall->prefix . 'insert_prepared_post_args', $data );
+				$data = apply_filters( $this->wall->prefix . 'insert_prepared_post_args', $data ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 				wp_update_post( $data );
 			}
 		}
@@ -378,8 +371,8 @@ class Posts {
 			$this->upload_images( $_post_images, $post_id );
 		}
 
-		$published_args = apply_filters( $this->wall->prefix . 'after_wall_post_published_args', array( $post_id ) );
-		do_action_ref_array( $this->wall->prefix . 'after_wall_post_published', $published_args );
+		$published_args = apply_filters( $this->wall->prefix . 'after_wall_post_published_args', array( $post_id ) ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
+		do_action_ref_array( $this->wall->prefix . 'after_wall_post_published', $published_args ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 
 		update_post_meta( $post_id, '_um_post_version', $this->wall->plugin_version );
 
@@ -399,7 +392,7 @@ class Posts {
 		// Update post
 		$args = array( 'ID' => $post_id );
 
-		$orig_content        = apply_filters( $this->wall->prefix . 'edit_post', $_post_content );
+		$orig_content        = apply_filters( $this->wall->prefix . 'edit_post', $_post_content ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 		$old_data            = get_post( $post_id );
 		$old_data->post_meta = get_post_meta( $post_id );
 
@@ -408,7 +401,7 @@ class Posts {
 			$args['meta_input']['_original_content'] = wp_slash( $orig_content );
 		}
 
-		$args    = apply_filters( $this->wall->prefix . 'update_post_args', $args, $old_data );
+		$args    = apply_filters( $this->wall->prefix . 'update_post_args', $args, $old_data ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 		$post_id = wp_update_post( $args );
 
 		if ( empty( $post_id ) || is_wp_error( $post_id ) ) {
@@ -430,7 +423,7 @@ class Posts {
 				}
 				$data['post_content'] = wp_slash( $converted_content );
 
-				$data = apply_filters( $this->wall->prefix . 'update_prepared_post_args', $data );
+				$data = apply_filters( $this->wall->prefix . 'update_prepared_post_args', $data ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 				wp_update_post( $data );
 			}
 		}
@@ -440,8 +433,8 @@ class Posts {
 			$this->upload_images( $_post_images, $post_id );
 		}
 
-		$updated_args = apply_filters( $this->wall->prefix . 'after_wall_post_updated_args', array( $post_id, $old_data ) );
-		do_action_ref_array( $this->wall->prefix . 'after_wall_post_updated', $updated_args );
+		$updated_args = apply_filters( $this->wall->prefix . 'after_wall_post_updated_args', array( $post_id, $old_data ) ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
+		do_action_ref_array( $this->wall->prefix . 'after_wall_post_updated', $updated_args ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 
 		update_post_meta( $post_id, '_um_post_version', $this->wall->plugin_version );
 
@@ -479,14 +472,12 @@ class Posts {
 		$site_host = wp_parse_url( home_url(), PHP_URL_HOST );
 		$wp_embed  = _wp_oembed_get_object();
 
-		$attributes = apply_filters(
-			$this->wall->prefix . 'make_links_clickable_attrs',
-			array(
-				'target' => '_blank',
-				'class'  => 'um-link',
-				'rel'    => 'noopener nofollow ugc',
-			)
+		$attributes = array(
+			'target' => '_blank',
+			'class'  => 'um-link',
+			'rel'    => 'noopener nofollow ugc',
 		);
+		$attributes = apply_filters( $this->wall->prefix . 'make_links_clickable_attrs', $attributes, 'posts' ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 
 		$attribute_string = '';
 		foreach ( $attributes as $key => $value ) {
@@ -534,7 +525,7 @@ class Posts {
 							$esc_url        = esc_url( $m[0] );
 							$figure_classes = esc_attr( implode( ' ', $figure_classes ) );
 							$inner_classes  = esc_attr( implode( ' ', $inner_classes ) );
-							// don't change this line, otherwise oembed doesn't work =).
+							// phpcs:disable PluginCheck.CodeAnalysis.Heredoc.NotAllowed -- don't change this line, otherwise oembed doesn't work =).
 							return <<<BLOCK
 							<!-- wp:embed {$block_json} --><figure class="{$figure_classes}">
 								<div class="{$inner_classes}">
@@ -542,6 +533,7 @@ class Posts {
 								</div>
 							</figure><!-- /wp:embed -->
 							BLOCK;
+							// phpcs:enable PluginCheck.CodeAnalysis.Heredoc.NotAllowed -- don't change this line, otherwise oembed doesn't work =).
 						}
 					}
 				}
@@ -658,7 +650,7 @@ class Posts {
 		}
 
 		// Fallback: use domain as title if no title found
-		$domain = parse_url( $url, PHP_URL_HOST );
+		$domain = wp_parse_url( $url, PHP_URL_HOST );
 		$domain = $domain ? strtoupper( preg_replace( '~^www\.~i', '', $domain ) ) : '';
 
 		if ( $img ) {
@@ -768,7 +760,7 @@ class Posts {
 	 * @return string
 	 */
 	public function shorten_string( $string ) {
-		$words_limit = absint( apply_filters( $this->wall->prefix . 'wall_post_excerpt_words_limit', 25 ) );
+		$words_limit = absint( apply_filters( $this->wall->prefix . 'wall_post_excerpt_words_limit', 25 ) ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 		if ( empty( $words_limit ) ) {
 			return $string;
 		}
@@ -812,7 +804,7 @@ class Posts {
 		}
 
 		$allowed      = UM()->common()->filesystem()::image_mimes( 'allowed' );
-		$allowed      = apply_filters( $this->wall->prefix . 'wall_allowed_mime_types', $allowed );
+		$allowed      = apply_filters( $this->wall->prefix . 'wall_allowed_mime_types', $allowed ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 		$user_basedir = UM()->common()->filesystem()->get_user_uploads_dir( get_current_user_id() );
 		if ( is_array( $_post_images ) ) {
 			foreach ( $_post_images as $photo ) {
@@ -902,7 +894,7 @@ class Posts {
 			wp_send_json_error( array( 'message' => __( 'You are not authorized to like this post.', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
 		}
 
-		do_action( $this->wall->prefix . 'before_wall_post_liked', $post_id, get_current_user_id() );
+		do_action( $this->wall->prefix . 'before_wall_post_liked', $post_id, get_current_user_id() ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 
 		$liked = get_post_meta( $post_id, '_liked', true );
 		if ( is_array( $liked ) && in_array( get_current_user_id(), $liked, true ) ) {
@@ -937,7 +929,7 @@ class Posts {
 			update_post_meta( $post_id, '_likes', $likes );
 		}
 
-		do_action( $this->wall->prefix . 'after_wall_post_liked', $post_id, get_current_user_id() );
+		do_action( $this->wall->prefix . 'after_wall_post_liked', $post_id, get_current_user_id() ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 
 		$content = UM()->frontend()::layouts()::avatars_list(
 			$liked,
@@ -976,7 +968,7 @@ class Posts {
 			wp_send_json_error( array( 'message' => __( 'You are not authorized to unlike this post.', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
 		}
 
-		do_action( $this->wall->prefix . 'before_wall_post_unliked', $post_id, get_current_user_id() );
+		do_action( $this->wall->prefix . 'before_wall_post_unliked', $post_id, get_current_user_id() ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 
 		$liked = get_post_meta( $post_id, '_liked', true );
 		if ( empty( $liked ) || ! is_array( $liked ) ) {
@@ -1005,7 +997,7 @@ class Posts {
 		$likes = 0 < $likes ? $likes : 0;
 		update_post_meta( $post_id, '_likes', $likes );
 
-		do_action( $this->wall->prefix . 'after_wall_post_unliked', $post_id, get_current_user_id() );
+		do_action( $this->wall->prefix . 'after_wall_post_unliked', $post_id, get_current_user_id() ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 
 		$content = UM()->frontend()::layouts()::avatars_list(
 			$liked,
@@ -1043,7 +1035,7 @@ class Posts {
 
 		$user_id = get_current_user_id();
 
-		do_action( $this->wall->prefix . 'before_wall_post_report', $post_id, $user_id );
+		do_action( $this->wall->prefix . 'before_wall_post_report', $post_id, $user_id ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 
 		$users_reported = get_post_meta( $post_id, '_reported_by', true );
 		if ( empty( $users_reported ) ) {
@@ -1064,7 +1056,7 @@ class Posts {
 		$new_r = absint( get_post_meta( $post_id, '_reported', true ) );
 		update_post_meta( $post_id, '_reported', $new_r + 1 );
 
-		do_action( $this->wall->prefix . 'wall_after_post_reported', $post_id, $user_id );
+		do_action( $this->wall->prefix . 'wall_after_post_reported', $post_id, $user_id ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 
 		$flag = UM()->frontend()::layouts()::badge(
 			__( 'Reported', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
@@ -1095,7 +1087,7 @@ class Posts {
 
 		$user_id = get_current_user_id();
 
-		do_action( $this->wall->prefix . 'before_wall_post_unreport', $post_id, $user_id );
+		do_action( $this->wall->prefix . 'before_wall_post_unreport', $post_id, $user_id ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 
 		$users_reported = get_post_meta( $post_id, '_reported_by', true );
 		if ( is_array( $users_reported ) && isset( $users_reported[ $user_id ] ) ) {
@@ -1124,7 +1116,7 @@ class Posts {
 			}
 		}
 
-		do_action( $this->wall->prefix . 'wall_after_post_unreported', $post_id, $user_id );
+		do_action( $this->wall->prefix . 'wall_after_post_unreported', $post_id, $user_id ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 		wp_send_json_success( 'success' );
 	}
 
@@ -1151,7 +1143,7 @@ class Posts {
 			wp_send_json_error( array( 'message' => __( 'You are not authorized to see likes.', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
 		}
 
-		do_action( $this->wall->prefix . 'before_wall_post_likes_loaded', $post_id, get_current_user_id() );
+		do_action( $this->wall->prefix . 'before_wall_post_likes_loaded', $post_id, get_current_user_id() ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 
 		$likes = get_post_meta( $post_id, '_liked', true );
 		if ( empty( $likes ) ) {
@@ -1164,7 +1156,7 @@ class Posts {
 			}
 		}
 
-		$template = apply_filters( $this->wall->prefix . 'wall_likes_template', 'modal/likes.php' );
+		$template = apply_filters( $this->wall->prefix . 'wall_likes_template', 'modal/likes.php' ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 
 		$content = UM()->get_template(
 			$template,
@@ -1227,6 +1219,7 @@ class Posts {
 		remove_filter( 'the_content', 'prepend_attachment' );
 		remove_filter( 'the_content', 'wpautop' );
 
+		/** This filter is already documented in core. wp-includes/post-template.php */
 		$content = apply_filters( 'the_content', $content_raw );
 		$content = $this->wall->common()->posts()->linkify_hashtags_in_content( $content );
 		$content = $this->wall->common()->posts()->maybe_linkify_mentions( $content, 'post', $post_id );

@@ -69,7 +69,7 @@ class Comments {
 			$likes = array();
 		}
 
-		$template = apply_filters( $this->wall->prefix . 'wall_likes_template', 'modal/likes.php' );
+		$template = apply_filters( $this->wall->prefix . 'wall_likes_template', 'modal/likes.php' ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 
 		$content = UM()->get_template(
 			$template,
@@ -104,7 +104,7 @@ class Comments {
 			wp_send_json_error( __( 'You are not authorized to like this comment.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
 		}
 
-		do_action( $this->wall->prefix . 'before_wall_comment_liked', $comment_id, get_current_user_id() );
+		do_action( $this->wall->prefix . 'before_wall_comment_liked', $comment_id, get_current_user_id() ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 
 		$liked = get_comment_meta( $comment_id, '_liked', true );
 		if ( is_array( $liked ) && in_array( get_current_user_id(), $liked, true ) ) {
@@ -138,7 +138,7 @@ class Comments {
 			update_comment_meta( $comment_id, '_likes', $likes );
 		}
 
-		do_action( $this->wall->prefix . 'after_wall_comment_liked', $comment_id, get_current_user_id() );
+		do_action( $this->wall->prefix . 'after_wall_comment_liked', $comment_id, get_current_user_id() ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 
 		$content = UM()->frontend()::layouts()::avatars_list(
 			$liked,
@@ -178,7 +178,7 @@ class Comments {
 			wp_send_json_error( __( 'You are not authorized to unlike this comment.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
 		}
 
-		do_action( $this->wall->prefix . 'before_wall_comment_unliked', $comment_id, get_current_user_id() );
+		do_action( $this->wall->prefix . 'before_wall_comment_unliked', $comment_id, get_current_user_id() ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 
 		$liked = get_comment_meta( $comment_id, '_liked', true );
 		if ( empty( $liked ) || ! is_array( $liked ) ) {
@@ -207,7 +207,7 @@ class Comments {
 		$likes = 0 < $likes ? $likes : 0;
 		update_comment_meta( $comment_id, '_likes', $likes );
 
-		do_action( $this->wall->prefix . 'after_wall_comment_unliked', $comment_id, get_current_user_id() );
+		do_action( $this->wall->prefix . 'after_wall_comment_unliked', $comment_id, get_current_user_id() ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 
 		$content = UM()->frontend()::layouts()::avatars_list(
 			$liked,
@@ -311,7 +311,7 @@ class Comments {
 			);
 		}
 
-		do_action( $this->wall->prefix . 'before_wall_comment_published', $post_id, get_current_user_id() );
+		do_action( $this->wall->prefix . 'before_wall_comment_published', $post_id, get_current_user_id() ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 
 		um_fetch_user( get_current_user_id() );
 
@@ -324,7 +324,7 @@ class Comments {
 				'br' => array(),
 			)
 		);
-		$comment_content = apply_filters( $this->wall->prefix . 'wall_comment_content_new', $orig_content, $post_id );
+		$comment_content = apply_filters( $this->wall->prefix . 'wall_comment_content_new', $orig_content, $post_id ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 		$comment_content = $this->prepare_comment_content( $comment_content );
 
 		$data = array(
@@ -345,7 +345,7 @@ class Comments {
 		$data['comment_date']     = $time;
 		$data['comment_date_gmt'] = $time_gmt;
 
-		$data = apply_filters( $this->wall->prefix . 'insert_comment_args', $data );
+		$data = apply_filters( $this->wall->prefix . 'insert_comment_args', $data ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 
 		$commentid = wp_insert_comment( $data );
 
@@ -378,9 +378,9 @@ class Comments {
 			$output['comment_content'] = nl2br( $linkified );
 
 			if ( $comment_parent ) {
-				do_action( $this->wall->prefix . 'after_wall_comment_reply_published', $commentid, $comment_parent, $post_id, get_current_user_id() );
+				do_action( $this->wall->prefix . 'after_wall_comment_reply_published', $commentid, $comment_parent, $post_id, get_current_user_id() ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 			} else {
-				do_action( $this->wall->prefix . 'after_wall_comment_published', $commentid, $comment_parent, $post_id, get_current_user_id() );
+				do_action( $this->wall->prefix . 'after_wall_comment_published', $commentid, $comment_parent, $post_id, get_current_user_id() ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 			}
 
 			$comment_count = get_post_meta( $post_id, '_comments', true );
@@ -391,7 +391,7 @@ class Comments {
 			$post_link = $this->wall->common()->posts()->get_permalink( $post_id );
 			$comment   = get_comment( $commentid );
 			$comments  = array( $comment );
-			$comm_num  = apply_filters( $this->wall->prefix . 'wall_comments_loadmore_number', 10 );
+			$comm_num  = $this->wall->common()->comments()->get_comments_per_page();
 
 			if ( $comment_parent ) {
 				$t_args = array(
@@ -402,8 +402,8 @@ class Comments {
 					'comm_num'         => $comm_num,
 				);
 
-				$t_args   = apply_filters( $this->wall->prefix . 'wall_comment_reply_template_args', $t_args, $comments, $post_id );
-				$template = apply_filters( $this->wall->prefix . 'wall_comment_reply_template', 'comment-reply.php' );
+				$t_args   = apply_filters( $this->wall->prefix . 'wall_comment_reply_template_args', $t_args, $comments, $post_id ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
+				$template = apply_filters( $this->wall->prefix . 'wall_comment_reply_template', 'comment-reply.php' ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 			} else {
 				$t_args = array(
 					'comments'         => $comments,
@@ -411,11 +411,11 @@ class Comments {
 					'post_link'        => $post_link,
 					'um_activity_wall' => $this->wall,
 					'comm_num'         => $comm_num,
-					'order_comment'    => apply_filters( $this->wall->prefix . 'wall_comments_loadmore_order', 'asc' ),
+					'order_comment'    => $this->wall->common()->comments()->get_comments_order(),
 				);
 
-				$t_args   = apply_filters( $this->wall->prefix . 'wall_comment_template_args', $t_args, $comments, $post_id );
-				$template = apply_filters( $this->wall->prefix . 'wall_comment_template', 'comment.php' );
+				$t_args   = apply_filters( $this->wall->prefix . 'wall_comment_template_args', $t_args, $comments, $post_id ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
+				$template = apply_filters( $this->wall->prefix . 'wall_comment_template', 'comment.php' ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 			}
 
 			$output = UM()->get_template( $template, $this->wall->plugin_basename, $t_args );
@@ -532,7 +532,7 @@ class Comments {
 			);
 		}
 
-		do_action( $this->wall->prefix . 'before_wall_comment_updated', $commentid, get_current_user_id() );
+		do_action( $this->wall->prefix . 'before_wall_comment_updated', $commentid, get_current_user_id() ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 
 		um_fetch_user( get_current_user_id() );
 
@@ -542,7 +542,7 @@ class Comments {
 				'br' => array(),
 			)
 		);
-		$comment_content = apply_filters( $this->wall->prefix . 'wall_comment_content_edit', $orig_content, $post_id, $commentid );
+		$comment_content = apply_filters( $this->wall->prefix . 'wall_comment_content_edit', $orig_content, $post_id, $commentid ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 
 		$old_data->comment_meta = get_comment_meta( $commentid );
 
@@ -551,7 +551,7 @@ class Comments {
 			'comment_content' => wp_slash( $comment_content ),
 		);
 
-		$data = apply_filters( $this->wall->prefix . 'update_comment_args', $data, $old_data );
+		$data = apply_filters( $this->wall->prefix . 'update_comment_args', $data, $old_data ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 
 		$result = wp_update_comment( $data );
 		if ( 1 === $result ) {
@@ -571,9 +571,9 @@ class Comments {
 			$comment_content = nl2br( $linkified );
 
 			if ( ! empty( $old_data->comment_parent ) ) {
-				do_action( $this->wall->prefix . 'after_wall_comment_reply_updated', $commentid, $old_data );
+				do_action( $this->wall->prefix . 'after_wall_comment_reply_updated', $commentid, $old_data ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 			} else {
-				do_action( $this->wall->prefix . 'after_wall_comment_updated', $commentid, $old_data );
+				do_action( $this->wall->prefix . 'after_wall_comment_updated', $commentid, $old_data ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 			}
 
 			update_comment_meta( $commentid, 'orig_content', wp_slash( $orig_content ) );
@@ -625,8 +625,8 @@ class Comments {
 			wp_send_json_error( __( 'You are not authorized to load comments.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
 		}
 
-		$number    = apply_filters( $this->wall->prefix . 'wall_comments_loadmore_number', 10 );
-		$order     = apply_filters( $this->wall->prefix . 'wall_comments_loadmore_order', 'asc' );
+		$number    = $this->wall->common()->comments()->get_comments_per_page();
+		$order     = $this->wall->common()->comments()->get_comments_order();
 		$offset    = ! empty( $_POST['offset'] ) ? absint( $_POST['offset'] ) : 0;
 		$post_link = $this->wall->common()->posts()->get_permalink( $post_id );
 		// phpcs:enable WordPress.Security.NonceVerification
@@ -643,8 +643,8 @@ class Comments {
 			'order_comment'    => $order,
 		);
 
-		$t_args   = apply_filters( $this->wall->prefix . 'wall_comment_template_args', $t_args, $comments, $post_id );
-		$template = apply_filters( $this->wall->prefix . 'wall_comment_template', 'comment.php' );
+		$t_args   = apply_filters( $this->wall->prefix . 'wall_comment_template_args', $t_args, $comments, $post_id ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
+		$template = apply_filters( $this->wall->prefix . 'wall_comment_template', 'comment.php' ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 
 		$content = UM()->get_template( $template, $this->wall->plugin_basename, $t_args, false );
 		if ( $comments_all > ( absint( $offset ) + absint( $number ) ) ) {
@@ -692,8 +692,8 @@ class Comments {
 			wp_send_json_error( __( 'Wrong post ID.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
 		}
 
-		$number    = apply_filters( $this->wall->prefix . 'wall_comments_loadmore_number', 10 );
-		$order     = apply_filters( $this->wall->prefix . 'wall_comments_loadmore_order', 10 );
+		$number    = $this->wall->common()->comments()->get_comments_per_page();
+		$order     = $this->wall->common()->comments()->get_comments_order();
 		$offset    = ! empty( $_POST['offset'] ) ? absint( $_POST['offset'] ) : 0;
 		$post_link = $this->wall->common()->posts()->get_permalink( $post_id );
 
@@ -711,8 +711,8 @@ class Comments {
 				'um_activity_wall' => $this->wall,
 			);
 
-			$t_args   = apply_filters( $this->wall->prefix . 'wall_comment_reply_template_args', $t_args, $commentc, $post_id );
-			$template = apply_filters( $this->wall->prefix . 'wall_comment_reply_template', 'comment-reply.php' );
+			$t_args   = apply_filters( $this->wall->prefix . 'wall_comment_reply_template_args', $t_args, $commentc, $post_id ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
+			$template = apply_filters( $this->wall->prefix . 'wall_comment_reply_template', 'comment-reply.php' ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 			$content .= UM()->get_template( $template, $this->wall->plugin_basename, $t_args, false );
 		}
 
@@ -785,14 +785,12 @@ class Comments {
 	 * @return string
 	 */
 	public function linkify_content( $raw_text ) {
-		$attributes = apply_filters(
-			$this->wall->prefix . 'make_links_clickable_attrs',
-			array(
-				'target' => '_blank',
-				'class'  => 'um-link',
-				'rel'    => 'noopener nofollow ugc',
-			)
+		$attributes = array(
+			'target' => '_blank',
+			'class'  => 'um-link',
+			'rel'    => 'noopener nofollow ugc',
 		);
+		$attributes = apply_filters( $this->wall->prefix . 'make_links_clickable_attrs', $attributes, 'comments' ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 
 		$attribute_string = '';
 		foreach ( $attributes as $key => $value ) {

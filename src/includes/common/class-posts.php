@@ -32,7 +32,7 @@ class Posts {
 	}
 
 	public function set_global_actions() {
-		$this->global_actions = apply_filters( $this->wall->prefix . 'global_actions', array() );
+		$this->global_actions = apply_filters( $this->wall->prefix . 'global_actions', array() ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 	}
 
 	/**
@@ -80,7 +80,7 @@ class Posts {
 				'title'          => true,
 			);
 
-			$allowed_html = apply_filters( $this->wall->prefix . 'late_escaping_allowed_tags_extend', $allowed_html );
+			$allowed_html = apply_filters( $this->wall->prefix . 'late_escaping_allowed_tags_extend', $allowed_html ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 		}
 
 		return $allowed_html;
@@ -94,7 +94,7 @@ class Posts {
 	 * @return string
 	 */
 	public function get_permalink( $post_id ) {
-		$url = apply_filters( $this->wall->prefix . 'wall_get_core_page', '' );
+		$url = apply_filters( $this->wall->prefix . 'wall_get_core_page', '' ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 		return add_query_arg( 'wall_post', $post_id, $url );
 	}
 
@@ -139,7 +139,7 @@ class Posts {
 		$unix_published_date = get_post_datetime( $post_id, 'date', 'gmt' );
 		$time                = UM()->datetime()->time_diff( $unix_published_date->getTimestamp() );
 
-		return apply_filters( $this->wall->prefix . 'human_post_time', $time, $post_id );
+		return apply_filters( $this->wall->prefix . 'human_post_time', $time, $post_id ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 	}
 
 	/**
@@ -174,7 +174,7 @@ class Posts {
 		}
 
 		$content = wp_oembed_get( $uri, $args );
-		$content = apply_filters( $this->wall->prefix . 'get_video', $content, $post_id, $args );
+		$content = apply_filters( $this->wall->prefix . 'get_video', $content, $post_id, $args ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 
 		return $content;
 	}
@@ -229,7 +229,7 @@ class Posts {
 			$content = $this->get_photo_v2( $post_id, $class, $author_id );
 		}
 
-		return apply_filters( $this->wall->prefix . 'get_photo_content', $content, $post_id, $class, $author_id );
+		return apply_filters( $this->wall->prefix . 'get_photo_content', $content, $post_id, $class, $author_id ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 	}
 
 	public function get_photo_v2( $post_id = 0, $class = '', $author_id = null ) {
@@ -289,7 +289,7 @@ class Posts {
 
 		$nonce = wp_create_nonce( $author_id . $post_id . 'um-download-nonce' );
 
-		$action = apply_filters( $this->wall->prefix . 'download_action', '' );
+		$action = apply_filters( $this->wall->prefix . 'download_action', '' ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 		if ( UM()->is_permalinks ) {
 			if ( '' !== $iamge_url ) {
 				$url = home_url( "/{$action}/{$post_id}/{$author_id}/{$nonce}/{$attachment_id}.{$filetype['ext']}" );
@@ -322,9 +322,7 @@ class Posts {
 			}
 		}
 
-		$url = apply_filters( $this->wall->prefix . 'get_download_link', $url, $post_id, $author_id );
-
-		return $url;
+		return apply_filters( $this->wall->prefix . 'get_download_link', $url, $post_id, $author_id ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 	}
 
 	/**
@@ -526,7 +524,7 @@ class Posts {
 			'meta_query'  => array(),
 		);
 
-		$query = apply_filters( $this->wall->prefix . 'wall_posts_args', $query, $args );
+		$query = apply_filters( $this->wall->prefix . 'wall_posts_args', $query, $args ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 
 		// Get posts.
 		$query_obj = new \WP_Query( $query );
@@ -580,7 +578,7 @@ class Posts {
 			return $content;
 		}
 
-		$run = apply_filters( $this->wall->prefix . 'maybe_linkify_mentions_condition', true, $content, $context, $id );
+		$run = apply_filters( $this->wall->prefix . 'maybe_linkify_mentions_condition', true, $content, $context, $id ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 		if ( true !== $run ) {
 			return $content;
 		}

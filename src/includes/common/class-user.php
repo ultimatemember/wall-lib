@@ -35,13 +35,13 @@ class User {
 			$can_remove = false;
 		}
 
-		return apply_filters( $this->wall->prefix . 'wall_post_can_remove', $can_remove, $post_id );
+		return apply_filters( $this->wall->prefix . 'wall_post_can_remove', $can_remove, $post_id ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 	}
 
 	public function can_view_wall( $profile_id ) {
 		$can_view = true;
 
-		return apply_filters( $this->wall->prefix . 'wall_can_view', $can_view, $profile_id );
+		return apply_filters( $this->wall->prefix . 'wall_can_view', $can_view, $profile_id ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 	}
 
 	/**
@@ -59,7 +59,7 @@ class User {
 		}
 
 		$in_users = array();
-		$in_users = apply_filters( $this->wall->prefix . 'wall_post_can_view_in_users', $in_users, $post_id );
+		$in_users = apply_filters( $this->wall->prefix . 'wall_post_can_view_in_users', $in_users, $post_id ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 
 		if ( ! empty( $in_users ) ) {
 			$in_users  = array_unique( $in_users );
@@ -70,7 +70,7 @@ class User {
 			}
 		}
 
-		return apply_filters( $this->wall->prefix . 'wall_post_can_view', $can_view, $post_id );
+		return apply_filters( $this->wall->prefix . 'wall_post_can_view', $can_view, $post_id ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 	}
 
 	public function can_like( $post_id, $user_id = null ) {
@@ -95,7 +95,7 @@ class User {
 			$can_like = $this->can_view_post( $post_id );
 		}
 
-		return apply_filters( $this->wall->prefix . 'wall_can_like_post', $can_like, $post_id, $user_id );
+		return apply_filters( $this->wall->prefix . 'wall_can_like_post', $can_like, $post_id, $user_id ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 	}
 
 	public function can_unlike( $post_id, $user_id = null ) {
@@ -122,7 +122,7 @@ class User {
 			$can_unlike = $this->can_view_post( $post_id );
 		}
 
-		return apply_filters( $this->wall->prefix . 'wall_can_unlike_post', $can_unlike, $post_id, $user_id );
+		return apply_filters( $this->wall->prefix . 'wall_can_unlike_post', $can_unlike, $post_id, $user_id ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 	}
 
 	/**
@@ -152,7 +152,7 @@ class User {
 			return true;
 		}
 
-		return apply_filters( $this->wall->prefix . 'wall_custom_privacy_view_likes', true, $user_id, $profile_id );
+		return apply_filters( $this->wall->prefix . 'wall_custom_privacy_view_likes', true, $user_id, $profile_id ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 	}
 
 	/**
@@ -186,7 +186,7 @@ class User {
 			return true;
 		}
 
-		return apply_filters( $this->wall->prefix . 'wall_custom_privacy_view_comment_likes', true, $comment_id, $user_id, $profile_id );
+		return apply_filters( $this->wall->prefix . 'wall_custom_privacy_view_comment_likes', true, $comment_id, $user_id, $profile_id ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 	}
 
 	public function can_like_comment( $comment_id, $user_id = null ) {
@@ -212,7 +212,7 @@ class User {
 			$can_like = $this->can_view_comment( $comment_id );
 		}
 
-		return apply_filters( $this->wall->prefix . 'wall_can_like_comment', $can_like, $comment_id, $user_id );
+		return apply_filters( $this->wall->prefix . 'wall_can_like_comment', $can_like, $comment_id, $user_id ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 	}
 
 	public function can_unlike_comment( $comment_id, $user_id = null ) {
@@ -238,7 +238,7 @@ class User {
 			$can_unlike = $this->can_view_comment( $comment_id );
 		}
 
-		return apply_filters( $this->wall->prefix . 'wall_can_unlike_comment', $can_unlike, $comment_id, $user_id );
+		return apply_filters( $this->wall->prefix . 'wall_can_unlike_comment', $can_unlike, $comment_id, $user_id ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 	}
 
 	/**
@@ -255,7 +255,7 @@ class User {
 			$can_view = false;
 		}
 
-		return apply_filters( $this->wall->prefix . 'wall_comment_can_view', $can_view, $comment_id );
+		return apply_filters( $this->wall->prefix . 'wall_comment_can_view', $can_view, $comment_id ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 	}
 
 	/**
@@ -277,7 +277,7 @@ class User {
 			$can_edit = true;
 		}
 
-		return apply_filters( $this->wall->prefix . 'wall_can_edit_comment', $can_edit );
+		return apply_filters( $this->wall->prefix . 'wall_can_edit_comment', $can_edit ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 	}
 
 	/**
@@ -292,7 +292,7 @@ class User {
 			$res = false;
 		}
 
-		return apply_filters( $this->wall->prefix . 'wall_can_post_comment', $res );
+		return apply_filters( $this->wall->prefix . 'wall_can_post_comment', $res ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 	}
 
 	/**
@@ -307,6 +307,6 @@ class User {
 			$res = 0;
 		}
 
-		return apply_filters( $this->wall->prefix . 'can_post_on_wall', $res );
+		return apply_filters( $this->wall->prefix . 'can_post_on_wall', $res ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 	}
 }

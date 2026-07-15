@@ -60,7 +60,7 @@ class Rewrite {
 		);
 		$allowed_image_types = implode( '|', $allowed_image_types );
 
-		$new_rules = apply_filters( $this->wall->prefix . 'rewrite_rules', $new_rules, $allowed_image_types );
+		$new_rules = apply_filters( $this->wall->prefix . 'rewrite_rules', $new_rules, $allowed_image_types ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 
 		return $new_rules + $rules;
 	}
@@ -69,7 +69,9 @@ class Rewrite {
 	 * @return bool
 	 */
 	public function download_routing() {
-		do_action( $this->wall->prefix . 'before_download_routing' );
+		global $wp_filesystem;
+
+		do_action( $this->wall->prefix . 'before_download_routing' ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 
 		$post_id = get_query_var( 'um_post' );
 		if ( empty( $post_id ) ) {
@@ -124,6 +126,8 @@ class Rewrite {
 			return false;
 		}
 
+		UM()->common()->filesystem()::maybe_init_wp_filesystem();
+
 		$size = filesize( $file_path );
 		if ( true === $is_attachment ) {
 			$originalname = get_the_title( $attachment_id );
@@ -141,14 +145,20 @@ class Rewrite {
 
 		header( 'Content-Length: ' . $size );
 
-		do_action( $this->wall->prefix . 'wall_download_file_header' );
+		do_action( $this->wall->prefix . 'wall_download_file_header' ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 
 		$levels = ob_get_level();
 		for ( $i = 0; $i < $levels; $i++ ) {
 			@ob_end_clean();
 		}
 
-		readfile( $file_path );
+		$contents = $wp_filesystem->get_contents( $file_path );
+		if ( false === $contents ) {
+			return false;
+		}
+
+		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- raw binary file output
+		echo $contents;
 		exit;
 	}
 }

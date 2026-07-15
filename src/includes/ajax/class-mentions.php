@@ -29,15 +29,19 @@ class Mentions {
 	public function get_user_suggestions() {
 		check_ajax_referer( 'um_wall_mentions', 'nonce' );
 
-		do_action( $this->wall->prefix . 'ajax_get_user_suggestions_before' );
+		do_action( $this->wall->prefix . 'ajax_get_user_suggestions_before' ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 
 		if ( ! isset( $_POST['term'] ) ) {
-			wp_send_json_error( array( 'message' => __( 'Invalid post name', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
+			wp_send_json_error( array( 'message' => __( 'Invalid term', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
 		}
 		$current_user = get_current_user_id();
 
-		$term = sanitize_text_field( $_POST['term'] );
-		$data = apply_filters( $this->wall->prefix . 'ajax_get_user_suggestions', array(), $term, $this );
+		$term = sanitize_text_field( wp_unslash( $_POST['term'] ) );
+		if ( empty( $term ) ) {
+			wp_send_json_error( array( 'message' => __( 'Empty term', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
+		}
+
+		$data = apply_filters( $this->wall->prefix . 'ajax_get_user_suggestions', array(), $term, $this ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 		$data = array_filter(
 			$data,
 			function ( $v ) use ( $current_user ) {

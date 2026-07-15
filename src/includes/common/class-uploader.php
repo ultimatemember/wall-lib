@@ -33,7 +33,7 @@ class Uploader {
 	 * @return string
 	 */
 	public function get_permalink( $post_id ) {
-		$url = apply_filters( $this->wall->prefix . 'wall_get_core_page', '' );
+		$url = apply_filters( $this->wall->prefix . 'wall_get_core_page', '' ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 		return add_query_arg( 'wall_post', $post_id, $url );
 	}
 
@@ -154,7 +154,7 @@ class Uploader {
 									'size'          => 's',
 									'icon_position' => 'content',
 									'icon'          => $button_content,
-									'title'         => __( 'Delete photo', 'um-user-photos' ),
+									'title'         => __( 'Delete photo', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
 									'classes'       => array( 'um-wall-delete-photo' ),
 									'data'          => array(
 										'id'           => $photo_id,

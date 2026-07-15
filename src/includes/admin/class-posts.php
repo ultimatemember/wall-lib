@@ -29,25 +29,20 @@ class Posts {
 	 * Clear a wall post report.
 	 */
 	public function um_admin_do_action__wall_report() {
-		if ( $this->wall->post_type !== $_REQUEST['post_type'] ) {
+		if ( empty( $_REQUEST['post_type'] ) || $this->wall->post_type !== $_REQUEST['post_type'] ) {
 			return;
 		}
 
 		$admin_url = admin_url( 'edit.php?post_type=' . $this->wall->post_type );
 
-		if ( empty( $_REQUEST['post_id'] ) ) {
-			wp_safe_redirect( $admin_url );
-			exit;
-		}
-
-		check_admin_referer( 'wall_report' . $_REQUEST['post_id'] );
-
-		if ( ! is_numeric( $_REQUEST['post_id'] ) ) {
+		if ( empty( $_REQUEST['post_id'] ) || ! is_numeric( $_REQUEST['post_id'] ) ) {
 			wp_safe_redirect( $admin_url );
 			exit;
 		}
 
 		$post_id = absint( $_REQUEST['post_id'] );
+
+		check_admin_referer( 'wall_report' . $post_id );
 
 		if ( ! $this->wall->common()->posts()->reported( $post_id ) ) {
 			wp_safe_redirect( $admin_url );

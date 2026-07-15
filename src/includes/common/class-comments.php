@@ -1,6 +1,8 @@
 <?php
 namespace WallLib\common;
 
+use WP_Comment;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -383,5 +385,23 @@ class Comments {
 	public function exists( $comment ) {
 		$status = wp_get_comment_status( $comment );
 		return false !== $status;
+	}
+
+	/**
+	 * Retrieves the number of comments to display per page.
+	 *
+	 * @return int Number of comments to display per page.
+	 */
+	public function get_comments_per_page() {
+		return apply_filters( $this->wall->prefix . 'wall_comments_loadmore_number', 10 ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
+	}
+
+	/**
+	 * Retrieves the order in which comments should be loaded.
+	 *
+	 * @return string The order in which comments are loaded, defaulting to 'asc'.
+	 */
+	public function get_comments_order() {
+		return apply_filters( $this->wall->prefix . 'wall_comments_loadmore_order', 'asc' ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 	}
 }
