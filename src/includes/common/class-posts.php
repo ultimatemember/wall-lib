@@ -78,6 +78,8 @@ class Posts {
 				'src'            => true,
 				'srcdoc'         => true,
 				'title'          => true,
+				'width'          => true,
+				'height'         => true,
 			);
 
 			$allowed_html = apply_filters( $this->wall->prefix . 'late_escaping_allowed_tags_extend', $allowed_html ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
