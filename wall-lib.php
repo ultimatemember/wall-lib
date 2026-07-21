@@ -8,9 +8,9 @@
  * Author URI: https://ultimatemember.com
  * License: GPLv3
  * License URI: http://www.gnu.org/licenses/gpl-3.0.txt
- * Requires at least: 5.5
+ * Requires at least: 6.2
  * Requires PHP: 7.4
- * UM version: 2.9.2
+ * UM version: 3.0.0
  * Requires Plugins: ultimate-member
  *
  * @package UM_WallLib
