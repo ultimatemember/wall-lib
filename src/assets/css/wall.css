@@ -597,6 +597,17 @@
   flex-wrap: nowrap;
   column-gap: 8px;
 }
+.um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-commentl .um-wall-comment-info .um-wall-comment-data .um-wall-comment-edit {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  flex-wrap: nowrap;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  row-gap: 8px;
+}
 .um .um-wall-widget .um-wall-comments .um-wall-comments-loop .um-wall-commentwrap .um-wall-commentl a {
   text-decoration: none;
 }

@@ -45,7 +45,7 @@ function um_check_textarea_length( editor ) {
 }
 
 function um_disable_textarea( form ) {
-	form.find( 'textarea.um-wall-textarea-elem' ).prop( 'disabled', true );
+	form.find( 'textarea.um-wall-textarea-elem' ).prop( 'disabled', true ).addClass('um-disabled');
 	let $editableDiv = form.find( 'div.um-wall-textarea-elem' );
 	if ( $editableDiv.length > 0 ) {
 		$editableDiv.prop( 'contenteditable', false ).prop( 'aria-disabled', true ).attr( 'contenteditable', false ).attr( 'aria-disabled', true ).attr('tabindex', -1).addClass('um-disabled');
@@ -54,7 +54,7 @@ function um_disable_textarea( form ) {
 }
 
 function um_enable_textarea( form ) {
-	form.find( 'textarea.um-wall-textarea-elem' ).prop( 'disabled', false );
+	form.find( 'textarea.um-wall-textarea-elem' ).prop( 'disabled', false ).removeClass('um-disabled');
 	let $editableDiv = form.find( 'div.um-wall-textarea-elem' );
 	if ( $editableDiv.length > 0 ) {
 		$editableDiv.prop( 'contenteditable', true ).prop( 'aria-disabled', false ).attr( 'contenteditable', true ).attr( 'aria-disabled', false ).removeAttr('tabindex').removeClass('um-disabled');
