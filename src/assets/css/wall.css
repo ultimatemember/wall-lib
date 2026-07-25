@@ -151,6 +151,15 @@
   line-height: var(--um-text-line-height-sm, 20px);
   font-weight: var(--um-text-font-weight-regular, 400);
 }
+.um .um-box .um-wall-textarea-elem.um-disabled {
+  cursor: not-allowed;
+  pointer-events: none;
+  user-select: none;
+  opacity: 0.6;
+  color: var(--um-blocks-button-fg-color, var(--um-gray-400, #98a2b3));
+  background-color: var(--um-blocks-button-bg-disabled-color, var(--um-blocks-button-bg-color, #fff));
+  border-color: var(--um-blocks-button-bg-disabled-color, var(--um-gray-200, #eaecf0));
+}
 .um .um-box .um-wall-textarea-elem.um-upload-link-disabled {
   background: var(--um-gray-100, #f2f4f7);
 }

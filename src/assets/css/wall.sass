@@ -85,6 +85,14 @@
       margin: 0
       color: $gray-900
       +typography( text, sm, regular )
+      &.#{$prefix}disabled
+        cursor: not-allowed
+        pointer-events: none
+        user-select: none
+        opacity: 0.6
+        color: $button-color-disabled
+        background-color: $button-bg-disabled
+        border-color: $button-border-color-disabled
       &.#{$prefix}upload-link-disabled
         background: $gray-100
       &:not(.wp-editor-area)

@@ -44,6 +44,24 @@ function um_check_textarea_length( editor ) {
 	}
 }
 
+function um_disable_textarea( form ) {
+	form.find( 'textarea.um-wall-textarea-elem' ).prop( 'disabled', true );
+	let $editableDiv = form.find( 'div.um-wall-textarea-elem' );
+	if ( $editableDiv.length > 0 ) {
+		$editableDiv.prop( 'contenteditable', false ).prop( 'aria-disabled', true ).attr( 'contenteditable', false ).attr( 'aria-disabled', true ).attr('tabindex', -1).addClass('um-disabled');
+		$editableDiv.siblings('.um-wall-editor-toolbar').find('button').prop('disabled', true);
+	}
+}
+
+function um_enable_textarea( form ) {
+	form.find( 'textarea.um-wall-textarea-elem' ).prop( 'disabled', false );
+	let $editableDiv = form.find( 'div.um-wall-textarea-elem' );
+	if ( $editableDiv.length > 0 ) {
+		$editableDiv.prop( 'contenteditable', true ).prop( 'aria-disabled', false ).attr( 'contenteditable', true ).attr( 'aria-disabled', false ).removeAttr('tabindex').removeClass('um-disabled');
+		$editableDiv.siblings('.um-wall-editor-toolbar').find('button').prop('disabled', false);
+	}
+}
+
 function um_enable_post_submit( form, empty = true, submit = true, success = false ) {
 	form.find( '.um-button, textarea' ).prop( 'disabled', false );
 	form.find( '.um-upload-link' ).removeClass('um-upload-link-disabled');
@@ -118,7 +136,8 @@ jQuery( document ).ready(function () {
 	jQuery( document.body ).on( 'submit', '.um-wall-publish', function(e) {
 		e.preventDefault();
 		let form = jQuery(this);
-		let post_content = form.find('.um-wall-textarea-elem').html();
+		let $textarea = form.find('.um-wall-textarea-elem');
+		let post_content = $textarea.html();
 		form.find('.um-wall-textarea').val(post_content);
 
 		let formdata = UM.common.form.vanillaSerialize( form );
@@ -158,6 +177,7 @@ jQuery( document ).ready(function () {
 
 		um_disable_post_submit( form );
 		$uploadToggle.prop('disabled',true);
+		um_disable_textarea( form );
 		$loader.umShow();
 
 		let $uploader = form.find('.um-uploader');
@@ -195,7 +215,6 @@ jQuery( document ).ready(function () {
 
 					form.find('textarea').val('').height('auto');
 					um_clean_photo_fields( form );
-					um_post_placeholder( form.find( 'textarea' ) );
 				} else {
 					let post_id = form.find('input[name="_post_id"]').val()
 					jQuery('#postid-' + post_id ).replaceWith(data);
@@ -228,6 +247,7 @@ jQuery( document ).ready(function () {
 				UM.frontend.dropdown.init();
 				UM.frontend.image.lazyload.init();
 				um_enable_post_submit( form );
+				um_enable_textarea( form );
 			},
 			error: function(data) {
 				form.find('.um-wall-right .um-ajax-spinner-svg').hide();
@@ -243,6 +263,7 @@ jQuery( document ).ready(function () {
 					type: 'error'
 				});
 				um_enable_post_submit( form );
+				um_enable_textarea( form );
 			}
 		});
 	});
@@ -1409,10 +1430,6 @@ function um_clean_photo_fields( form ) {
 	form.find('.um-wall-preview img').attr('src', '');
 	form.find( 'input[type="hidden"][name="_post_img"]' ).val('');
 	form.find( 'input[type="hidden"][name="_post_img_url"]' ).val('');
-}
-
-function um_post_placeholder( obj ) {
-	obj.attr( 'placeholder', obj.attr( 'data-ph' ) );
 }
 
 jQuery(document).ready(function () {
