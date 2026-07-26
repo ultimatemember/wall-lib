@@ -1731,20 +1731,21 @@ jQuery(document).ready(function () {
 		}
 
 		let word = getCurrentWord(this);
-		let nonce = jQuery(this).attr('data-nonce');
+		let $editor = jQuery(this);
+		let nonce   = $editor.data('nonce');
 
 		if (word && word.startsWith('@') && word.length > 1) {
 			let term = word.substring(1);
-			startMentionSearch(term, nonce, this);
+			startMentionSearch(term, nonce, $editor);
 		} else {
-			hideMentionBox();
+			hideMentionBox($editor);
 		}
 	});
 
 	//--------------------------------------------------------------------
 	// AJAX search
 	//--------------------------------------------------------------------
-	function startMentionSearch(term, nonce, editor) {
+	function startMentionSearch(term, nonce, $editor) {
 		clearTimeout(mentionTimer);
 		let action = wp.hooks.applyFilters(
 			'um_wall_user_suggestions_action',
@@ -1754,21 +1755,21 @@ jQuery(document).ready(function () {
 		data = wp.hooks.applyFilters(
 			'um_wall_user_suggestions_data',
 			data,
-			{ term, nonce, editor }
+			{ term: term, nonce: nonce, editor: $editor }
 		);
 		mentionTimer = setTimeout(function(){
 			wp.ajax.send(action, {
 				data: data,
 				success: function(response){
-					if (response) showMentionBox(response, editor);
-					else hideMentionBox();
+					if (response) showMentionBox(response, $editor);
+					else hideMentionBox( $editor );
 				},
 				error: function(e){
 					jQuery(this).um_notice({
 						message: e,
 						type: 'error'
 					});
-					hideMentionBox();
+					hideMentionBox( $editor );
 				}
 			});
 		}, 220);
@@ -1777,12 +1778,12 @@ jQuery(document).ready(function () {
 	//--------------------------------------------------------------------
 	// Show suggestion box
 	//--------------------------------------------------------------------
-	function showMentionBox(users, editor){
-		let box = jQuery('#um-mention-autocomplete');
+	function showMentionBox(users, $editor){
+		let box = $editor.parents('.um-wall-publish').find('.um-mention-autocomplete');
 		box.empty();
 
 		if (!users.length) {
-			hideMentionBox();
+			hideMentionBox( $editor );
 			return;
 		}
 
@@ -1797,7 +1798,7 @@ jQuery(document).ready(function () {
 			box.append(item);
 		});
 
-		let pos = getCaretWordPosition(editor);
+		let pos = getCaretWordPosition($editor);
 
 		box.css({
 			left: pos.left,
@@ -1805,18 +1806,21 @@ jQuery(document).ready(function () {
 		}).show();
 	}
 
-	function hideMentionBox(){
-		jQuery('#um-mention-autocomplete').hide();
+	function hideMentionBox( $editor ){
+		if ( $editor ) {
+			$editor.parents('.um-wall-publish').find('.um-mention-autocomplete').hide();
+		} else {
+			jQuery('.um-mention-autocomplete').hide();
+		}
 	}
 
 	//--------------------------------------------------------------------
 	// caret box position
 	//--------------------------------------------------------------------
-	function getCaretWordPosition(editor){
-
-		if (isTextarea(editor)) {
-			let offset = jQuery(editor).offset();
-			let height = jQuery(editor).outerHeight();
+	function getCaretWordPosition($editor){
+		if (isTextarea($editor[0])) {
+			let offset = $editor.offset();
+			let height = $editor.outerHeight();
 			return {
 				left: offset.left + 20,
 				top: offset.top + 25
@@ -1831,7 +1835,7 @@ jQuery(document).ready(function () {
 		let rect = range.getClientRects()[0];
 
 		if (!rect) {
-			let offset = jQuery(editor).offset();
+			let offset = $editor.offset();
 			return {
 				left: offset.left,
 				top: offset.top
@@ -1874,7 +1878,7 @@ jQuery(document).ready(function () {
 	// Close box on outside click
 	//--------------------------------------------------------------------
 	jQuery(document).on('mousedown', function(e){
-		if (!jQuery(e.target).closest('#um-mention-autocomplete').length &&
+		if (!jQuery(e.target).closest('.um-mention-autocomplete').length &&
 			!jQuery(e.target).closest('.um-mention-item').length)
 		{
 			hideMentionBox();
