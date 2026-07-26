@@ -1807,10 +1807,15 @@ jQuery(document).ready(function () {
 	}
 
 	function hideMentionBox( $editor ){
+		let $mentionBox = null;
 		if ( $editor ) {
-			$editor.parents('.um-wall-publish').find('.um-mention-autocomplete').hide();
+			$mentionBox = $editor.parents('.um-wall-publish').find('.um-mention-autocomplete');
 		} else {
-			jQuery('.um-mention-autocomplete').hide();
+			$mentionBox = jQuery('.um-mention-autocomplete');
+		}
+
+		if ( $mentionBox ) {
+			$mentionBox.hide();
 		}
 	}
 
@@ -1819,11 +1824,79 @@ jQuery(document).ready(function () {
 	//--------------------------------------------------------------------
 	function getCaretWordPosition($editor){
 		if (isTextarea($editor[0])) {
-			let offset = $editor.offset();
-			let height = $editor.outerHeight();
+			const el = $editor[0];
+			const parent = $editor.parent()[0];
+
+			const style = window.getComputedStyle(el);
+			const mirror = document.createElement('div');
+
+			const properties = [
+				'boxSizing',
+				'width',
+				'height',
+				'overflowX',
+				'overflowY',
+				'borderTopWidth',
+				'borderRightWidth',
+				'borderBottomWidth',
+				'borderLeftWidth',
+				'paddingTop',
+				'paddingRight',
+				'paddingBottom',
+				'paddingLeft',
+				'fontStyle',
+				'fontVariant',
+				'fontWeight',
+				'fontStretch',
+				'fontSize',
+				'fontSizeAdjust',
+				'lineHeight',
+				'fontFamily',
+				'textAlign',
+				'textTransform',
+				'textIndent',
+				'textDecoration',
+				'letterSpacing',
+				'wordSpacing',
+				'tabSize',
+				'whiteSpace',
+				'wordWrap'
+			];
+
+			mirror.style.position = 'absolute';
+			mirror.style.visibility = 'hidden';
+			mirror.style.whiteSpace = 'pre-wrap';
+			mirror.style.wordWrap = 'break-word';
+			mirror.style.top = '0';
+			mirror.style.left = '-9999px';
+
+			properties.forEach(function(property) {
+				mirror.style[property] = style[property];
+			});
+
+			document.body.appendChild(mirror);
+
+			const caret = el.selectionStart;
+			const before = el.value.substring(0, caret);
+			const after = el.value.substring(caret) || '.';
+
+			mirror.textContent = before;
+
+			const marker = document.createElement('span');
+			marker.textContent = after.charAt(0);
+			mirror.appendChild(marker);
+
+			const markerRect = marker.getBoundingClientRect();
+			const parentRect = parent.getBoundingClientRect();
+
+			const left = markerRect.left - parentRect.left - el.scrollLeft;
+			const top = markerRect.bottom - parentRect.top - el.scrollTop + 3;
+
+			document.body.removeChild(mirror);
+
 			return {
-				left: offset.left + 20,
-				top: offset.top + 25
+				left: Math.max(0, left) + 20,
+				top: Math.max(0, top) + 25
 			};
 		}
 
