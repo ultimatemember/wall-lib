@@ -1,3 +1,13 @@
+.um-wall-shortcode {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  flex-wrap: nowrap;
+  row-gap: 12px;
+  position: relative;
+}
+
 .um .um-wall-empty {
   text-align: center;
   width: 100%;
