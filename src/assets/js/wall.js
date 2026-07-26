@@ -1779,7 +1779,7 @@ jQuery(document).ready(function () {
 	// Show suggestion box
 	//--------------------------------------------------------------------
 	function showMentionBox(users, $editor){
-		let box = $editor.parents('.um-wall-publish').find('.um-mention-autocomplete');
+		let box = $editor.parents('.um-wall-shortcode').find('.um-mention-autocomplete');
 		box.empty();
 
 		if (!users.length) {
@@ -1798,7 +1798,7 @@ jQuery(document).ready(function () {
 			box.append(item);
 		});
 
-		let pos = getCaretWordPosition($editor);
+		let pos = getCaretWordPosition($editor, box);
 
 		box.css({
 			left: pos.left,
@@ -1809,7 +1809,7 @@ jQuery(document).ready(function () {
 	function hideMentionBox( $editor ){
 		let $mentionBox = null;
 		if ( $editor ) {
-			$mentionBox = $editor.parents('.um-wall-publish').find('.um-mention-autocomplete');
+			$mentionBox = $editor.parents('.um-wall-shortcode').find('.um-mention-autocomplete');
 		} else {
 			$mentionBox = jQuery('.um-mention-autocomplete');
 		}
@@ -1822,102 +1822,88 @@ jQuery(document).ready(function () {
 	//--------------------------------------------------------------------
 	// caret box position
 	//--------------------------------------------------------------------
-	function getCaretWordPosition($editor){
+	function getCaretWordPosition($editor, $box){
 		if (isTextarea($editor[0])) {
 			const el = $editor[0];
-			const parent = $editor.parent()[0];
-
 			const style = window.getComputedStyle(el);
-			const mirror = document.createElement('div');
 
-			const properties = [
-				'boxSizing',
-				'width',
-				'height',
-				'overflowX',
-				'overflowY',
-				'borderTopWidth',
-				'borderRightWidth',
-				'borderBottomWidth',
-				'borderLeftWidth',
-				'paddingTop',
-				'paddingRight',
-				'paddingBottom',
-				'paddingLeft',
-				'fontStyle',
-				'fontVariant',
-				'fontWeight',
-				'fontStretch',
-				'fontSize',
-				'fontSizeAdjust',
-				'lineHeight',
-				'fontFamily',
-				'textAlign',
-				'textTransform',
-				'textIndent',
-				'textDecoration',
-				'letterSpacing',
-				'wordSpacing',
-				'tabSize',
-				'whiteSpace',
-				'wordWrap'
-			];
+			const $root = $box.closest('.um-wall-shortcode');
 
-			mirror.style.position = 'absolute';
-			mirror.style.visibility = 'hidden';
-			mirror.style.whiteSpace = 'pre-wrap';
-			mirror.style.wordWrap = 'break-word';
-			mirror.style.top = '0';
-			mirror.style.left = '-9999px';
-
-			properties.forEach(function(property) {
-				mirror.style[property] = style[property];
-			});
-
-			document.body.appendChild(mirror);
+			const editorOffset = $editor.offset();
+			const rootOffset = $root.offset();
 
 			const caret = el.selectionStart;
-			const before = el.value.substring(0, caret);
-			const after = el.value.substring(caret) || '.';
+			const textBeforeCaret = el.value.substring(0, caret);
+			const lines = textBeforeCaret.split('\n');
+			const currentLineText = lines[lines.length - 1];
 
-			mirror.textContent = before;
+			const canvas = getCaretWordPosition.canvas ||
+				(getCaretWordPosition.canvas = document.createElement('canvas'));
 
-			const marker = document.createElement('span');
-			marker.textContent = after.charAt(0);
-			mirror.appendChild(marker);
+			const context = canvas.getContext('2d');
 
-			const markerRect = marker.getBoundingClientRect();
-			const parentRect = parent.getBoundingClientRect();
+			context.font = [
+				style.fontStyle,
+				style.fontVariant,
+				style.fontWeight,
+				style.fontSize,
+				style.fontFamily
+			].join(' ');
 
-			const left = markerRect.left - parentRect.left - el.scrollLeft;
-			const top = markerRect.bottom - parentRect.top - el.scrollTop + 3;
+			let lineHeight = parseFloat(style.lineHeight);
 
-			document.body.removeChild(mirror);
+			if (isNaN(lineHeight)) {
+				lineHeight = parseFloat(style.fontSize) * 1.2;
+			}
+
+			const paddingLeft = parseFloat(style.paddingLeft) || 0;
+			const paddingTop = parseFloat(style.paddingTop) || 0;
+			const borderLeft = parseFloat(style.borderLeftWidth) || 0;
+			const borderTop = parseFloat(style.borderTopWidth) || 0;
+
+			const caretLeft = context.measureText(currentLineText).width;
+			const visualLineIndex = lines.length - 1;
 
 			return {
-				left: Math.max(0, left) + 20,
-				top: Math.max(0, top) + 25
+				left: editorOffset.left - rootOffset.left + borderLeft + paddingLeft + caretLeft - el.scrollLeft,
+				top: editorOffset.top - rootOffset.top + borderTop + paddingTop + ((visualLineIndex + 1) * lineHeight) - el.scrollTop + 6
 			};
 		}
 
 		// contenteditable
 		let sel = window.getSelection();
+		if (!sel || !sel.rangeCount) {
+			const $root = $box.closest('.um-wall-shortcode');
+			const editorOffset = $editor.offset();
+			const rootOffset = $root.offset();
+
+			return {
+				left: editorOffset.left - rootOffset.left,
+				top: editorOffset.top - rootOffset.top + $editor.outerHeight()
+			};
+		}
+
 		let range = sel.getRangeAt(0).cloneRange();
 		range.collapse(true);
 
 		let rect = range.getClientRects()[0];
 
+		const $root = $box.closest('.um-wall-shortcode');
+		const rootRect = $root[0].getBoundingClientRect();
+
 		if (!rect) {
-			let offset = $editor.offset();
+			const editorOffset = $editor.offset();
+			const rootOffset = $root.offset();
+
 			return {
-				left: offset.left,
-				top: offset.top
+				left: editorOffset.left - rootOffset.left,
+				top: editorOffset.top - rootOffset.top + $editor.outerHeight()
 			};
 		}
 
 		return {
-			left: rect.left + window.scrollX,
-			top: rect.bottom + window.scrollY + 3
+			left: rect.left - rootRect.left,
+			top: rect.bottom - rootRect.top + 6
 		};
 	}
 
@@ -1930,6 +1916,10 @@ jQuery(document).ready(function () {
 
 		let user = jQuery(this).data('user');
 
+		if (!activeEditor) {
+			return;
+		}
+
 		activeEditor.focus();
 
 		if (!isTextarea(activeEditor)) {
@@ -1938,7 +1928,7 @@ jQuery(document).ready(function () {
 				sel.removeAllRanges();
 				sel.addRange(savedRange);
 			}
-		} else {
+		} else if (savedRange && typeof savedRange.textareaPos !== 'undefined') {
 			activeEditor.selectionStart = activeEditor.selectionEnd = savedRange.textareaPos;
 		}
 

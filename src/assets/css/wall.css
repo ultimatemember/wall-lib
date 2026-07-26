@@ -28,7 +28,6 @@
   flex-wrap: nowrap;
   padding: 16px 20px;
   row-gap: 0;
-  position: relative;
 }
 .um .um-box.um-wall-new-post .um-box-header, .um .um-box.um-wall-edit-post .um-box-header,
 .um .um-box .um-wall-edit-post .um-box-header {
