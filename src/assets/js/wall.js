@@ -19,6 +19,26 @@
  * 		}
  * }
  */
+// --------------- Toggle hooks ---------------
+wp.hooks.addFilter( 'um_toggle_block', 'um-wall-lib', function( $toggleBlock, $toggleButton ) {
+	if ( $toggleButton.hasClass( 'um-wall-comments-toggle' ) ) {
+		// Change toggle text.
+		let textAfter  = $toggleButton.data( 'toggle-text' );
+		let textBefore = $toggleButton.find( '.um-wall-comment-text' ).text();
+		$toggleButton.data( 'toggle-text',textBefore );
+		$toggleButton.find( '.um-wall-comment-text' ).text( textAfter )
+	}
+
+	return $toggleBlock;
+});
+// Set toggle block based on parent.
+wp.hooks.addFilter( 'um_toggle_block', 'um-wall-lib', function( $toggleBlock, $toggleButton ) {
+	if ( $toggleButton.hasClass('um-wall-toggle-uploader') ) {
+		$toggleBlock = $toggleButton.parents('form.um-wall-publish').find( $toggleButton.data('um-toggle') );
+	}
+
+	return $toggleBlock;
+});
 
 /**
  * Check the length of the text in a textarea and enable or disable the form submit button accordingly.
@@ -324,7 +344,7 @@ jQuery( document ).ready(function () {
 	jQuery( document.body ).on( 'click', '.um-wall-cancel-edit', function() {
 		let post_id = jQuery(this).attr('data-post_id');
 		let widget = jQuery('#postid-' + post_id )
-		widget.find('.um-wall-post-form-wrapper').remove();
+		widget.find('form.um-wall-publish').remove();
 		widget.find('.um-wall-body').umShow();
 		widget.find('.um-wall-comments').umShow();
 		widget.find('.um-wall-comment-form').umShow();
@@ -407,7 +427,7 @@ jQuery( document ).ready(function () {
 		}
 
 		let count = jQuery(this).parents('.um-uploader-filelist').find('.um-uploader-file').length;
-		jQuery(this).parents('.um-wall-post-form-wrapper').find('.um-wall-uploaded-count').text( parseInt( count ) - 1);
+		jQuery(this).parents('form.um-wall-publish').find('.um-wall-uploaded-count').text( parseInt( count ) - 1);
 
 		let id = jQuery(this).data( 'id' );
 		if ( id ) {
@@ -1951,25 +1971,25 @@ jQuery(document).ready(function () {
 
 // Update files count badge and submit button state
 function um_wall_calculate_files( $uploader, up, action ) {
-	let count = $uploader.parents('.um-wall-post-form-wrapper').find('.um-wall-uploaded-count').text();
-	let form = $uploader.parents( 'form' );
+	let $countBox = $uploader.parents('form.um-wall-publish').find('.um-wall-uploaded-count');
+	let count = $countBox.text();
 	if ( jQuery.isNumeric(count) && count > 0 ) {
 		let filesCountBadge;
-		// if action is add increase count by 1, if action is remove decrease by 1
+		// if action is `add` increase count by 1, if action is remove decrease by 1
 		if ( action === 'add' ) {
 			filesCountBadge = parseInt(count) + 1;
 		} else {
 			filesCountBadge = parseInt(count) - 1;
 		}
 		if ( filesCountBadge === 0 ) {
-			$uploader.parents('.um-wall-post-form-wrapper').find('.um-wall-uploaded-count').addClass('um-display-none').text('');
+			$countBox.text('').umHide();
 		} else {
 			if ( filesCountBadge > 10 ) {
 				filesCountBadge = '10+';
 			}
-			$uploader.parents('.um-wall-post-form-wrapper').find('.um-wall-uploaded-count').removeClass('um-display-none').text( filesCountBadge );
+			$countBox.text( filesCountBadge ).umShow();
 		}
 	} else {
-		$uploader.parents('.um-wall-post-form-wrapper').find('.um-wall-uploaded-count').removeClass('um-display-none').text( 1 );
+		$countBox.text( 1 ).umShow();
 	}
 }
