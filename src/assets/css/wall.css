@@ -8,6 +8,11 @@
   position: relative;
 }
 
+.um-wall-post-form-wrapper,
+.um-wall-publish {
+  width: 100%;
+}
+
 .um .um-wall-empty {
   text-align: center;
   width: 100%;
