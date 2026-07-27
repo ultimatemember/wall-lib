@@ -291,24 +291,23 @@ jQuery( document ).ready(function () {
 	/* Trash post */
 	jQuery( document.body ).on('click', '.um-wall-trash', function(e) {
 		let btn = jQuery(this);
-		let post_id = btn.attr('data-post_id');
-		let nonce = btn.attr('data-nonce');
-		let msg = btn.attr('data-msg');
-		let title = btn.attr('data-title');
+		let post_id = btn.data('post_id');
+		let nonce = btn.data('nonce');
+		let msg = btn.data('msg');
+		let title = btn.data('title');
 		let post = jQuery('#postid-' + post_id);
-		post.css('opacity', '0.5');
-		post.find('button, textarea').prop('disabled', true);
+		let error = btn.data('error');
 
-		let action = wp.hooks.applyFilters(
-			'um_wall_remove_action',
-			'um_wall_remove_post'
-		);
+		let action = wp.hooks.applyFilters('um_wall_remove_action', 'um_wall_remove_post');
 
 		jQuery.um_confirm(
 			{
 				title   : title,
 				message : msg,
 				onYes: function() {
+					post.css('opacity', '0.5');
+					post.find('button, textarea').prop('disabled', true);
+
 					wp.ajax.send( action, {
 						data: {
 							post_id: post_id,
@@ -318,9 +317,10 @@ jQuery( document ).ready(function () {
 							post.remove();
 						},
 						error: function( data ) {
+							console.log( data );
+
 							post.css('opacity', '1');
 							post.find('button, textarea').prop('disabled', true);
-							let error = jQuery(this).attr('data-error');
 							if ( data.message ) {
 								error = data.message;
 							}
@@ -328,12 +328,8 @@ jQuery( document ).ready(function () {
 								message: error,
 								type: 'error'
 							});
-							console.log( data );
 						}
 					});
-				},
-				onNo: function() {
-					post.css('opacity', '1');
 				},
 				object: this
 			}
@@ -1080,24 +1076,21 @@ jQuery( document ).ready(function () {
 		let wrap = btn.parents('.um-wall-widget');
 		let is_reply = btn.attr('data-is_reply');
 		let comment = btn.parents('.um-wall-commentl');
-		comment.css('opacity', '0.5');
-		comment.find('button').attr('disabled', true);
 
-		let action = wp.hooks.applyFilters(
-			'um_wall_remove_comment_action',
-			'um_wall_remove_comment'
-		);
-
-		if ( 1 === parseInt( is_reply ) ) {
-			btn.parents('.um-wall-commentl.is-child').addClass('um-group-delete-loading');
-			btn.parents('.um-wall-editc').find('button').attr('disabled', true);
-		}
+		let action = wp.hooks.applyFilters( 'um_wall_remove_comment_action', 'um_wall_remove_comment' );
 
 		jQuery.um_confirm(
 			{
 				title   : title,
 				message : msg,
 				onYes: function() {
+					comment.css('opacity', '0.5');
+					comment.find('button').attr('disabled', true);
+					if ( 1 === parseInt( is_reply ) ) {
+						btn.parents('.um-wall-commentl.is-child').addClass('um-group-delete-loading');
+						btn.parents('.um-wall-editc').find('button').attr('disabled', true);
+					}
+
 					wp.ajax.send( action, {
 						data: {
 							comment_id: comment_id,
@@ -1121,12 +1114,12 @@ jQuery( document ).ready(function () {
 							console.log( data );
 							btn.parents('.um-wall-commentl.is-child').removeClass('um-group-delete-loading');
 							btn.parents('.um-wall-editc').find('button').attr('disabled', false);
+							comment.css('opacity', '1');
+							comment.find('button').attr('disabled', false);
 							jQuery(this).um_notice({
 								message: data,
 								type: 'error'
 							});
-							comment.css('opacity', '1');
-							comment.find('button').attr('disabled', false);
 						}
 					});
 				},
