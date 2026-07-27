@@ -354,8 +354,9 @@ jQuery( document ).ready(function () {
 	/* Edit Post */
 	jQuery( document.body ).on( 'click', '.um-wall-manage', function() {
 		let widget = jQuery(this).parents('.um-wall-widget');
-		let post_id = jQuery(this).attr('data-post_id');
-		let nonce = jQuery(this).attr('data-nonce');
+
+		let post_id = jQuery(this).data('post_id');
+		let nonce = jQuery(this).data('nonce');
 		let loader = widget.find('.um-wall-post-loader');
 
 		if ( jQuery(this).parents('.um-wall-dialog').length ) {
