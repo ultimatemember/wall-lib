@@ -125,11 +125,9 @@ class Comments {
 		if ( empty( $liked ) || ! is_array( $liked ) ) {
 			$liked          = array( get_current_user_id() );
 			$increase_likes = true;
-		} else {
-			if ( ! in_array( get_current_user_id(), $liked, true ) ) {
-				$liked[]        = get_current_user_id();
-				$increase_likes = true;
-			}
+		} elseif ( ! in_array( get_current_user_id(), $liked, true ) ) {
+			$liked[]        = get_current_user_id();
+			$increase_likes = true;
 		}
 
 		if ( $increase_likes ) {
@@ -586,10 +584,14 @@ class Comments {
 				)
 			);
 		} else {
+			$error_text = __( 'You can\'t edit this comment. `wp_update_comment()` issue.', $this->wall->textdomain ); // phpcs:ignore WordPress.WP.I18n
+			if ( is_wp_error( $result ) ) {
+				$error_text = $result->get_error_message();
+			}
 			wp_send_json_error(
 				wp_kses(
 					UM()->frontend()::layouts()::alert(
-						esc_html__( 'You can\'t edit this comment.', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
+						$error_text,
 						array(
 							'type'      => 'error',
 							'underline' => false,

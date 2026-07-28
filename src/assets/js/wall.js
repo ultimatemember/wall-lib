@@ -586,6 +586,7 @@ jQuery( document ).ready(function () {
 				},
 				success: function (answer) {
 					btn.addClass('active');
+					btn.attr('title', btn.attr('data-unlike_text'));
 					wrap.find('.um-badge').html(answer.likes);
 					wrap.find('.um-wall-post-likes-avatars').html(answer.content).umShow();
 					wrap.find('.um-wall-show-likes').attr('disabled', false);
@@ -628,12 +629,16 @@ jQuery( document ).ready(function () {
 			},
 			success: function( answer ) {
 				btn.removeClass('active');
+				btn.attr('title', btn.attr('data-like_text'));
 				wrap.find('.um-badge').html(answer.likes);
 				wrap.find('.um-wall-post-likes-avatars').html(answer.content);
 				let count = wrap.find('.um-wall-show-likes .um-badge').text();
 				if ( parseInt( count ) === 0 ) {
 					wrap.find('.um-wall-post-likes-avatars').umHide();
 					wrap.find('.um-wall-show-likes').attr('disabled', true);
+				} else {
+					wrap.find('.um-wall-post-likes-avatars').umShow();
+					wrap.find('.um-wall-show-likes').attr('disabled', false);
 				}
 				loader.umHide();
 			},
@@ -809,8 +814,12 @@ jQuery( document ).ready(function () {
 				btn.attr('title', btn.attr('data-like_text'));
 				wrap.find('.um-badge').text(response.likes);
 				wrap.find('.um-wall-comment-likes-avatars').html(response.content);
-				if ( parseInt( response.likes) >0 ) {
+				if ( parseInt( response.likes ) > 0 ) {
 					wrap.find('.um-wall-comment-likes-avatars').umShow();
+					wrap.find('.um-wall-comment-likes').attr('disabled', false);
+				} else {
+					wrap.find('.um-wall-comment-likes-avatars').umHide();
+					wrap.find('.um-wall-comment-likes').attr('disabled', true);
 				}
 				loader.umHide();
 			},
