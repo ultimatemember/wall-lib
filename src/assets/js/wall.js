@@ -121,6 +121,34 @@ function um_check_comment_length( textarea ) {
 	}
 }
 
+let UM_wall_scrolled_to_comment = false;
+
+function um_scroll_to_wall_comment_from_url() {
+	if ( UM_wall_scrolled_to_comment ) {
+		return;
+	}
+
+	let params = new URLSearchParams( window.location.search );
+	if ( ! params.has( 'wall_comment_id' ) ) {
+		return;
+	}
+
+	let comment_id = params.get( 'wall_comment_id' );
+	let comment = jQuery( '.um-wall-commentwrap, .um-wall-commentl.is-child' ).filter( function() {
+		let $comment = jQuery( this );
+		return comment_id === String( $comment.data( 'comment_id' ) ) || 'commentid-' + comment_id === $comment.attr( 'id' );
+	}).first();
+
+	if ( ! comment.length ) {
+		return;
+	}
+
+	UM_wall_scrolled_to_comment = true;
+	jQuery( 'html, body' ).animate({
+		scrollTop: comment.offset().top-20
+	}, 300);
+}
+
 let Loadwall_ajax = false;
 
 jQuery( document ).ready(function () {
@@ -131,6 +159,7 @@ jQuery( document ).ready(function () {
 	if ( jQuery('.um-wall:not([data-single_post="1"])').not('[data-loading="sync"]').length ) {
 		um_wall_ajax_request();
 	}
+	um_scroll_to_wall_comment_from_url();
 
 	/* Detect change in editor content */
 	jQuery( document.body ).on( 'input keyup paste', '.um-wall-textarea-elem', function() {
@@ -1439,6 +1468,7 @@ function um_wall_ajax_request() {
 
 				wp.hooks.doAction( 'um_activity_wall_loaded', wall );
 				UM.frontend.image.lazyload.init();
+				um_scroll_to_wall_comment_from_url();
 			},
 			error: function (e) {
 				wall.html(e.message);
