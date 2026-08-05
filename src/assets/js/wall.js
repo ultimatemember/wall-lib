@@ -104,10 +104,12 @@ function um_disable_post_submit( form, empty = true, submit = true ) {
 
 function um_enable_comment_submit( form ) {
 	form.find( '.um-button, .um-wall-comment-textarea, .um-wall-comment-edit textarea' ).prop( 'disabled', false );
+	form.parents('.um-wall-commentl').find('.um-wall-edit-comment-cancel').prop( 'disabled', false );
 }
 
 function um_disable_comment_submit( form ) {
 	form.find( '.um-button, .um-wall-comment-textarea, .um-wall-comment-edit textarea' ).prop( 'disabled', true );
+	form.parents('.um-wall-commentl').find('.um-wall-edit-comment-cancel').prop( 'disabled', true );
 }
 
 function um_check_comment_length( textarea ) {
@@ -307,6 +309,8 @@ jQuery( document ).ready(function () {
 				onYes: function() {
 					post.css('opacity', '0.5');
 					post.find('button, textarea').prop('disabled', true);
+					let dropdown = post.find('.um-wall-right .um-dropdown-toggle');
+					UM.frontend.dropdown.disable(dropdown);
 
 					wp.ajax.send( action, {
 						data: {
@@ -321,6 +325,7 @@ jQuery( document ).ready(function () {
 
 							post.css('opacity', '1');
 							post.find('button, textarea').prop('disabled', true);
+							UM.frontend.dropdown.enable(dropdown);
 							if ( data.message ) {
 								error = data.message;
 							}
@@ -705,10 +710,8 @@ jQuery( document ).ready(function () {
 	/* Reply to comment */
 	jQuery( document ).on( 'click', '.um-wall-edit-comment, .um-wall-edit-comment-cancel', function(e) {
 		let wrap = jQuery(this).parents('.um-wall-commentl');
-		wrap.find('.um-wall-comment-text').umToggle();
-		wrap.find('.um-wall-comment-edit').umToggle();
-		wrap.find('.um-wall-editc .um-wall-edit-comment').umToggle();
-		wrap.find('.um-wall-editc .um-wall-edit-comment-cancel').umToggle();
+		console.log(wrap)
+		wrap.find('.um-wall-comment-text, .um-wall-comment-edit, .um-wall-delete-comment, .um-wall-editc .um-wall-edit-comment, .um-wall-editc .um-wall-edit-comment-cancel').umToggle();
 	});
 
 	/* Show comment likes in modal */
@@ -949,11 +952,8 @@ jQuery( document ).ready(function () {
 			success: function( response ) {
 				loader.umHide();
 				btn.parents('.um-wall-comment-edit').umToggle();
-
 				btn.parents('.um-wall-comment-data').find('.um-wall-comment-text').html(response.content).umToggle();
-
-				btn.parents('.um-wall-commentl').find('.um-wall-editc .um-wall-edit-comment-cancel').umToggle();
-				btn.parents('.um-wall-commentl').find('.um-wall-editc .um-wall-edit-comment').umToggle();
+				btn.parents('.um-wall-commentl').find('.um-wall-editc .um-wall-edit-comment-cancel, .um-wall-editc .um-wall-edit-comment, .um-wall-editc .um-wall-delete-comment').umToggle();
 				um_enable_comment_submit( btm_wrap );
 			},
 			error: function( data ) {
@@ -980,6 +980,7 @@ jQuery( document ).ready(function () {
 
 			reply_form.find('.um-wall-comment-post').attr('data-comment_id', comment_id).attr('data-reply_to', reply_to);
 			wrap.find('.um-wall-comment-child-loop').append(reply_form);
+			wrap.find('.um-wall-comment-child-loop .um-wall-reply-form .um-wall-comment-textarea').focus();
 		}
 		btn.umHide();
 	});
