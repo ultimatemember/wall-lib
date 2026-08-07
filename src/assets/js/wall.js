@@ -19,6 +19,51 @@
  * 		}
  * }
  */
+(function() {
+	window.umWallIframeRefreshInstalled = window.umWallIframeRefreshInstalled || {};
+	if ( window.umWallIframeRefreshInstalled.wallLib ) {
+		return;
+	}
+
+	window.umWallIframeRefreshInstalled.wallLib = true;
+	let wasHidden = false;
+
+	function refreshWallIframes() {
+		let iframes = document.querySelectorAll( '.um-wall iframe[src]' );
+
+		for ( let i = 0; i < iframes.length; i++ ) {
+			let iframe = iframes[i];
+			let src = iframe.getAttribute( 'src' );
+
+			if ( ! src || ! iframe.parentNode ) {
+				continue;
+			}
+
+			let clone = iframe.cloneNode( true );
+			clone.setAttribute( 'src', src );
+			iframe.parentNode.replaceChild( clone, iframe );
+		}
+	}
+
+	window.addEventListener( 'pageshow', function() {
+		setTimeout( function() {
+			refreshWallIframes();
+		}, 0 );
+	});
+
+	document.addEventListener( 'visibilitychange', function() {
+		if ( 'hidden' === document.visibilityState ) {
+			wasHidden = true;
+			return;
+		}
+
+		if ( wasHidden ) {
+			wasHidden = false;
+			refreshWallIframes();
+		}
+	});
+})();
+
 // --------------- Toggle hooks ---------------
 wp.hooks.addFilter( 'um_toggle_block', 'um-wall-lib', function( $toggleBlock, $toggleButton ) {
 	if ( $toggleButton.hasClass( 'um-wall-comments-toggle' ) ) {
