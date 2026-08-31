@@ -19,47 +19,59 @@
  * 		}
  * }
  */
+
+if (typeof (window.UM) !== 'object') {
+	window.UM = {};
+}
+if (typeof (window.UM.wall) !== 'object') {
+	window.UM.wall = {
+		iframes: {
+			installed: false,
+			wasHidden: false,
+			refresh: function() {
+				let iframes = document.querySelectorAll( '.um-wall iframe[src]' );
+
+				for ( let i = 0; i < iframes.length; i++ ) {
+					let iframe = iframes[i];
+					let src = iframe.getAttribute( 'src' );
+
+					if ( ! src || ! iframe.parentNode ) {
+						continue;
+					}
+
+					let clone = iframe.cloneNode( true );
+					clone.setAttribute( 'src', src );
+					iframe.parentNode.replaceChild( clone, iframe );
+				}
+			}
+		}
+	};
+}
+
+/**
+ * Refresh wall iframes after restoring a browser page from cache.
+ */
 (function() {
-	window.umWallIframeRefreshInstalled = window.umWallIframeRefreshInstalled || {};
-	if ( window.umWallIframeRefreshInstalled.wallLib ) {
+	if ( window.UM.wall.iframes.installed ) {
 		return;
 	}
-
-	window.umWallIframeRefreshInstalled.wallLib = true;
-	let wasHidden = false;
-
-	function refreshWallIframes() {
-		let iframes = document.querySelectorAll( '.um-wall iframe[src]' );
-
-		for ( let i = 0; i < iframes.length; i++ ) {
-			let iframe = iframes[i];
-			let src = iframe.getAttribute( 'src' );
-
-			if ( ! src || ! iframe.parentNode ) {
-				continue;
-			}
-
-			let clone = iframe.cloneNode( true );
-			clone.setAttribute( 'src', src );
-			iframe.parentNode.replaceChild( clone, iframe );
-		}
-	}
+	window.UM.wall.iframes.installed = true;
 
 	window.addEventListener( 'pageshow', function() {
 		setTimeout( function() {
-			refreshWallIframes();
+			window.UM.wall.iframes.refresh();
 		}, 0 );
 	});
 
 	document.addEventListener( 'visibilitychange', function() {
 		if ( 'hidden' === document.visibilityState ) {
-			wasHidden = true;
+			window.UM.wall.iframes.wasHidden = true;
 			return;
 		}
 
-		if ( wasHidden ) {
-			wasHidden = false;
-			refreshWallIframes();
+		if ( window.UM.wall.iframes.wasHidden ) {
+			window.UM.wall.iframes.wasHidden = false;
+			window.UM.wall.iframes.refresh();
 		}
 	});
 })();
