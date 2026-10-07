@@ -22,7 +22,7 @@ class Posts {
 
 		// Add clear report action for wall posts.
 		add_action( 'um_admin_do_action__wall_report', array( $this, 'um_admin_do_action__wall_report' ) );
-		add_filter( 'um_adm_action_individual_nonce_actions', array( $this, 'um_social_activity_adm_action_individual_nonce_actions' ) );
+		add_filter( 'um_adm_action_individual_nonce_actions', array( $this, 'add_individual_nonce_actions' ) );
 	}
 
 	/**
@@ -63,7 +63,7 @@ class Posts {
 		exit;
 	}
 
-	public function um_social_activity_adm_action_individual_nonce_actions( $actions ) {
+	public function add_individual_nonce_actions( $actions ) {
 		$actions[] = 'wall_report';
 		return $actions;
 	}

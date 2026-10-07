@@ -511,8 +511,8 @@ class Posts {
 			),
 			array(
 				$curr_page,
-				add_query_arg( 'redirect_to', $curr_page, um_get_core_page( 'login' ) ),
-				add_query_arg( 'redirect_to', $curr_page, um_get_core_page( 'register' ) ),
+				add_query_arg( 'redirect_to', $curr_page, um_get_predefined_page_url( 'login' ) ),
+				add_query_arg( 'redirect_to', $curr_page, um_get_predefined_page_url( 'register' ) ),
 			),
 			$pattern
 		);
@@ -556,7 +556,7 @@ class Posts {
 				}
 
 				if ( $term && ! is_wp_error( $term ) ) {
-					$link = add_query_arg( 'hashtag', $term->slug, um_get_core_page( 'activity' ) );
+					$link = add_query_arg( 'hashtag', $term->slug, um_get_predefined_page_url( 'activity' ) );
 					if ( $link ) {
 						return '<a class="um-hashtag um-link" href="' . esc_url( $link ) . '">#' . $tag_name . '</a>';
 					}
