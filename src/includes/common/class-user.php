@@ -189,6 +189,24 @@ class User {
 		return apply_filters( $this->wall->prefix . 'wall_custom_privacy_view_comment_likes', true, $comment_id, $user_id, $profile_id ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 	}
 
+	/**
+	 * Check access before changing a personal comment visibility preference.
+	 *
+	 * @param int $comment_id Comment ID.
+	 * @return bool
+	 */
+	public function can_change_comment_visibility( $comment_id ) {
+		$comment = get_comment( $comment_id );
+		if ( ! is_user_logged_in() || ! $comment || '1' !== (string) $comment->comment_approved || $this->wall->post_type !== get_post_type( $comment->comment_post_ID ) ) {
+			return false;
+		}
+		if ( ! $this->can_view_comment( $comment_id ) || ! UM()->common()->users()->can_view_user( $comment->user_id ) ) {
+			return false;
+		}
+
+		return (bool) apply_filters( $this->wall->prefix . 'wall_can_change_comment_visibility', true, $comment_id ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound
+	}
+
 	public function can_like_comment( $comment_id, $user_id = null ) {
 		// return `false` if doesn't exist.
 		$can_like = true;

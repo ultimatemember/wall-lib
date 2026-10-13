@@ -23,6 +23,9 @@ class Comments {
 		add_action( 'wp_ajax_' . $this->wall->prefix . 'wall_get_comment_likes', array( $this, 'get_comment_likes' ) );
 		add_action( 'wp_ajax_nopriv_' . $this->wall->prefix . 'wall_get_comment_likes', array( $this, 'get_comment_likes' ) );
 
+		add_action( 'wp_ajax_' . $this->wall->prefix . 'wall_hide_comment', array( $this, 'hide_comment' ) );
+		add_action( 'wp_ajax_' . $this->wall->prefix . 'wall_unhide_comment', array( $this, 'unhide_comment' ) );
+
 		add_action( 'wp_ajax_' . $this->wall->prefix . 'wall_like_comment', array( $this, 'like_comment' ) );
 		add_action( 'wp_ajax_' . $this->wall->prefix . 'wall_unlike_comment', array( $this, 'unlike_comment' ) );
 
@@ -36,6 +39,51 @@ class Comments {
 		add_action( 'wp_ajax_nopriv_' . $this->wall->prefix . 'wall_load_more_replies', array( $this, 'load_more_replies' ) );
 
 		add_action( 'wp_ajax_' . $this->wall->prefix . 'wall_remove_comment', array( $this, 'remove_comment' ) );
+	}
+
+	/** Hide a comment for the current user. */
+	public function hide_comment() {
+		$this->change_comment_visibility( true );
+	}
+
+	/** Show a previously hidden comment for the current user. */
+	public function unhide_comment() {
+		$this->change_comment_visibility( false );
+	}
+
+	/**
+	 * Validate the request and persist personal visibility through the common API.
+	 *
+	 * @param bool $hidden Target visibility state.
+	 * @return void
+	 */
+	private function change_comment_visibility( $hidden ) {
+		if ( ! is_user_logged_in() ) {
+			wp_send_json_error( esc_html__( 'Invalid permissions', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
+		}
+		$comment_id = isset( $_POST['comment_id'] ) && is_numeric( $_POST['comment_id'] ) ? absint( $_POST['comment_id'] ) : 0;
+		if ( ! $comment_id ) {
+			wp_send_json_error( esc_html__( 'Wrong comment ID.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
+		}
+		$action = $this->wall->prefix . ( $hidden ? 'wall_hide_comment' : 'wall_unhide_comment' );
+		if ( ! isset( $_POST['nonce'] ) || ! is_string( $_POST['nonce'] ) || ! check_ajax_referer( $action . $comment_id, 'nonce', false ) ) {
+			wp_send_json_error( esc_html__( 'Invalid nonce', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
+		}
+		if ( ! $this->wall->common()->user()->can_change_comment_visibility( $comment_id ) ) {
+			wp_send_json_error( esc_html__( 'Invalid permissions', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
+		}
+
+		do_action( $this->wall->prefix . 'before_wall_comment_visibility_changed', $comment_id, $hidden, get_current_user_id() ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound
+		if ( ! $this->wall->common()->comments()->set_comment_hidden( $comment_id, $hidden ) ) {
+			wp_send_json_error( esc_html__( 'Unable to save the comment visibility. Please try again.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
+		}
+		do_action( $this->wall->prefix . 'after_wall_comment_visibility_changed', $comment_id, $hidden, get_current_user_id() ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound
+		wp_send_json_success(
+			array(
+				'comment_id' => $comment_id,
+				'hidden'     => $hidden,
+			)
+		);
 	}
 
 	/**

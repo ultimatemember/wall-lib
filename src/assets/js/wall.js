@@ -2084,3 +2084,62 @@ function um_wall_calculate_files( $uploader, up, action ) {
 		$countBox.text( 1 ).umShow();
 	}
 }
+
+
+/* Personal comment visibility. Delegation also handles AJAX-loaded comments. */
+jQuery( document.body ).on( 'click', '.um-wall-comment-hide, .um-wall-comment-unhide', function ( event ) {
+	event.preventDefault();
+	let button = jQuery( this );
+	let comment = button.closest( '.um-wall-commentl' );
+	if ( comment.data( 'visibility-pending' ) || comment.hasClass( 'unready' ) ) {
+		return;
+	}
+	let commentId = button.attr( 'data-commentid' );
+	let hidden = button.hasClass( 'um-wall-comment-hide' );
+	let instances = jQuery( '.um-wall-commentl' ).filter( function () {
+		return this.id === 'commentid-' + commentId;
+	} );
+	let buttons = instances.find( '.um-wall-comment-hide, .um-wall-comment-unhide' );
+	let loader = button.next( '.um-wall-comment-visibility-loader' );
+	button.umHide();
+	loader.umShow();
+	instances.data( 'visibility-pending', true );
+	buttons.prop( 'disabled', true ).attr( 'aria-disabled', 'true' );
+	let action = wp.hooks.applyFilters(
+		hidden ? 'um_wall_hide_comment_action' : 'um_wall_unhide_comment_action',
+		button.attr( 'data-action' ) || ( hidden ? 'um_wall_hide_comment' : 'um_wall_unhide_comment' ),
+		button
+	);
+	let finish = function () {
+		loader.umHide();
+		button.umShow();
+		instances.removeData( 'visibility-pending' );
+		buttons.prop( 'disabled', false ).removeAttr( 'aria-disabled' );
+	};
+	wp.ajax.send( action, {
+		data: {
+			comment_id: commentId,
+			nonce: button.attr( 'data-wpnonce' )
+		},
+		success: function ( response ) {
+			let isHidden = response.hidden;
+			instances.each( function () {
+				let item = jQuery( this );
+				item.toggleClass( 'um-wall-comment-is-hidden', isHidden );
+				item.children( '.um-wall-comment-info' ).toggleClass( 'hidden-1', isHidden ).toggleClass( 'hidden-0', ! isHidden );
+				if ( ! item.hasClass( 'is-child' ) ) {
+					item.parent( '.um-wall-commentwrap' ).toggleClass( 'um-wall-thread-is-hidden', isHidden );
+				}
+			} );
+			finish();
+			comment.find( isHidden ? '.um-wall-comment-unhide' : '.um-wall-comment-hide' ).first().trigger( 'focus' );
+		},
+		error: function ( error ) {
+			finish();
+			button.um_notice( {
+				message: typeof error === 'string' && error ? error : button.attr( 'data-error' ),
+				type: 'error'
+			} );
+		}
+	} );
+} );

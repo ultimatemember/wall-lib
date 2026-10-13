@@ -90,28 +90,109 @@ class Comments {
 		}
 	}
 
-//	/**
-//	 * Unhide a comment for user
-//	 *
-//	 * @param $comment_id
-//	 */
-//	public function user_unhide_comment( $comment_id ) {
-//		$users = get_comment_meta( $comment_id, '_hidden_from', true );
-//
-//		$user_id = get_current_user_id();
-//
-//		if ( isset( $users[ $user_id ] ) ) {
-//			unset( $users[ $user_id ] );
-//		}
-//
-//		if ( ! $users ) {
-//			delete_comment_meta( $comment_id, '_hidden_from' );
-//		} else {
-//			update_comment_meta( $comment_id, '_hidden_from', $users );
-//		}
-//	}
-//
-//
+	/**
+	 * Save only the current user's preference. Replies retain their own state.
+	 *
+	 * @param int  $comment_id Comment ID.
+	 * @param bool $hidden Whether to hide the comment.
+	 * @return bool Whether the requested state was saved.
+	 */
+	public function set_comment_hidden( $comment_id, $hidden ) {
+		$user_id = get_current_user_id();
+		if ( ! $user_id || ! $this->exists( $comment_id ) ) {
+			return false;
+		}
+
+		$users = get_comment_meta( $comment_id, '_hidden_from', true );
+		$users = is_array( $users ) ? $users : array();
+		if ( $hidden ) {
+			$users[ $user_id ] = current_time( 'timestamp' );
+		} else {
+			unset( $users[ $user_id ] );
+		}
+
+		if ( empty( $users ) ) {
+			delete_comment_meta( $comment_id, '_hidden_from' );
+		} else {
+			update_comment_meta( $comment_id, '_hidden_from', $users );
+		}
+
+		return (bool) $this->user_hidden_comment( $comment_id ) === (bool) $hidden;
+	}
+
+	/**
+	 * Shared Hide/Show button for plugin comment templates.
+	 *
+	 * @param int  $comment_id Comment ID.
+	 * @param bool $hidden Target visibility state.
+	 * @return string
+	 */
+	public function get_comment_visibility_button( $comment_id, $hidden = true ) {
+		if ( ! is_user_logged_in() ) {
+			return '';
+		}
+
+		$action = $this->wall->prefix . ( $hidden ? 'wall_hide_comment' : 'wall_unhide_comment' );
+
+		$button = UM()->frontend()::layouts()::link(
+			$hidden ? esc_html__( 'Hide', $this->wall->textdomain ) : esc_html__( 'Show this comment', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
+			array(
+				'size'    => 's',
+				'design'  => 'primary',
+				'title'   => $hidden ? esc_html__( 'Hide this comment', $this->wall->textdomain ) : esc_html__( 'Show this comment', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
+				'classes' => array( $hidden ? 'um-wall-comment-hide' : 'um-wall-comment-unhide' ),
+				'data'    => array(
+					'commentid' => absint( $comment_id ),
+					'action'    => $action,
+					'wpnonce'   => wp_create_nonce( $action . absint( $comment_id ) ),
+					'error'     => esc_html__( 'Unable to save the comment visibility. Please try again.', $this->wall->textdomain ), // phpcs:ignore WordPress.WP.I18n
+				),
+			)
+		);
+
+		return $button . UM()->frontend()::layouts()::ajax_loader(
+			's',
+			array( 'classes' => array( 'um-wall-loader', 'um-wall-comment-visibility-loader', 'um-display-none' ) )
+		);
+	}
+
+	/**
+	 * Render comment author data with the hidden notice beside supporting text.
+	 *
+	 * @param int   $comment_id Comment ID.
+	 * @param int   $user_id Comment author ID.
+	 * @param array $args Small data layout arguments.
+	 * @return string
+	 */
+	public function get_comment_user_data( $comment_id, $user_id, $args = array() ) {
+		$html   = UM()->frontend()::layouts()::small_data( $user_id, $args );
+		$notice = $this->get_comment_hidden_notice( $comment_id );
+		$end    = strrpos( $html, '</div>' );
+		if ( '' === $notice || false === $end ) {
+			return $html;
+		}
+
+		// Insert into the small_data wrapper, after the supporting-text sibling.
+		return substr_replace( $html, $notice, $end, 0 );
+	}
+
+	/**
+	 * Shared placeholder displayed instead of a hidden comment.
+	 *
+	 * @param int $comment_id Comment ID.
+	 * @return string
+	 */
+	public function get_comment_hidden_notice( $comment_id ) {
+		if ( ! is_user_logged_in() ) {
+			return '';
+		}
+
+		return '<div class="um-wall-comment-hidden">'
+			. '<span>' . esc_html__( 'Comment hidden.', $this->wall->textdomain ) . '</span>' // phpcs:ignore WordPress.WP.I18n
+			. $this->get_comment_visibility_button( $comment_id, false )
+			. '</div>';
+	}
+
 	/**
 	 * Checks if user hidden comment
 	 *
@@ -335,46 +416,6 @@ class Comments {
 
 		return $replies_all;
 	}
-
-//	/**
-//	 * Hide a comment for user
-//	 *
-//	 * @param $comment_id
-//	 */
-//	public function user_hide_comment( $comment_id ) {
-//		$user_id = get_current_user_id();
-//
-//		//hide comment replies
-//		$comment_data = get_comment( $comment_id );
-//		if ( 0 === absint( $comment_data->comment_parent ) ) {
-//			$replies = get_comments(
-//				array(
-//					'post_id' => $comment_data->comment_post_ID,
-//					'parent'  => $comment_id,
-//					'number'  => 10000,
-//					'offset'  => 0,
-//					'fields'  => 'ids',
-//				)
-//			);
-//
-//			if ( ! empty( $replies ) && ! is_wp_error( $replies ) ) {
-//				foreach ( $replies as $reply_id ) {
-//					$this->user_hide_comment( $reply_id );
-//				}
-//			}
-//		}
-//
-//		$users = get_comment_meta( $comment_id, '_hidden_from', true );
-//
-//		if ( empty( $users ) || ! is_array( $users ) ) {
-//			$users = array();
-//		}
-//
-//		$users[ $user_id ] = current_time( 'timestamp' );
-//
-//		update_comment_meta( $comment_id, '_hidden_from', $users );
-//	}
-//
 
 	/**
 	 *

@@ -1,8 +1,13 @@
-@import "../../../../ultimate-member/assets/css/selectors"
-@import "../../../../ultimate-member/assets/css/mixins"
-@import "../../../../ultimate-member/assets/css/box"
-@import "../../../../ultimate-member/assets/css/colors"
-@import "../../../../ultimate-member/assets/css/typography"
+//@import "../../../../ultimate-member/assets/css/selectors"
+//@import "../../../../ultimate-member/assets/css/mixins"
+//@import "../../../../ultimate-member/assets/css/box"
+//@import "../../../../ultimate-member/assets/css/colors"
+//@import "../../../../ultimate-member/assets/css/typography"
+@import "../../../../../../../ultimate-member/assets/css/selectors"
+@import "../../../../../../../ultimate-member/assets/css/mixins"
+@import "../../../../../../../ultimate-member/assets/css/box"
+@import "../../../../../../../ultimate-member/assets/css/colors"
+@import "../../../../../../../ultimate-member/assets/css/typography"
 
 .#{$prefix}wall-shortcode
   +flex( column, flex-start, stretch, nowrap )
@@ -614,3 +619,29 @@
           .#{$prefix}uploader-file
             max-width: 100%
             width: 100%
+
+
+// Personal comment visibility. Collapsing a thread preserves each reply's preference.
+.um .#{$prefix}wall-commentl
+  > .#{$prefix}small-data > .#{$prefix}wall-comment-hidden
+    display: none
+    grid-column: 2
+    grid-row: 1 / 3
+    align-self: center
+    +typography( text, sm, regular )
+    color: $gray-600
+  &.#{$prefix}wall-comment-is-hidden
+    > .#{$prefix}small-data
+      > :not(.#{$prefix}avatar):not(.#{$prefix}wall-comment-hidden)
+        display: none !important
+      > .#{$prefix}avatar
+        opacity: 0.4
+      > .#{$prefix}wall-comment-hidden
+        +flex( row, flex-start, center, wrap )
+        column-gap: $spacing-sm
+    > .#{$prefix}wall-comment-info,
+    > .#{$prefix}wall-editc
+      display: none !important
+
+.um .#{$prefix}wall-thread-is-hidden > .#{$prefix}wall-comment-child
+  display: none !important
