@@ -15,6 +15,18 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Posts {
 
+	/**
+	 * Hashtag pattern. Hashtag must have space or start line before and space, end line or punctuation (.,!?;:) after.
+	 * Hashtag can contain digits, letters, underscore. Not space or dash "-". Not only digits. Tag name is in the group 1.
+	 */
+	const HASHTAG_REGEX = '/(?<!\S)#(?!\d+\b)([\p{Pc}\p{N}\p{L}\p{Mn}\p{Mc}]+)(?=\s|$|[.,!?;:])/u';
+
+	/**
+	 * The same as HASHTAG_REGEX but for the content passed through 'the_content' or 'comment_text' filters,
+	 * where wptexturize() converts "..." after hashtag to "&#8230;".
+	 */
+	const HASHTAG_DISPLAY_REGEX = '/(?<!\S)#(?!\d+\b)([\p{Pc}\p{N}\p{L}\p{Mn}\p{Mc}]+)(?=\s|$|[.,!?;:]|&\#8230;)/u';
+
 	private $wall;
 
 	/**
@@ -328,6 +340,19 @@ class Posts {
 	}
 
 	/**
+	 * Get unique hashtags from the raw post or comment content.
+	 *
+	 * @param string $content
+	 *
+	 * @return string[] Hashtag names without "#".
+	 */
+	public function get_hashtags( $content ) {
+		preg_match_all( self::HASHTAG_REGEX, $content, $matches );
+
+		return array_values( array_unique( $matches[1] ) );
+	}
+
+	/**
 	 * Add hashtags to activity wall post based on post or comment ID.
 	 *
 	 * @param int    $post_id
@@ -335,18 +360,7 @@ class Posts {
 	 * @param bool   $append
 	 */
 	public function hashtagit( $post_id, $content, $append = false ) {
-		// hashtag must have space or start line before and space or end line after. Hashtag can contain digits, letters, underscore. Not space or dash "-".
-		preg_match_all( '/(^|\s)#([\p{Pc}\p{N}\p{L}\p{Mn}]+)/um', $content, $matches, PREG_SET_ORDER, 0 );
-
-		$terms = array();
-		if ( isset( $matches[0] ) && is_array( $matches[0] ) ) {
-			foreach ( $matches as $match ) {
-				if ( isset( $match[2] ) ) {
-					$terms[] = $match[2];
-				}
-			}
-		}
-
+		$terms = $this->get_hashtags( $content );
 		wp_set_post_terms( $post_id, $terms, 'um_hashtag', $append );
 	}
 
@@ -546,7 +560,7 @@ class Posts {
 	 */
 	public function linkify_hashtags_in_content( $content ) {
 		return preg_replace_callback(
-			'/(?<!\w)#([\p{Pc}\p{N}\p{L}\p{Mn}]+)/um',
+			self::HASHTAG_DISPLAY_REGEX,
 			function ( $m ) {
 				$tag_name = $m[1];
 
