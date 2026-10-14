@@ -69,6 +69,11 @@ class Init {
 	public $post_type = '';
 
 	/**
+	 * @var mixed|string
+	 */
+	public $hashtag = '';
+
+	/**
 	 * namespace
 	 *
 	 * @param string
@@ -93,6 +98,7 @@ class Init {
 		$this->plugin_basename = $data['plugin_basename'];
 		$this->textdomain      = $data['textdomain'];
 		$this->post_type       = $data['post_type'];
+		$this->hashtag         = $data['hashtag'];
 		$this->classes         = $data['classes'];
 
 		$this->includes();

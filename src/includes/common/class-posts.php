@@ -361,7 +361,7 @@ class Posts {
 	 */
 	public function hashtagit( $post_id, $content, $append = false ) {
 		$terms = $this->get_hashtags( $content );
-		wp_set_post_terms( $post_id, $terms, 'um_hashtag', $append );
+		wp_set_post_terms( $post_id, $terms, $this->wall->hashtag, $append );
 	}
 
 	/**
@@ -564,9 +564,9 @@ class Posts {
 			function ( $m ) {
 				$tag_name = $m[1];
 
-				$term = get_term_by( 'name', $tag_name, 'um_hashtag' );
+				$term = get_term_by( 'name', $tag_name, $this->wall->hashtag );
 				if ( ! $term || is_wp_error( $term ) ) {
-					$term = get_term_by( 'slug', sanitize_title( $tag_name ), 'um_hashtag' );
+					$term = get_term_by( 'slug', sanitize_title( $tag_name ), $this->wall->hashtag );
 				}
 
 				if ( $term && ! is_wp_error( $term ) ) {
