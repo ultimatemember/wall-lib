@@ -40,7 +40,6 @@ class Posts {
 
 		add_action( 'wp_ajax_' . $this->wall->prefix . 'wall_remove_post', array( $this, 'remove_post' ) );
 
-		add_action( 'wp_ajax_' . $this->wall->prefix . 'wall_get_full_post', array( $this, 'get_full_post' ) );
 	}
 
 	/**
@@ -1199,35 +1198,4 @@ class Posts {
 		wp_send_json_success();
 	}
 
-	/**
-	 * Get full post via AJAX
-	 */
-	public function get_full_post() {
-		if ( empty( $_POST['post_id'] ) ) {
-			wp_send_json_error( __( 'Wrong post ID.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
-		}
-		$post_id = absint( $_POST['post_id'] );
-
-		check_ajax_referer( $this->wall->prefix . 'get_full_post_' . $post_id, 'nonce' );
-
-		if ( ! $this->wall->common()->posts()->exists( $post_id ) ) {
-			wp_send_json_error( array( 'message' => __( 'Wrong post ID.', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
-		}
-
-		$content_raw = get_post_field( 'post_content', $post_id );
-
-		remove_filter( 'the_content', 'prepend_attachment' );
-		remove_filter( 'the_content', 'wpautop' );
-
-		/** This filter is already documented in core. wp-includes/post-template.php */
-		$content = apply_filters( 'the_content', $content_raw );
-		$content = $this->wall->common()->posts()->linkify_hashtags_in_content( $content );
-		$content = $this->wall->common()->posts()->maybe_linkify_mentions( $content, 'post', $post_id );
-		$content = nl2br( $content );
-
-		add_filter( 'the_content', 'prepend_attachment' );
-		add_filter( 'the_content', 'wpautop' );
-
-		wp_send_json_success( array( 'content' => UM()->ajax()->esc_html_spaces( $content ) ) );
-	}
 }

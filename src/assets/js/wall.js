@@ -1289,33 +1289,10 @@ jQuery( document ).ready(function () {
 
 	/* Show hidden post content */
 	jQuery( document.body ).on('click', '.um-wall-seemore', function(e) {
-		let post_id = jQuery(this).attr('data-post_id');
-		let container = jQuery(this).parents('.um-wall-bodyinner-txt');
-		let nonce = jQuery(this).attr('data-nonce');
-		container.addClass('loading');
-
-		let action = wp.hooks.applyFilters(
-			'um_wall_full_post_action',
-			'um_wall_get_full_post'
-		);
-
-		wp.ajax.send(
-			action,
-			{
-				data: {
-					post_id: post_id,
-					nonce: nonce
-				},
-				success: function( data ) {
-					container.removeClass('loading');
-					container.html( data.content );
-				},
-				error: function(e) {
-					container.removeClass('loading');
-					console.log( 'UM Wall Error', e );
-				}
-			}
-		);
+		e.preventDefault();
+		let excerpt = jQuery(this).closest('.um-activity-post-excerpt');
+		excerpt.hide();
+		excerpt.siblings('.um-activity-post-full').show();
 	});
 
 	// Text editor with the contenteditable attribute

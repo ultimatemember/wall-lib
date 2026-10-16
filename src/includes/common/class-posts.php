@@ -16,6 +16,30 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Posts {
 
 	/**
+	 * Render the full post content for initial display.
+	 *
+	 * @param int $post_id Post ID.
+	 * @return string
+	 */
+	public function get_full_content( $post_id ) {
+		$content_raw = get_post_field( 'post_content', $post_id );
+
+		remove_filter( 'the_content', 'prepend_attachment' );
+		remove_filter( 'the_content', 'wpautop' );
+
+		/** This filter is already documented in core. wp-includes/post-template.php */
+		$content = apply_filters( 'the_content', $content_raw );
+		$content = $this->linkify_hashtags_in_content( $content );
+		$content = $this->maybe_linkify_mentions( $content, 'post', $post_id );
+		$content = nl2br( $content );
+
+		add_filter( 'the_content', 'prepend_attachment' );
+		add_filter( 'the_content', 'wpautop' );
+
+		return UM()->ajax()->esc_html_spaces( $content );
+	}
+
+	/**
 	 * Hashtag pattern. Hashtag must have space or start line before and space, end line or punctuation (.,!?;:) after.
 	 * Hashtag can contain digits, letters, underscore. Not space or dash "-". Not only digits. Tag name is in the group 1.
 	 */
