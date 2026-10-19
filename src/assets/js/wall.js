@@ -510,38 +510,43 @@ jQuery( document ).ready(function () {
 
 		let confirm_text = jQuery(this).data( 'confirmation' );
 
-		if ( ! confirm( confirm_text ) ) {
-			return false;
-		}
+		jQuery.um_confirm(
+			{
+				title: wp.i18n.__( 'Confirmation', 'ultimate-member' ),
+				message: confirm_text,
+				onYes: function() {
+					let count = jQuery(this).parents('.um-uploader-filelist').find('.um-uploader-file').length;
+					jQuery(this).parents('form.um-wall-publish').find('.um-wall-uploaded-count').text( parseInt( count ) - 1);
 
-		let count = jQuery(this).parents('.um-uploader-filelist').find('.um-uploader-file').length;
-		jQuery(this).parents('form.um-wall-publish').find('.um-wall-uploaded-count').text( parseInt( count ) - 1);
+					let id = jQuery(this).data( 'id' );
+					if ( id ) {
+						wp.hooks.doAction( 'um_wall_uploader_after_file_row_removed', id, jQuery(this) );
+					}
 
-		let id = jQuery(this).data( 'id' );
-		if ( id ) {
-			wp.hooks.doAction( 'um_wall_uploader_after_file_row_removed', id, jQuery(this) );
-		}
+					let $uploader = jQuery(this).parents( '.um-uploader' );
 
-		let $uploader = jQuery(this).parents( '.um-uploader' );
+					let uploaderObj = UM.frontend.uploaders[ $uploader.data('plupload') ];
 
-		let uploaderObj = UM.frontend.uploaders[ $uploader.data('plupload') ];
+					let button = uploaderObj.getOption( 'browse_button' )[0];
 
-		let button = uploaderObj.getOption( 'browse_button' )[0];
+					button.removeAttribute('disabled');
+					let dropZone = uploaderObj.getOption( 'drop_element' )[0];
+					if ( dropZone ) {
+						dropZone.classList.remove('um-dropzone-disabled');
+						let uploadLink = dropZone.querySelector( '.um-upload-link' );
+						if ( uploadLink ) {
+							uploadLink.classList.remove('um-link-disabled');
+						}
+					}
 
-		button.removeAttribute('disabled');
-		let dropZone = uploaderObj.getOption( 'drop_element' )[0];
-		if ( dropZone ) {
-			dropZone.classList.remove('um-dropzone-disabled');
-			let uploadLink = dropZone.querySelector( '.um-upload-link' );
-			if ( uploadLink ) {
-				uploadLink.classList.remove('um-link-disabled');
+					$uploader.find('.um-wall-photos-error').umHide();
+					jQuery(this).parents('.um-wall-widget').find('.um-wall-post').prop( 'disabled', false );
+					let $fileRow = jQuery( '#wall-photo-' + jQuery(this).data( 'id' ) );
+					$fileRow.remove();
+				}.bind(this),
+				object: this
 			}
-		}
-
-		$uploader.find('.um-wall-photos-error').umHide();
-		jQuery(this).parents('.um-wall-widget').find('.um-wall-post').prop( 'disabled', false );
-		let $fileRow = jQuery( '#wall-photo-' + jQuery(this).data( 'id' ) );
-		$fileRow.remove();
+		);
 	});
 
 	/* Report post */
