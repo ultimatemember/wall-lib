@@ -401,7 +401,7 @@ jQuery( document ).ready(function () {
 					wp.ajax.send( action, {
 						data: {
 							post_id: post_id,
-							nonce: nonce
+							_wpnonce: nonce
 						},
 						success: function( response ) {
 							post.remove();
@@ -462,14 +462,14 @@ jQuery( document ).ready(function () {
 			'um_get_wall_post'
 		);
 
-		let data = { post_id: post_id, nonce: nonce };
+		let data = { post_id: post_id, _wpnonce: nonce };
 		data = wp.hooks.applyFilters(
 			'um_wall_edit_post_data',
 			data,
 			{
 				action: action,
 				post_id: post_id,
-				nonce: nonce,
+				_wpnonce: nonce,
 				widget: widget
 			}
 		);
@@ -567,14 +567,14 @@ jQuery( document ).ready(function () {
 
 		let data = {
 			post_id: post_id,
-			nonce: nonce
+			_wpnonce: nonce
 		};
 		data = wp.hooks.applyFilters(
 			'um_wall_report_data',
 			data,
 			{
 				post_id: post_id,
-				nonce: nonce,
+				_wpnonce: nonce,
 				el: el
 			}
 		);
@@ -622,14 +622,14 @@ jQuery( document ).ready(function () {
 
 		let data = {
 			post_id: post_id,
-			nonce: nonce
+			_wpnonce: nonce
 		};
 		data = wp.hooks.applyFilters(
 			'um_wall_report_data',
 			data,
 			{
 				post_id: post_id,
-				nonce: nonce,
+				_wpnonce: nonce,
 				el: el
 			}
 		);
@@ -678,7 +678,7 @@ jQuery( document ).ready(function () {
 			wp.ajax.send( action, {
 				data: {
 					post_id: postid,
-					nonce: nonce
+					_wpnonce: nonce
 				},
 				success: function (answer) {
 					btn.addClass('active');
@@ -721,7 +721,7 @@ jQuery( document ).ready(function () {
 		wp.ajax.send( action, {
 			data: {
 				post_id: postid,
-				nonce: nonce
+				_wpnonce: nonce
 			},
 			success: function( answer ) {
 				btn.removeClass('active');
@@ -769,7 +769,7 @@ jQuery( document ).ready(function () {
 			wp.ajax.send( action, {
 				data: {
 					post_id: post_id,
-					nonce: nonce
+					_wpnonce: nonce
 				},
 				success: function( response ) {
 					let settings = {
@@ -816,7 +816,7 @@ jQuery( document ).ready(function () {
 			wp.ajax.send('um_wall_get_comment_likes', {
 				data: {
 					comment_id: comment_id,
-					nonce: nonce
+					_wpnonce: nonce
 				},
 				success: function (response) {
 					let settings = {
@@ -859,7 +859,7 @@ jQuery( document ).ready(function () {
 			wp.ajax.send( action, {
 				data: {
 					comment_id: commentid,
-					nonce: nonce
+					_wpnonce: nonce
 				},
 				success: function( response ) {
 					btn.addClass('active');
@@ -901,7 +901,7 @@ jQuery( document ).ready(function () {
 		wp.ajax.send( action, {
 			data: {
 				comment_id: commentid,
-				nonce: nonce
+				_wpnonce: nonce
 			},
 			success: function( response ) {
 				btn.removeClass('active');
@@ -964,7 +964,7 @@ jQuery( document ).ready(function () {
 				comment: comment,
 				reply_to: reply_to,
 				commentid: comment_id,
-				nonce: nonce
+				_wpnonce: nonce
 			},
 			success: function( response ) {
 				loader.umHide();
@@ -1038,7 +1038,7 @@ jQuery( document ).ready(function () {
 			data: {
 				comment_id: commentid,
 				comment: comment,
-				nonce: nonce
+				_wpnonce: nonce
 			},
 			success: function( response ) {
 				loader.umHide();
@@ -1105,7 +1105,7 @@ jQuery( document ).ready(function () {
 			data: {
 				post_id: post_id,
 				offset: offset,
-				nonce: nonce
+				_wpnonce: nonce
 			},
 			success: function( response ) {
 				loader.umHide();
@@ -1147,7 +1147,7 @@ jQuery( document ).ready(function () {
 			data: {
 				comment_id: comment_id,
 				offset: offset,
-				nonce: nonce
+				_wpnonce: nonce
 			},
 			success: function( response ) {
 				loader.umHide();
@@ -1195,7 +1195,7 @@ jQuery( document ).ready(function () {
 					wp.ajax.send( action, {
 						data: {
 							comment_id: comment_id,
-							nonce: nonce
+							_wpnonce: nonce
 						},
 						success: function( response ) {
 							if ( btn.parents('.um-wall-comment-child').length ) {
@@ -1474,7 +1474,7 @@ function um_wall_ajax_request() {
 			core_page: wall.data('core_page'),
 			post_id: wall.data('post_id'),
 			show_pending: wall.data('show_pending'),
-			nonce: nonce
+			_wpnonce: nonce
 		};
 
 		wp.ajax.send( action, {
@@ -1844,11 +1844,11 @@ jQuery(document).ready(function () {
 			'um_wall_user_suggestions_action',
 			'um_get_user_suggestions'
 		);
-		let data = { term: term, nonce: nonce };
+		let data = { term: term, _wpnonce: nonce };
 		data = wp.hooks.applyFilters(
 			'um_wall_user_suggestions_data',
 			data,
-			{ term: term, nonce: nonce, editor: $editor }
+			{ term: term, _wpnonce: nonce, editor: $editor }
 		);
 		mentionTimer = setTimeout(function(){
 			wp.ajax.send(action, {
@@ -2101,7 +2101,7 @@ jQuery( document.body ).on( 'click', '.um-wall-comment-hide, .um-wall-comment-un
 	wp.ajax.send( action, {
 		data: {
 			comment_id: commentId,
-			nonce: button.attr( 'data-wpnonce' )
+			_wpnonce: button.attr( 'data-wpnonce' )
 		},
 		success: function ( response ) {
 			let isHidden = response.hidden;

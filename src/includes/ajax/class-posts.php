@@ -105,7 +105,7 @@ class Posts {
 		$post_id = absint( $_POST['post_id'] );
 		// phpcs:enable WordPress.Security.NonceVerification
 
-		check_ajax_referer( 'um_wall_get_post' . $post_id, 'nonce' );
+		check_ajax_referer( 'um_wall_get_post' . $post_id );
 
 		$post = get_post( $post_id );
 		if ( empty( $post ) || is_wp_error( $post ) ) {
@@ -187,9 +187,9 @@ class Posts {
 		$post_id = absint( $_POST['_post_id'] );
 
 		if ( 0 === $post_id ) {
-			check_ajax_referer( $this->wall->prefix . 'wall_post_publish', 'nonce' );
+			check_ajax_referer( $this->wall->prefix . 'wall_post_publish' );
 		} else {
-			check_ajax_referer( $this->wall->prefix . 'wall_post_edit' . $post_id, 'nonce' );
+			check_ajax_referer( $this->wall->prefix . 'wall_post_edit' . $post_id );
 		}
 
 		do_action( $this->wall->prefix . 'before_wall_post_publish', $post_id ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
@@ -883,7 +883,7 @@ class Posts {
 		}
 		$post_id = absint( $_POST['post_id'] );
 
-		check_ajax_referer( 'um_wall_like_post' . $post_id, 'nonce' );
+		check_ajax_referer( 'um_wall_like_post' . $post_id );
 
 		if ( ! $this->wall->common()->posts()->exists( $post_id ) ) {
 			wp_send_json_error( array( 'message' => __( 'Wrong post ID.', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
@@ -957,7 +957,7 @@ class Posts {
 		}
 		$post_id = absint( $_POST['post_id'] );
 
-		check_ajax_referer( 'um_wall_unlike_post' . $post_id, 'nonce' );
+		check_ajax_referer( 'um_wall_unlike_post' . $post_id );
 
 		if ( ! $this->wall->common()->posts()->exists( $post_id ) ) {
 			wp_send_json_error( array( 'message' => __( 'Wrong post ID.', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
@@ -1026,7 +1026,7 @@ class Posts {
 
 		$post_id = absint( $_POST['post_id'] );
 
-		check_ajax_referer( 'um_wall_report_post' . $post_id, 'nonce' );
+		check_ajax_referer( 'um_wall_report_post' . $post_id );
 
 		if ( ! $this->wall->common()->posts()->exists( $post_id ) ) {
 			wp_send_json_error( array( 'message' => __( 'Wrong post ID.', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
@@ -1078,7 +1078,7 @@ class Posts {
 		}
 		$post_id = absint( $_POST['post_id'] );
 
-		check_ajax_referer( 'um_wall_cancel_report_post' . $post_id, 'nonce' );
+		check_ajax_referer( 'um_wall_cancel_report_post' . $post_id );
 
 		if ( ! $this->wall->common()->posts()->exists( $post_id ) ) {
 			wp_send_json_error( array( 'message' => __( 'Wrong post ID.', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
@@ -1128,7 +1128,7 @@ class Posts {
 		}
 		$post_id = absint( $_POST['post_id'] );
 
-		check_ajax_referer( 'um_wall_show_likes' . $post_id, 'nonce' );
+		check_ajax_referer( 'um_wall_show_likes' . $post_id );
 
 		if ( ! $this->wall->common()->posts()->exists( $post_id ) ) {
 			wp_send_json_error( array( 'message' => __( 'Wrong post ID.', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n
@@ -1183,7 +1183,7 @@ class Posts {
 		}
 		$post_id = absint( $_POST['post_id'] );
 
-		check_ajax_referer( 'um_wall_delete_post' . $post_id, 'nonce' );
+		check_ajax_referer( 'um_wall_delete_post' . $post_id );
 
 		if ( ! $this->wall->common()->posts()->exists( $post_id ) ) {
 			wp_send_json_error( array( 'message' => __( 'Wrong post ID.', $this->wall->textdomain ) ) ); // phpcs:ignore WordPress.WP.I18n

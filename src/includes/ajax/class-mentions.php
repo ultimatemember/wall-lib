@@ -27,7 +27,7 @@ class Mentions {
 	 * Get user suggestions
 	 */
 	public function get_user_suggestions() {
-		check_ajax_referer( 'um_wall_mentions', 'nonce' );
+		check_ajax_referer( 'um_wall_mentions' );
 
 		do_action( $this->wall->prefix . 'ajax_get_user_suggestions_before' ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 

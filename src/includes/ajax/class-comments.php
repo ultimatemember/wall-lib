@@ -66,7 +66,7 @@ class Comments {
 			wp_send_json_error( esc_html__( 'Wrong comment ID.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
 		}
 		$action = $this->wall->prefix . ( $hidden ? 'wall_hide_comment' : 'wall_unhide_comment' );
-		if ( ! isset( $_POST['nonce'] ) || ! is_string( $_POST['nonce'] ) || ! check_ajax_referer( $action . $comment_id, 'nonce', false ) ) {
+		if ( ! isset( $_POST['_wpnonce'] ) || ! is_string( $_POST['_wpnonce'] ) || ! check_ajax_referer( $action . $comment_id, false, false ) ) {
 			wp_send_json_error( esc_html__( 'Invalid nonce', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
 		}
 		if ( ! $this->wall->common()->user()->can_change_comment_visibility( $comment_id ) ) {
@@ -98,7 +98,7 @@ class Comments {
 
 		$comment_id = absint( $_POST['comment_id'] );
 
-		check_ajax_referer( 'um_wall_get_comment_likes' . $comment_id, 'nonce' );
+		check_ajax_referer( 'um_wall_get_comment_likes' . $comment_id );
 
 		if ( UM()->is_rate_limited( 'wall_get_comment_likes' ) ) {
 			wp_send_json_error( __( 'Too many requests', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
@@ -142,7 +142,7 @@ class Comments {
 
 		$comment_id = absint( $_POST['comment_id'] );
 
-		check_ajax_referer( 'um_wall_like_comment' . $comment_id, 'nonce' );
+		check_ajax_referer( 'um_wall_like_comment' . $comment_id );
 
 		if ( ! $this->wall->common()->comments()->exists( $comment_id ) ) {
 			wp_send_json_error( __( 'Wrong comment ID.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
@@ -214,7 +214,7 @@ class Comments {
 
 		$comment_id = absint( $_POST['comment_id'] );
 
-		check_ajax_referer( 'um_wall_unlike_comment' . $comment_id, 'nonce' );
+		check_ajax_referer( 'um_wall_unlike_comment' . $comment_id );
 
 		if ( ! $this->wall->common()->comments()->exists( $comment_id ) ) {
 			wp_send_json_error( __( 'Wrong comment ID.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
@@ -294,7 +294,7 @@ class Comments {
 
 		$post_id = absint( $_POST['post_id'] );
 
-		check_ajax_referer( 'um_wall_comment_post' . $post_id, 'nonce' );
+		check_ajax_referer( 'um_wall_comment_post' . $post_id );
 
 		if ( ! $this->wall->common()->posts()->exists( $post_id ) ) {
 			wp_send_json_error(
@@ -497,7 +497,7 @@ class Comments {
 		}
 		$commentid = absint( $_POST['comment_id'] );
 
-		check_ajax_referer( 'um_wall_comment_edit' . $commentid, 'nonce' );
+		check_ajax_referer( 'um_wall_comment_edit' . $commentid );
 
 		if ( ! $this->wall->common()->comments()->exists( $commentid ) ) {
 			wp_send_json_error(
@@ -661,7 +661,7 @@ class Comments {
 
 		$post_id = absint( $_POST['post_id'] );
 
-		check_ajax_referer( 'um_wall_comments_loadmore' . $post_id, 'nonce' );
+		check_ajax_referer( 'um_wall_comments_loadmore' . $post_id );
 
 		if ( ! $this->wall->common()->posts()->exists( $post_id ) ) {
 			wp_send_json_error( __( 'Wrong post ID.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
@@ -722,7 +722,7 @@ class Comments {
 		}
 		$comment_id = absint( $_POST['comment_id'] );
 
-		check_ajax_referer( 'um_wall_replies_loadmore' . $comment_id, 'nonce' );
+		check_ajax_referer( 'um_wall_replies_loadmore' . $comment_id );
 
 		if ( UM()->is_rate_limited( 'wall_load_more_replies' ) ) {
 			wp_send_json_error( __( 'Too many requests', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
@@ -791,7 +791,7 @@ class Comments {
 		}
 		$comment_id = absint( $_POST['comment_id'] );
 
-		check_ajax_referer( 'um_wall_delete_comment' . $comment_id, 'nonce' );
+		check_ajax_referer( 'um_wall_delete_comment' . $comment_id );
 
 		if ( ! $this->wall->common()->comments()->exists( $comment_id ) ) {
 			wp_send_json_error( __( 'Wrong comment ID.', $this->wall->textdomain ) ); // phpcs:ignore WordPress.WP.I18n
