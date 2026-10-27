@@ -1295,9 +1295,9 @@ jQuery( document ).ready(function () {
 	/* Show hidden post content */
 	jQuery( document.body ).on('click', '.um-wall-seemore', function(e) {
 		e.preventDefault();
-		let excerpt = jQuery(this).closest('.um-activity-post-excerpt');
-		excerpt.hide();
-		excerpt.siblings('.um-activity-post-full').show();
+		let $excerpt = jQuery(this).closest('.um-wall-post-excerpt');
+		$excerpt.umHide();
+		$excerpt.siblings('.um-wall-post-full').umShow();
 	});
 
 	// Text editor with the contenteditable attribute

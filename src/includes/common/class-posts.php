@@ -1,8 +1,8 @@
 <?php
 namespace WallLib\common;
 
-use DOMDocument;
 use WP_Post;
+use WP_Query;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -14,30 +14,6 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @package WallLib\common
  */
 class Posts {
-
-	/**
-	 * Render the full post content for initial display.
-	 *
-	 * @param int $post_id Post ID.
-	 * @return string
-	 */
-	public function get_full_content( $post_id ) {
-		$content_raw = get_post_field( 'post_content', $post_id );
-
-		remove_filter( 'the_content', 'prepend_attachment' );
-		remove_filter( 'the_content', 'wpautop' );
-
-		/** This filter is already documented in core. wp-includes/post-template.php */
-		$content = apply_filters( 'the_content', $content_raw );
-		$content = $this->linkify_hashtags_in_content( $content );
-		$content = $this->maybe_linkify_mentions( $content, 'post', $post_id );
-		$content = nl2br( $content );
-
-		add_filter( 'the_content', 'prepend_attachment' );
-		add_filter( 'the_content', 'wpautop' );
-
-		return UM()->ajax()->esc_html_spaces( $content );
-	}
 
 	/**
 	 * Hashtag pattern. Hashtag must have space or start line before and space, end line or punctuation (.,!?;:) after.
@@ -195,26 +171,6 @@ class Posts {
 		}
 
 		return ( $reported ) ? 1 : 0;
-	}
-
-	/**
-	 * Get a possible video
-	 *
-	 * @param int $post_id
-	 * @param array $args
-	 *
-	 * @return false|string
-	 */
-	public function get_video( $post_id = 0, $args = array() ) {
-		$uri = get_post_meta( $post_id, '_video_url', true );
-		if ( ! $uri ) {
-			return '';
-		}
-
-		$content = wp_oembed_get( $uri, $args );
-		$content = apply_filters( $this->wall->prefix . 'get_video', $content, $post_id, $args ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
-
-		return $content;
 	}
 
 	/**
@@ -417,7 +373,7 @@ class Posts {
 	}
 
 	/**
-	 * @Gets action name
+	 * Gets action name
 	 **/
 	public function get_action( $post_id ) {
 		$action = (string) get_post_meta( $post_id, '_action', true );
@@ -441,7 +397,7 @@ class Posts {
 	}
 
 	/**
-	 * @Checks if image is valid
+	 * Checks if image is valid
 	 */
 	public function is_image( $url ) {
 		$allow_types = array(
@@ -510,10 +466,9 @@ class Posts {
 	}
 
 	/**
-	 * @Checks if user liked specific wall post
+	 * Checks if user liked specific wall post
 	 */
 	public function user_liked( $post_id ) {
-		$res   = '';
 		$users = get_post_meta( $post_id, '_liked', true );
 		if ( $users && is_array( $users ) && in_array( get_current_user_id(), $users, true ) ) {
 			return true;
@@ -567,7 +522,7 @@ class Posts {
 		$query = apply_filters( $this->wall->prefix . 'wall_posts_args', $query, $args ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- properly prefixed after installation and library init.
 
 		// Get posts.
-		$query_obj = new \WP_Query( $query );
+		$query_obj = new WP_Query( $query );
 
 		return array(
 			'result'      => $query_obj->get_posts(),
@@ -658,6 +613,30 @@ class Posts {
 				$content = preg_replace( '/(?<=^|\s)@' . preg_quote( $name, '/' ) . '(?=$|\s)/um', '<a href="' . esc_url( um_user_profile_url( $user_id1 ) ) . '" class="um-link">' . esc_html( $name ) . '</a>', $content );
 			}
 		}
+
+		return $content;
+	}
+
+	/**
+	 * Render the full post content for initial display.
+	 *
+	 * @param int $post_id Post ID.
+	 * @return string
+	 */
+	public function get_full_content( $post_id ) {
+		$content_raw = get_post_field( 'post_content', $post_id );
+
+		remove_filter( 'the_content', 'prepend_attachment' );
+		remove_filter( 'the_content', 'wpautop' );
+
+		/** This filter is already documented in core. wp-includes/post-template.php */
+		$content = apply_filters( 'the_content', $content_raw );
+		$content = $this->linkify_hashtags_in_content( $content );
+		$content = $this->maybe_linkify_mentions( $content, 'post', $post_id );
+		$content = nl2br( $content );
+
+		add_filter( 'the_content', 'prepend_attachment' );
+		add_filter( 'the_content', 'wpautop' );
 
 		return $content;
 	}
