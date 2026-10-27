@@ -91,7 +91,7 @@ class Comments {
 	 * @param bool $hidden Target visibility state.
 	 * @return string
 	 */
-	public function get_comment_visibility_button( $comment_id, $hidden = true ) {
+	public function get_visibility_button( $comment_id, $hidden = true ) {
 		if ( ! is_user_logged_in() ) {
 			return '';
 		}
@@ -153,7 +153,7 @@ class Comments {
 
 		return '<div class="um-wall-comment-hidden">'
 			. '<span>' . esc_html__( 'Comment hidden.', $this->wall->textdomain ) . '</span>' // phpcs:ignore WordPress.WP.I18n
-			. $this->get_comment_visibility_button( $comment_id, false )
+			. $this->get_visibility_button( $comment_id, false )
 			. '</div>';
 	}
 
